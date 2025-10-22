@@ -29,6 +29,9 @@ jobs:
         with:
           cache-read-only: true
 
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Execute Gradle build
         run: ./gradlew build -Pbuild.release=true
 
