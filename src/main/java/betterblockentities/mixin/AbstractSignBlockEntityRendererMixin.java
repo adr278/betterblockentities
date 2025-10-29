@@ -13,9 +13,9 @@ import net.minecraft.client.model.Model;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.AbstractSignBlockEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.Text;
 
 /* mixin */
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /*
     this whole mixin will probably get removed once we move to baking the sign text into meshes
-    as this implementation is not as efficient.
+    as this implementation is not as efficient
 */
 @Mixin(AbstractSignBlockEntityRenderer.class)
 public abstract class AbstractSignBlockEntityRendererMixin {
