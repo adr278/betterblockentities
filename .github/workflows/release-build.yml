@@ -1,0 +1,111 @@
+# Automatic Gradle-based release workflow
+# Generates tags, changelogs, and uploads release assets automatically
+
+name: auto-release
+
+on:
+  push:
+    branches:
+      - main  # Trigger whenever code is pushed to main
+
+permissions:
+  contents: write  # Needed to push tags and create releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed to access all tags for changelog comparison
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      # 🧩 Read project version from Gradle
+      - name: Extract Gradle version
+        id: version
+        run: |
+          version=$(./gradlew properties | grep "^version:" | awk '{print $2}')
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "Detected version: ${version}"
+
+      # 🏷️ Create and push a new Git tag if it doesn't exist
+      - name: Create tag if missing
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists. Skipping tag creation."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$tag" -m "Release $tag"
+            git push origin "$tag"
+          fi
+
+      # 🧾 Generate categorized changelog
+      - name: Generate changelog
+        id: changelog
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          echo "## 🧾 Changelog for $tag" > changelog.md
+          git fetch --tags
+          previous_tag=$(git describe --tags --abbrev=0 "$tag"^ 2>/dev/null || echo "")
+          if [ -n "$previous_tag" ]; then
+            range="$previous_tag..$tag"
+          else
+            range="$tag"
+          fi
+
+          features=$(git log $range --pretty=format:"%s" | grep -E "^(feat:|feat\(.*\):)" | sed -E "s/^feat(\(.*\))?:[[:space:]]*//" || true)
+          fixes=$(git log $range --pretty=format:"%s" | grep -E "^(fix:|fix\(.*\):)" | sed -E "s/^fix(\(.*\))?:[[:space:]]*//" || true)
+          refactors=$(git log $range --pretty=format:"%s" | grep -E "^(refactor:|refactor\(.*\):)" | sed -E "s/^refactor(\(.*\))?:[[:space:]]*//" || true)
+          others=$(git log $range --pretty=format:"%s" | grep -Ev "^(feat:|feat\(.*\):|fix:|fix\(.*\):|refactor:|refactor\(.*\):)" || true)
+
+          if [ -n "$features" ]; then
+            echo -e "\n### ✨ Features" >> changelog.md
+            echo "$features" | sed 's/^/- /' >> changelog.md
+          fi
+          if [ -n "$fixes" ]; then
+            echo -e "\n### 🐛 Fixes" >> changelog.md
+            echo "$fixes" | sed 's/^/- /' >> changelog.md
+          fi
+          if [ -n "$refactors" ]; then
+            echo -e "\n### 🧹 Refactors" >> changelog.md
+            echo "$refactors" | sed 's/^/- /' >> changelog.md
+          fi
+          if [ -n "$others" ]; then
+            echo -e "\n### 🧩 Other changes" >> changelog.md
+            echo "$others" | sed 's/^/- /' >> changelog.md
+          fi
+
+          echo "Generated changelog:"
+          cat changelog.md
+
+      # ⚙️ Build with Gradle
+      - name: Build project
+        run: ./gradlew build -Pbuild.release=true
+
+      # 🚀 Create or update GitHub Release and upload jars
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          body_path: changelog.md
+          files: build/libs/*.jar
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
