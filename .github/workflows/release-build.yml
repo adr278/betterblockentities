@@ -1,18 +1,21 @@
 # Used when a release is pushed to GitHub
-# This does not make use of any caching as to ensure a clean build
+# Ensures a clean build and uploads artifacts to the release
 name: build-release
 
 on:
   release:
-     types:
-       - published
+    types:
+      - published
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
@@ -22,14 +25,16 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Make gradlew executable
+      - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
       - name: Execute Gradle build
         run: ./gradlew build -Pbuild.release=true
 
-      - name: Upload assets to GitHub
-        uses: AButler/upload-release-assets@v2.0
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
         with:
-          files: 'build/libs/*.jar'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          files: build/libs/*.jar
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+
