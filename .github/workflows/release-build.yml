@@ -6,7 +6,7 @@ name: auto-release
 on:
   push:
     branches:
-      - main  # Trigger whenever code is pushed to main
+      - '*'  # Trigger whenever code is pushed to any branch
 
 permissions:
   contents: write  # Needed to push tags and create releases
