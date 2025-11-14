@@ -55,41 +55,68 @@ jobs:
             git push origin "$tag"
           fi
 
-      # 🧾 Generate categorized changelog
+      # 🧾 CATEGORY-BASED TABLE-FORMATTED CHANGELOG
       - name: Generate changelog
         id: changelog
         run: |
           tag="v${{ steps.version.outputs.version }}"
-          echo "## 🧾 Changelog for $tag" > changelog.md
+          repo="${GITHUB_REPOSITORY}"
+
+          echo "# 🧾 Changelog for $tag" > changelog.md
+          echo "" >> changelog.md
+
           git fetch --tags
           previous_tag=$(git describe --tags --abbrev=0 "$tag"^ 2>/dev/null || echo "")
+
           if [ -n "$previous_tag" ]; then
             range="$previous_tag..$tag"
           else
             range="$tag"
           fi
 
-          features=$(git log $range --pretty=format:"%s" | grep -E "^(feat:|feat\(.*\):)" | sed -E "s/^feat(\(.*\))?:[[:space:]]*//" || true)
-          fixes=$(git log $range --pretty=format:"%s" | grep -E "^(fix:|fix\(.*\):)" | sed -E "s/^fix(\(.*\))?:[[:space:]]*//" || true)
-          refactors=$(git log $range --pretty=format:"%s" | grep -E "^(refactor:|refactor\(.*\):)" | sed -E "s/^refactor(\(.*\))?:[[:space:]]*//" || true)
-          others=$(git log $range --pretty=format:"%s" | grep -Ev "^(feat:|feat\(.*\):|fix:|fix\(.*\):|refactor:|refactor\(.*\):)" || true)
+          declare -A categories
+          categories=(
+            ["✨ Features"]="feat|feature|add|added|implement|implemented|implementing|new"
+            ["🐛 Fixes"]="fix|fixes|fixed|bug|bugfix|hotfix|patch|resolve"
+            ["🧹 Refactors"]="refactor|cleanup|rework|rewrite"
+            ["📚 Documentation"]="docs|doc|documentation|readme"
+            ["⬆️ Dependencies"]="deps|dependency|bump|upgrade|update"
+            ["💥 Breaking Changes"]="break|breaking|!"
+            ["🧩 Other Changes"]="."
+          )
 
-          if [ -n "$features" ]; then
-            echo -e "\n### ✨ Features" >> changelog.md
-            echo "$features" | sed 's/^/- /' >> changelog.md
-          fi
-          if [ -n "$fixes" ]; then
-            echo -e "\n### 🐛 Fixes" >> changelog.md
-            echo "$fixes" | sed 's/^/- /' >> changelog.md
-          fi
-          if [ -n "$refactors" ]; then
-            echo -e "\n### 🧹 Refactors" >> changelog.md
-            echo "$refactors" | sed 's/^/- /' >> changelog.md
-          fi
-          if [ -n "$others" ]; then
-            echo -e "\n### 🧩 Other changes" >> changelog.md
-            echo "$others" | sed 's/^/- /' >> changelog.md
-          fi
+          # Function to linkify commit hashes
+          linkify_hash() {
+            hash="$1"
+            short=$(echo "$hash" | cut -c1-7)
+            echo "[\`$short\`](https://github.com/$repo/commit/$hash)"
+          }
+
+          # Collect raw commits
+          git log $range --pretty=format:"%h%x09%s" > commits.txt
+
+          # Categorize
+          for category in "${!categories[@]}"; do
+            regex="${categories[$category]}"
+            matches=$(grep -Ei $regex commits.txt || true)
+
+            if [ -n "$matches" ]; then
+              echo "## $category" >> changelog.md
+              echo "" >> changelog.md
+              echo "| Description | Commit |" >> changelog.md
+              echo "|------------|--------|" >> changelog.md
+
+              while IFS=$'\t' read -r hash msg; do
+                if echo "$msg" | grep -Ei "$regex" >/dev/null; then
+                  desc=$(echo "$msg" | sed -E "s/^($regex)(\(.*\))?:[[:space:]]*//I")
+                  link=$(linkify_hash "$hash")
+                  echo "| $desc | $link |" >> changelog.md
+                fi
+              done <<< "$matches"
+
+              echo "" >> changelog.md
+            fi
+          done
 
           echo "Generated changelog:"
           cat changelog.md
