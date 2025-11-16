@@ -7,10 +7,16 @@ import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadTransform;
 
 /* minecraft */
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.data.AtlasDefinitionProvider;
 import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.client.texture.atlas.AtlasSource;
+import net.minecraft.client.texture.atlas.AtlasSprite;
+import net.minecraft.client.texture.atlas.Atlases;
+import net.minecraft.util.Identifier;
 
-public class ModelTransform
-{
+public class ModelTransform {
     /* rotates base MutableQuadView from passed degrees and not radians */
     public static QuadTransform rotateY(float degrees) {
         float radians = (float) Math.toRadians(degrees);
@@ -31,7 +37,7 @@ public class ModelTransform
         };
     }
 
-    /* swaps the sprite of the quad while preserving UV mapping proportions */
+    /* swaps the sprite of the quad while preserving UV mapping proportions (no caching) recompute for every quad */
     public static QuadTransform swapSprite(Sprite newSprite) {
         return quad -> {
             if (!(quad instanceof MutableQuadViewImpl mQuad)) return true;
@@ -49,6 +55,57 @@ public class ModelTransform
             mQuad.cachedSprite(newSprite);
             return true;
         };
+    }
+
+    /* swaps the sprite of the quad while preserving UV mapping proportions (caching) */
+    public static QuadTransform swapSpriteCached(Sprite newSprite) {
+        final float uNewMin = newSprite.getMinU();
+        final float uNewMax = newSprite.getMaxU();
+        final float vNewMin = newSprite.getMinV();
+        final float vNewMax = newSprite.getMaxV();
+
+        return quad -> {
+            if (!(quad instanceof MutableQuadViewImpl mQuad)) return true;
+            Sprite old = mQuad.cachedSprite();
+            if (old == null) return true;
+
+            float uOldMin = old.getMinU();
+            float uOldMax = old.getMaxU();
+            float vOldMin = old.getMinV();
+            float vOldMax = old.getMaxV();
+
+            float uOldRange = uOldMax - uOldMin;
+            float vOldRange = vOldMax - vOldMin;
+
+            float uNewRange = uNewMax - uNewMin;
+            float vNewRange = vNewMax - vNewMin;
+
+            for (int i = 0; i < 4; i++) {
+                float uNorm = (mQuad.u(i) - uOldMin) / uOldRange;
+                float vNorm = (mQuad.v(i) - vOldMin) / vOldRange;
+
+                mQuad.uv(i,
+                        uNewMin + uNorm * uNewRange,
+                        vNewMin + vNorm * vNewRange
+                );
+            }
+
+            mQuad.cachedSprite(newSprite);
+            return true;
+        };
+    }
+
+    //minecraft:textures/atlas/blocks.png
+
+    /* gets an existing sprite from the atlas */
+    public static Sprite getSprite(Identifier id) {
+        var client = MinecraftClient.getInstance();
+        var textureManager = client.getTextureManager();
+        var tex = textureManager.getTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE);
+        if ((tex instanceof SpriteAtlasTexture atlas)) {
+            return atlas.getSprite(id);
+        };
+        return null;
     }
 
     private ModelTransform() {
