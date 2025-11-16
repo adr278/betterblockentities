@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "id": "betterblockentities",
   "version": "${version}",
-
   "name": "BBE",
   "description": "Optimize and customize block entity rendering with a more modern approach.",
   "authors": [
@@ -13,10 +12,8 @@
     "issues": "https://github.com/ceeden/betterblockentities/issues",
     "sources": "https://github.com/ceeden/betterblockentities"
   },
-
   "license": "LGPLv3",
   "icon": "assets/betterblockentities/icon.png",
-
   "environment": "client",
   "entrypoints": {
     "client": [
