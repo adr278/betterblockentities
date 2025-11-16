@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 /* minecraft */
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.model.*;
@@ -157,7 +158,10 @@ public class BlockRendererMixin {
                 BlockEntityExt ext = getBlockEntityInstance(pos);
                 boolean shouldRender = shouldRender(ext);
 
-                if (!shouldRender) ci.cancel();
+                ci.cancel();
+                if (!shouldRender) return;
+
+                BlockRenderHelper.emitDecoratedPotQuads(model, state, emitter, (DecoratedPotBlockEntity)ext, acc.getRandom(), acc::isFaceCulledInvoke);
             }
             restoreContext();
         }
