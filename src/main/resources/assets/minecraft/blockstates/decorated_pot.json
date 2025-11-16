@@ -1,8 +1,36 @@
 {
-  "variants": {
-    "facing=north": { "model": "minecraft:block/decorated_pot", "y": 0 },
-    "facing=east":  { "model": "minecraft:block/decorated_pot", "y": 90 },
-    "facing=south": { "model": "minecraft:block/decorated_pot", "y": 180 },
-    "facing=west":  { "model": "minecraft:block/decorated_pot", "y": 270 }
-  }
+  "multipart": [
+    {
+      "when": { "facing": "north" },
+      "apply": { "model": "block/decorated_pot_sides", "y": 0 }
+    },
+    {
+      "when": { "facing": "east" },
+      "apply": { "model": "block/decorated_pot_sides", "y": 90 }
+    },
+    {
+      "when": { "facing": "south" },
+      "apply": { "model": "block/decorated_pot_sides", "y": 180 }
+    },
+    {
+      "when": { "facing": "west" },
+      "apply": { "model": "block/decorated_pot_sides", "y": 270 }
+    },
+    {
+      "when": { "facing": "north" },
+      "apply": { "model": "block/decorated_pot_top", "y": 0 }
+    },
+    {
+      "when": { "facing": "east" },
+      "apply": { "model": "block/decorated_pot_top", "y": 90 }
+    },
+    {
+      "when": { "facing": "south" },
+      "apply": { "model": "block/decorated_pot_top", "y": 180 }
+    },
+    {
+      "when": { "facing": "west" },
+      "apply": { "model": "block/decorated_pot_top", "y": 270 }
+    }
+  ]
 }
