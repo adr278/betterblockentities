@@ -17,9 +17,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 public class ConfigManager
 {
@@ -51,7 +49,7 @@ public class ConfigManager
 
     public static void refreshSupportedTypes() {
         /* set supported block entities in BlockEntityManager */
-        Set<Class<? extends BlockEntity>> supported = new HashSet<>();
+        ReferenceOpenHashSet<Class<? extends BlockEntity>> supported = new ReferenceOpenHashSet<>();
         if (ConfigManager.CONFIG.optimize_chests) {
             supported.add(ChestBlockEntity.class);
             supported.add(TrappedChestBlockEntity.class);
@@ -65,7 +63,7 @@ public class ConfigManager
             supported.add(SignBlockEntity.class);
             supported.add(HangingSignBlockEntity.class);
         }
-        BlockEntityManager.SUPPORTED_TYPES = Collections.unmodifiableSet(supported);
+        BlockEntityManager.SUPPORTED_TYPES = supported;
 
         /* set animation/rendering config values in BlockEntityManager */
         var cfg = ConfigManager.CONFIG;

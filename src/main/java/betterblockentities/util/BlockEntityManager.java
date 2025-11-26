@@ -13,8 +13,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 
 /* java/misc */
-import java.util.Collections;
-import java.util.Set;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import java.util.List;
 
 /*
     TODO: instead of sending chunk updates for each iteration,
@@ -23,12 +23,14 @@ import java.util.Set;
  */
 
 public class BlockEntityManager {
-    public static Set<Class<? extends BlockEntity>> SUPPORTED_TYPES = Collections.emptySet();
-    public static final Set<Class<? extends Block>> SUPPORTED_BLOCKS = Set.of(
-            ChestBlock.class, EnderChestBlock.class, ShulkerBoxBlock.class,
-            BellBlock.class, DecoratedPotBlock.class, BedBlock.class,
-            SignBlock.class, HangingSignBlock.class,
-            WallSignBlock.class, WallHangingSignBlock.class
+    public static ReferenceOpenHashSet<Class<? extends BlockEntity>> SUPPORTED_TYPES = new ReferenceOpenHashSet<>();
+    public static final ReferenceOpenHashSet<Class<? extends Block>> SUPPORTED_BLOCKS = new ReferenceOpenHashSet<>(
+            List.of(
+                    ChestBlock.class, EnderChestBlock.class, ShulkerBoxBlock.class,
+                    BellBlock.class, DecoratedPotBlock.class, BedBlock.class,
+                    SignBlock.class, HangingSignBlock.class,
+                    WallSignBlock.class, WallHangingSignBlock.class
+            )
     );
 
     public static boolean chestAnims, shulkerAnims, bellAnims, potAnims, signText, masterOptimize;
