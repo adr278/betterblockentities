@@ -7,27 +7,33 @@ import betterblockentities.gui.ConfigManager;
 import betterblockentities.util.*;
 
 /* sodium */
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 
 /* fabric */
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
+
 
 /* minecraft */
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.DecoratedPotBlockEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.render.model.*;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.random.Random;
+
 
 /* mixin */
+import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.resources.model.ModelManager;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -65,15 +71,15 @@ public class BlockRendererMixin {
             /* setup context */
             AbstractBlockRenderContextAccessor acc = setupContext(state, pos, origin);
             if (acc == null) return;
-            final QuadEmitter emitter = acc.getEmitterInvoke();
+            final AbstractBlockRenderContext.BlockEmitter emitter = acc.getEmitterInvoke();
 
             /* SIGNS */
-            if (block instanceof SignBlock || block instanceof HangingSignBlock) {
+            if (block instanceof SignBlock || block instanceof CeilingHangingSignBlock) {
                 ci.cancel();
 
                 if (!ConfigManager.CONFIG.optimize_signs) return;
 
-                emitter.pushTransform(ModelTransform.rotateY(BlockRenderHelper.computeSignRotation(state)));
+                emitter.(ModelTransform.rotateY(BlockRenderHelper.computeSignRotation(state)));
                 ((FabricBlockStateModel) model).emitQuads(emitter, acc.getLevel(), pos, state, acc.getRandom(), acc::isFaceCulledInvoke);
                 emitter.popTransform();
             }
@@ -91,7 +97,7 @@ public class BlockRendererMixin {
 
                 ci.cancel();
 
-                List<BlockModelPart> parts = model.getParts(acc.getRandom());
+                List<BlockModelPart> parts = model.collectParts(acc.getRandom());
 
                 /* splice BlockModelParts from MultipartBlockStateModel */
                 int quadThreshold = isShulker ? 10 : 6;
@@ -124,8 +130,8 @@ public class BlockRendererMixin {
                 if (!ConfigManager.CONFIG.optimize_bells) return;
                 ci.cancel();
 
-                Random rand = acc.getRandom();
-                List<BlockModelPart> bell_part = model.getParts(rand);
+                RandomSource rand = acc.getRandom();
+                List<BlockModelPart> bell_part = model.collectParts(rand);
                 List<BlockModelPart> bell_body_part = new ArrayList<>();
 
                 BlockEntityExt ext = getBlockEntityInstance(pos);
@@ -133,9 +139,9 @@ public class BlockRendererMixin {
 
                 if (shouldRender) {
                     try {
-                        BakedModelManager manager = MinecraftClient.getInstance().getBakedModelManager();
-                        BlockStateModel bell_body = manager.getModel(ModelLoader.BELL_BODY_KEY);
-                        bell_body_part.addAll(bell_body.getParts(rand));
+                        ModelManager manager = Minecraft.getInstance().getModelManager();
+                        BlockStateModel bell_body = manager(ModelLoader.BELL_BODY_KEY);
+                        bell_body_part.addAll(bell_body.collectParts(rand));
                     }
                     catch (Exception e) {
                         BetterBlockEntities.getLogger().error("Error: Retrieving bell body BlockModelPart at {}", pos, e);
@@ -179,7 +185,7 @@ public class BlockRendererMixin {
     @Unique
     private BlockEntityExt getBlockEntityInstance(BlockPos pos) {
         try {
-            ClientWorld world = MinecraftClient.getInstance().world;
+            ClientLevel world = Minecraft.getInstance().level;
             BlockEntity blockEntity = world.getBlockEntity(pos);
             return (blockEntity instanceof BlockEntityExt bex) ? bex : null;
         } catch (Exception e) {
@@ -197,16 +203,16 @@ public class BlockRendererMixin {
             acc.prepareAoInfoInvoke(true);
 
             this.posOffset.set(origin.getX(), origin.getY(), origin.getZ());
-            if (state.hasModelOffset()) {
-                Vec3d offset = state.getModelOffset(pos);
-                this.posOffset.add((float) offset.x, (float) offset.y, (float) offset.z);
+            if (state.hasOffsetFunction()) {
+                Vec3 modelOffset = state.getOffset(pos);
+                this.posOffset.add((float)modelOffset.x, (float)modelOffset.y, (float)modelOffset.z);
             }
 
             this.colorProvider = this.colorProviderRegistry.getColorProvider(state.getBlock());
             acc.prepareCullingInvoke(true);
-            acc.setDefaultRenderType(RenderLayers.getBlockLayer(state));
+            acc.setDefaultRenderType(ItemBlockRenderTypes.getChunkRenderType(state));
             acc.setAllowDowngrade(true);
-            acc.getRandom().setSeed(state.getRenderingSeed(pos));
+            acc.getRandom().setSeed(state.getSeed(pos));
             return acc;
         } catch (Exception e) {
             BetterBlockEntities.getLogger().error("Error: Setting up BlockRenderer context failed! at {}", pos, e);

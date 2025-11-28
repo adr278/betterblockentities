@@ -1,30 +1,29 @@
 package betterblockentities.util;
 
 /* fabric */
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadTransform;
-import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
-import net.fabricmc.fabric.api.renderer.v1.model.ModelHelper;
+
+import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
 import net.fabricmc.fabric.api.util.TriState;
 
 /* minecraft */
-import net.minecraft.block.BlockState;
-import net.minecraft.block.DecoratedPotBlock;
-import net.minecraft.block.SignBlock;
-import net.minecraft.block.entity.DecoratedPotBlockEntity;
-import net.minecraft.block.entity.Sherds;
-import net.minecraft.client.render.model.BakedQuad;
-import net.minecraft.client.render.model.BlockModelPart;
-import net.minecraft.client.render.model.BlockStateModel;
-import net.minecraft.client.texture.Sprite;
-import net.minecraft.item.Item;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
+
 
 /* java/misc */
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.DecoratedPotBlock;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Predicate;
 
 public class BlockRenderHelper {
@@ -37,7 +36,7 @@ public class BlockRenderHelper {
     }
 
     /* custom emitQuads implementation with QuadTransforms for dynamically swaping the sprite of each quad */
-    public static void emitDecoratedPotQuads(BlockStateModel model, BlockState state, QuadEmitter emitter, DecoratedPotBlockEntity blockEntity, Random random, Predicate<@Nullable Direction> cullTest) {
+    public static void emitDecoratedPotQuads(BlockStateModel model, BlockState state, QuadEmitter emitter, DecoratedPotBlockEntity blockEntity, RandomSource random, Predicate<@Nullable Direction> cullTest) {
         Sherds sherds = blockEntity.getSherds();
 
         Sprite[] sideSprites = new Sprite[4];
@@ -52,9 +51,9 @@ public class BlockRenderHelper {
             sideTransforms[i] = (s != null) ? ModelTransform.swapSpriteCached(s) : null;
         }
 
-        int facingIndex = horizontalIndex(state.get(DecoratedPotBlock.FACING));
+        int facingIndex = horizontalIndex(state.getValue(DecoratedPotBlock.HORIZONTAL_FACING));
 
-        for (BlockModelPart part : model.getParts(random)) {
+        for (BlockModelPart part : model.collectParts(random)) {
             boolean skipTransform = part.getQuads(null).size() > 10;
             TriState ao = part.useAmbientOcclusion() ? TriState.DEFAULT : TriState.FALSE;
 
@@ -100,7 +99,7 @@ public class BlockRenderHelper {
         if (item == null) return null;
         String itemName = item.toString();
         String pattern = parseSherdName(itemName);
-        Identifier spriteId = Identifier.ofVanilla("entity/decorated_pot/" + pattern + "_pottery_pattern");
+        Identifier spriteId = Identifier.withDefaultNamespace("entity/decorated_pot/" + pattern + "_pottery_pattern");
         return ModelTransform.getSprite(spriteId);
     }
 
@@ -125,7 +124,7 @@ public class BlockRenderHelper {
 
     /* compute rotation angle in degrees */
     public static float computeSignRotation(BlockState state) {
-        if (state.contains(SignBlock.ROTATION)) {
+        if (state.getValue(SignBlock.)) {
             int rot = state.get(SignBlock.ROTATION);
             return rot * 22.5f;
         }

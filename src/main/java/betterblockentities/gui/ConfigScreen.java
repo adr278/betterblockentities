@@ -1,24 +1,23 @@
 package betterblockentities.gui;
 
 /* minecraft */
-import net.minecraft.block.entity.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.option.GameOptionsScreen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.option.SimpleOption;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.network.chat.Component;
 
 /*
     TODO: clean this shit up lol
 */
 
-public class ConfigScreen extends GameOptionsScreen {
+public class ConfigScreen extends OptionsSubScreen {
     private final ConfigHolder originalConfig;
 
-    private SimpleOption<Boolean> masterToggle;
-    private SimpleOption<Boolean>
+    private OptionInstance<Boolean> masterToggle;
+    private OptionInstance<Boolean>
             chestOpt,
             signOpt,
             shulkerOpt,
@@ -30,19 +29,19 @@ public class ConfigScreen extends GameOptionsScreen {
             shulkerAnimOpt,
             bellAnimOpt,
             potAnimOpt;
-    private SimpleOption<Integer>
+    private OptionInstance<Integer>
             updateType,
             smoothness;
-    private SimpleOption<Integer> signDistance;
+    private OptionInstance<Integer> signDistance;
 
     public ConfigScreen(Screen parent) {
-        super(parent, MinecraftClient.getInstance().options, Text.translatable("Better Block Entities"));
+        super(parent, Minecraft.getInstance().options, Component.translatable("Better Block Entities"));
         this.originalConfig = ConfigManager.CONFIG.copy();
     }
 
     @Override
     protected void addOptions() {
-        if (this.body == null) return;
+        if (this.list == null) return;
 
         masterToggle = masterToggle();
         chestOpt = optimizeChests();
@@ -61,8 +60,8 @@ public class ConfigScreen extends GameOptionsScreen {
         bellAnimOpt = bellAnimations();
         potAnimOpt = potAnimations();
 
-        this.body.addSingleOptionEntry(masterToggle);
-        this.body.addAll(
+        this.list.addBig(masterToggle);
+        this.list.addSmall(
                 chestOpt, chestAnimOpt,
                 signOpt, signTextOpt,
                 shulkerOpt, shulkerAnimOpt,
@@ -70,18 +69,18 @@ public class ConfigScreen extends GameOptionsScreen {
                 potOpt, potAnimOpt,
                 bedOpt
         );
-        this.body.addSingleOptionEntry(updateType);
-        this.body.addSingleOptionEntry(smoothness);
-        this.body.addSingleOptionEntry(signDistance);
-        updateDependentOptions(masterToggle.getValue());
+        this.list.addBig(updateType);
+        this.list.addBig(smoothness);
+        this.list.addBig(signDistance);
+        updateDependentOptions(masterToggle.get());
     }
 
-    private SimpleOption<Boolean> masterToggle() {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> masterToggle() {
+        return new OptionInstance<>(
                 "Enable Optimizations",
-                value -> Tooltip.of(Text.of("§7Turns the entire optimization system on or off.")),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                value -> Tooltip.create(Component.literal("§7Turns the entire optimization system on or off.")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 ConfigManager.CONFIG.master_optimize,
                 value -> {
                     ConfigManager.CONFIG.master_optimize = value;
@@ -90,21 +89,21 @@ public class ConfigScreen extends GameOptionsScreen {
         );
     }
 
-    private SimpleOption<Boolean> optimizeChests() {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> optimizeChests() {
+        return new OptionInstance<>(
                 "Optimize Chests",
-                value -> Tooltip.of(Text.of("§7Turns off all Chest optimizations, overrides the option: §l§nChest Animations§r")),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                value -> Tooltip.create(Component.literal("§7Turns off all Chest optimizations, overrides the option: §l§nChest Animations§r")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 ConfigManager.CONFIG.optimize_chests,
                 v -> {
                     ConfigManager.CONFIG.optimize_chests = v;
-                    setOptionActive(chestAnimOpt, v && masterToggle.getValue());
+                    setOptionActive(chestAnimOpt, v && masterToggle.get());
                 }
         );
     }
 
-    private SimpleOption<Boolean> chestsAnimations() {
+    private OptionInstance<Boolean> chestsAnimations() {
         return booleanOption(
                 "Chest Animations",
                 ConfigManager.CONFIG.chest_animations,
@@ -112,21 +111,21 @@ public class ConfigScreen extends GameOptionsScreen {
         );
     }
 
-    private SimpleOption<Boolean> optimizeSigns() {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> optimizeSigns() {
+        return new OptionInstance<>(
                 "Optimize Signs",
-                value -> Tooltip.of(Text.of("§7Turns off all Sign optimizations, overrides the option: §l§nSign Text§r")),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                value -> Tooltip.create(Component.literal("§7Turns off all Sign optimizations, overrides the option: §l§nSign Text§r")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 ConfigManager.CONFIG.optimize_signs,
                 v -> {
                     ConfigManager.CONFIG.optimize_signs = v;
-                    setOptionActive(signTextOpt, v && masterToggle.getValue());
+                    setOptionActive(signTextOpt, v && masterToggle.get());
                 }
         );
     }
 
-    private SimpleOption<Boolean> renderSignText() {
+    private OptionInstance<Boolean> renderSignText() {
         return booleanOption(
                 "Sign Text",
                 ConfigManager.CONFIG.render_sign_text,
@@ -134,21 +133,21 @@ public class ConfigScreen extends GameOptionsScreen {
         );
     }
 
-    private SimpleOption<Boolean> optimizeShulkers() {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> optimizeShulkers() {
+        return new OptionInstance<>(
                 "Optimize Shulkers",
-                value -> Tooltip.of(Text.of("§7Turns off all ShulkerBox optimizations, overrides the option: §l§nShulker Animations§r")),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                value -> Tooltip.create(Component.literal("§7Turns off all ShulkerBox optimizations, overrides the option: §l§nShulker Animations§r")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 ConfigManager.CONFIG.optimize_shulkers,
                 v -> {
                     ConfigManager.CONFIG.optimize_shulkers = v;
-                    setOptionActive(shulkerAnimOpt, v && masterToggle.getValue());
+                    setOptionActive(shulkerAnimOpt, v && masterToggle.get());
                 }
         );
     }
 
-    private SimpleOption<Boolean> shulkerAnimations() {
+    private OptionInstance<Boolean> shulkerAnimations() {
         return booleanOption(
                 "Shulker Animations",
                 ConfigManager.CONFIG.shulker_animations,
@@ -156,35 +155,35 @@ public class ConfigScreen extends GameOptionsScreen {
         );
     }
 
-    private SimpleOption<Boolean> optimizeBeds() {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> optimizeBeds() {
+        return new OptionInstance<>(
                 "Optimize Beds",
-                value -> Tooltip.of(Text.of("§7Turns off all Bed optimizations")),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                value -> Tooltip.create(Component.literal("§7Turns off all Bed optimizations")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 ConfigManager.CONFIG.optimize_beds,
                 v -> {
                     ConfigManager.CONFIG.optimize_beds = v;
-                    setOptionActive(masterToggle, v && masterToggle.getValue());
+                    setOptionActive(masterToggle, v && masterToggle.get());
                 }
         );
     }
 
-    private SimpleOption<Boolean> optimizeBells() {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> optimizeBells() {
+        return new OptionInstance<>(
                 "Optimize Bells",
-                value -> Tooltip.of(Text.of("§7Turns off all Bell optimizations, overrides the option: §l§nBell Animations§r")),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                value -> Tooltip.create(Component.literal("§7Turns off all Bell optimizations, overrides the option: §l§nBell Animations§r")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 ConfigManager.CONFIG.optimize_bells,
                 v -> {
                     ConfigManager.CONFIG.optimize_bells = v;
-                    setOptionActive(bellAnimOpt, v && masterToggle.getValue());
+                    setOptionActive(bellAnimOpt, v && masterToggle.get());
                 }
         );
     }
 
-    private SimpleOption<Boolean> bellAnimations() {
+    private OptionInstance<Boolean> bellAnimations() {
         return booleanOption(
                 "Bell Animations",
                 ConfigManager.CONFIG.bell_animations,
@@ -192,21 +191,21 @@ public class ConfigScreen extends GameOptionsScreen {
         );
     }
 
-    private SimpleOption<Boolean> optimizeDecoratedPots() {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> optimizeDecoratedPots() {
+        return new OptionInstance<>(
                 "Optimize Decorated Pots",
-                value -> Tooltip.of(Text.of("§7Turns off all Decorated Pot optimizations, overrides the option: §l§nDecorated Pot Animations§r")),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                value -> Tooltip.create(Component.literal("§7Turns off all Decorated Pot optimizations, overrides the option: §l§nDecorated Pot Animations§r")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 ConfigManager.CONFIG.optimize_decoratedpots,
                 v -> {
                     ConfigManager.CONFIG.optimize_decoratedpots = v;
-                    setOptionActive(potAnimOpt, v && masterToggle.getValue());
+                    setOptionActive(potAnimOpt, v && masterToggle.get());
                 }
         );
     }
 
-    private SimpleOption<Boolean> potAnimations() {
+    private OptionInstance<Boolean> potAnimations() {
         return booleanOption(
                 "Decorated Pot Animations",
                 ConfigManager.CONFIG.pot_animations,
@@ -214,49 +213,49 @@ public class ConfigScreen extends GameOptionsScreen {
         );
     }
 
-    private SimpleOption<Integer> signTextRenderDistance() {
-        return new SimpleOption<>(
+    private OptionInstance<Integer> signTextRenderDistance() {
+        return new OptionInstance<>(
                 "Sign Text Render Distance",
-                value -> Tooltip.of(Text.of("§7The amount of blocks the sign text will stop rendering at")),
-                (text, value) -> Text.of(text.getString() + ": " + value),
-                new SimpleOption.ValidatingIntSliderCallbacks(0, 64),
+                value -> Tooltip.create(Component.literal("§7The amount of blocks the sign text will stop rendering at")),
+                (text, value) -> Component.literal(text.getString() + ": " + value),
+                new OptionInstance.IntRange(0, 64),
                 ConfigManager.CONFIG.sign_text_render_distance,
                 v -> ConfigManager.CONFIG.sign_text_render_distance = v
         );
     }
 
-    private SimpleOption<Integer> updateType() {
-        return new SimpleOption<>(
+    private OptionInstance<Integer> updateType() {
+        return new OptionInstance<>(
                 "Update Type",
-                value -> Tooltip.of(Text.of("§7Type of update scheduler being used. §l§nSmart§r §7updates only when the BE is not in line of sight or out of FOV. §l§nFast§r §7updates immediately")),
+                value -> Tooltip.create(Component.literal("§7Type of update scheduler being used. §l§nSmart§r §7updates only when the BE is not in line of sight or out of FOV. §l§nFast§r §7updates immediately")),
                 (text, value) -> switch (value) {
-                    case 0 -> Text.of("Smart");
-                    case 1 -> Text.of("Fast");
-                    default -> Text.of("Fast");
+                    case 0 -> Component.literal("Smart");
+                    case 1 -> Component.literal("Fast");
+                    default -> Component.literal("Fast");
                 },
-                new SimpleOption.MaxSuppliableIntCallbacks(0, () -> 1, 1),
+                new OptionInstance.ClampingLazyMaxIntRange(0, () -> 1, 1),
                 ConfigManager.CONFIG.updateType,
                 value -> ConfigManager.CONFIG.updateType = value
         );
     }
 
-    private SimpleOption<Integer> extraRenderPasses() {
-        return new SimpleOption<>(
+    private OptionInstance<Integer> extraRenderPasses() {
+        return new OptionInstance<>(
                 "Extra Render Passes",
-                value -> Tooltip.of(Text.of("§7The amount of extra render passes each optimized block entity should be rendered for after it stops animating, can help smooth out visual bugs")),
-                (text, value) -> Text.of(text.getString() + ": " + value),
-                new SimpleOption.ValidatingIntSliderCallbacks(0, 50),
+                value -> Tooltip.create(Component.literal("§7The amount of extra render passes each optimized block entity should be rendered for after it stops animating, can help smooth out visual bugs")),
+                (text, value) -> Component.literal(text.getString() + ": " + value),
+                new OptionInstance.IntRange(0, 50),
                 ConfigManager.CONFIG.smoothness_slider,
                 v -> ConfigManager.CONFIG.smoothness_slider = v
         );
     }
 
-    private SimpleOption<Boolean> booleanOption(String key, boolean initial, java.util.function.Consumer<Boolean> onChange) {
-        return new SimpleOption<>(
+    private OptionInstance<Boolean> booleanOption(String key, boolean initial, java.util.function.Consumer<Boolean> onChange) {
+        return new OptionInstance<>(
                 key,
-                SimpleOption.emptyTooltip(),
-                (text, value) -> value ? Text.of("§aON") : Text.of("§cOFF"),
-                SimpleOption.BOOLEAN,
+                OptionInstance.noTooltip(),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
                 initial,
                 onChange
         );
@@ -270,20 +269,20 @@ public class ConfigScreen extends GameOptionsScreen {
         setOptionActive(bellOpt, enabled);
         setOptionActive(potOpt, enabled);
 
-        setOptionActive(chestAnimOpt, enabled && chestOpt.getValue());
-        setOptionActive(signTextOpt, enabled && signOpt.getValue());
-        setOptionActive(shulkerAnimOpt, enabled && shulkerOpt.getValue());
-        setOptionActive(bellAnimOpt, enabled && bellOpt.getValue());
-        setOptionActive(potAnimOpt, enabled && potOpt.getValue());
+        setOptionActive(chestAnimOpt, enabled && chestOpt.get());
+        setOptionActive(signTextOpt, enabled && signOpt.get());
+        setOptionActive(shulkerAnimOpt, enabled && shulkerOpt.get());
+        setOptionActive(bellAnimOpt, enabled && bellOpt.get());
+        setOptionActive(potAnimOpt, enabled && potOpt.get());
 
         setOptionActive(smoothness, enabled);
         setOptionActive(updateType, enabled);
         setOptionActive(signDistance, enabled);
     }
 
-    private void setOptionActive(SimpleOption<?> option, boolean active) {
-        if (this.body == null) return;
-        ClickableWidget widget = this.body.getWidgetFor(option);
+    private void setOptionActive(OptionInstance<?> option, boolean active) {
+        if (this.list == null) return;
+        AbstractWidget widget = this.list.findOption(option);
         if (widget != null) widget.active = active;
     }
 
@@ -292,7 +291,7 @@ public class ConfigScreen extends GameOptionsScreen {
         if (!ConfigManager.CONFIG.equals(originalConfig)) {
             ConfigManager.save();
             ConfigManager.refreshSupportedTypes();
-            MinecraftClient.getInstance().reloadResources();
+            Minecraft.getInstance().reloadResourcePacks();
         }
     }
 }

@@ -4,16 +4,21 @@ package betterblockentities.mixin.sodium;
 import betterblockentities.util.BlockEntityManager;
 
 /* sodium */
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 
 /* minecraft */
 import net.minecraft.block.entity.*;
+import net.minecraft.client.Camera;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.state.WorldRenderState;
+import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.BlockBreakingInfo;
 
 /* mixin */
+import net.minecraft.server.level.BlockDestructionProgress;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,7 +34,7 @@ import java.util.SortedSet;
 public abstract class SodiumWorldRendererMixin
 {
     @Inject(method = "extractBlockEntity", at = @At("HEAD"), cancellable = true)
-    private void extractBlockEntity(BlockEntity blockEntity, MatrixStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockBreakingInfo>> progression, WorldRenderState levelRenderState, CallbackInfo ci) {
+    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState, CallbackInfo ci) {
         if (!BlockEntityManager.shouldRender(blockEntity))
             ci.cancel();
     }

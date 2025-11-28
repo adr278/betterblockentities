@@ -7,6 +7,8 @@ import betterblockentities.resource.pack.ResourceBuilder;
 import net.minecraft.resource.*;
 
 /* mixin */
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackRepository;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,15 +25,15 @@ import java.util.Map;
     ResourcePackPosition passed to the pack profile
     "
 */
-@Mixin(ResourcePackManager.class)
+@Mixin(PackRepository.class)
 public class ResourcePackManagerMixin
 {
-    @Inject(method = "providePackProfiles", at =
+    @Inject(method = "discoverAvailable", at =
         @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap;copyOf(Ljava/util/Map;)Lcom/google/common/collect/ImmutableMap;"),
             locals = LocalCapture.CAPTURE_FAILSOFT
     )
-    private void injectGeneratedPackProfiles(CallbackInfoReturnable<Map<String, ResourcePackProfile>> cir, Map<String, ResourcePackProfile> map) {
-        ResourcePackProfile generated = ResourceBuilder.buildPackProfile();
+    private void injectGeneratedPackProfiles(CallbackInfoReturnable<Map<String, Pack>> cir, Map<String, Pack> map) {
+        Pack generated = ResourceBuilder.buildPackProfile();
 
         /* remove the old profile if it exists */
         map.remove(generated.getId());

@@ -5,17 +5,15 @@ import betterblockentities.gui.ConfigManager;
 import betterblockentities.util.BlockEntityManager;
 
 /* minecraft */
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.block.entity.LoadedBlockEntityModels;
-import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemDisplayContext;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeCollection;
+import net.minecraft.client.renderer.SubmitNodeStorage;
 
 /* mixin */
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -27,13 +25,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
     which loads a predefined model (from the block´s blockstate json) aka our defined chest model in our pack
 */
 
-@Mixin(OrderedRenderCommandQueueImpl.class)
+@Mixin(SubmitNodeCollection.class)
 public class OrderedRenderCommandQueueImplMixin {
+    @Shadow @Final private SubmitNodeStorage submitNodeStorage;
+
     @Inject(method = "submitBlock", at = @At("HEAD"), cancellable = true)
-    public void submitBlock(MatrixStack matrices, BlockState state, int light, int overlay, int outlineColor, CallbackInfo ci) {
+    public void submitBlock(PoseStack poseStack, net.minecraft.world.level.block.state.BlockState state, int i, int j, int k, CallbackInfo ci) {
         if (BlockEntityManager.isSupportedBlock(state.getBlock()) && ConfigManager.CONFIG.master_optimize) {
             ci.cancel();
-            ((LoadedBlockEntityModels)MinecraftClient.getInstance().getBakedModelManager().getBlockEntityModelsSupplier().get()).render(state.getBlock(), ItemDisplayContext.NONE, matrices, (OrderedRenderCommandQueue)this, light, OverlayTexture.DEFAULT_UV, 0);
+            Minecraft.getInstance()
+                    .getModelManager()
+                    .specialBlockModelRenderer()
+                    .renderByBlock(state.getBlock(), net.minecraft.world.item.ItemDisplayContext.NONE, poseStack, this.submitNodeStorage, i, j, k);
         }
     }
 }

@@ -1,26 +1,26 @@
 package betterblockentities.mixin.minecraft.chest;
 
 /* minecraft */
-import net.minecraft.block.entity.ChestLidAnimator;
 
 /* mixin */
+import net.minecraft.world.level.block.entity.ChestLidController;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(ChestLidAnimator.class)
+@Mixin(ChestLidController.class)
 public interface ChestLidAnimatorAccessor {
-    @Accessor("open")
+    @Accessor("shouldBeOpen")
     boolean getOpen();
-    @Accessor("open")
+    @Accessor("shouldBeOpen")
     void setOpen(boolean value);
 
-    @Accessor("progress")
+    @Accessor("openness")
     float getProgress();
-    @Accessor("progress")
+    @Accessor("openness")
     void setProgress(float value);
 
-    @Accessor("lastProgress")
+    @Accessor("oOpenness")
     float getLastProgress();
-    @Accessor("lastProgress")
+    @Accessor("oOpenness")
     void setLastProgress(float value);
 }

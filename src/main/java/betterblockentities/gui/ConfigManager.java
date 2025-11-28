@@ -4,9 +4,9 @@ package betterblockentities.gui;
 import betterblockentities.util.BlockEntityManager;
 
 /* minecraft */
-import net.minecraft.block.entity.*;
 
 /* gson */
+import net.minecraft.world.level.block.entity.*;
 import org.spongepowered.include.com.google.gson.*;
 
 /* fabric */

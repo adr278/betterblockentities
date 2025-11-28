@@ -6,14 +6,16 @@ import betterblockentities.chunk.ChunkUpdateDispatcher;
 import betterblockentities.gui.ConfigManager;
 
 /* minecraft */
-import net.minecraft.block.*;
-import net.minecraft.block.entity.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Vec3d;
+
 
 /* java/misc */
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
+import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+
 import java.util.List;
 
 /*
@@ -28,7 +30,7 @@ public class BlockEntityManager {
             List.of(
                     ChestBlock.class, EnderChestBlock.class, ShulkerBoxBlock.class,
                     BellBlock.class, DecoratedPotBlock.class, BedBlock.class,
-                    SignBlock.class, HangingSignBlock.class,
+                    SignBlock.class, CeilingHangingSignBlock.class,
                     WallSignBlock.class, WallHangingSignBlock.class
             )
     );

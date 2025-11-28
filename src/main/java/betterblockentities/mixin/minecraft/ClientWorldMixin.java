@@ -15,19 +15,20 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
 /* minecraft */
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.ChestBlockEntity;
-import net.minecraft.block.entity.ChestLidAnimator;
-import net.minecraft.block.entity.LidOpenable;
-import net.minecraft.block.enums.ChestType;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+
 
 /* mixin */
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.ChestLidController;
+import net.minecraft.world.level.block.entity.LidBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,14 +36,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
-@Mixin(ClientWorld.class)
+@Mixin(ClientLevel.class)
 public class ClientWorldMixin {
-    @Inject(method = "handleBlockUpdate", at = @At("TAIL"), cancellable = true)
-    public void handleBlockUpdate(BlockPos pos, BlockState state, int flags, CallbackInfo ci) {
+    @Inject(method = "setServerVerifiedBlockState", at = @At("TAIL"), cancellable = true)
+    public void handleBlockUpdate(BlockPos pos, BlockState blockState, int i, CallbackInfo ci) {
         if (!ConfigManager.CONFIG.master_optimize) return;
 
-        ClientWorld world = (ClientWorld) (Object) this;
-        if (!world.isClient()) return;
+        ClientLevel world = (ClientLevel) (Object) this;
+        if (!world.isClientSide()) return;
 
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (blockEntity == null || !BlockEntityManager.isSupportedEntity(blockEntity)) return;
@@ -50,12 +51,12 @@ public class ClientWorldMixin {
         BlockEntityExt inst = (BlockEntityExt) blockEntity;
 
         /* get other chest half */
-        BlockEntity alt = getOtherChestHalf(blockEntity.getWorld(), blockEntity.getPos());
+        BlockEntity alt = getOtherChestHalf(blockEntity.getLevel(), blockEntity.getBlockPos());
 
         /* sync other half if it’s animating */
-        if (alt != null && ((LidOpenable) alt).getAnimationProgress(0.5f) > 0f) {
-            ChestLidAnimator src = ((ChestBlockEntityAccessor) alt).getLidAnimator();
-            ChestLidAnimator dst = ((ChestBlockEntityAccessor) blockEntity).getLidAnimator();
+        if (alt != null && ((LidBlockEntity) alt).getOpenNess(0.5f) > 0f) {
+            ChestLidController src = ((ChestBlockEntityAccessor) alt).getLidAnimator();
+            ChestLidController dst = ((ChestBlockEntityAccessor) blockEntity).getLidAnimator();
 
             ChestLidAnimatorAccessor accSrc = (ChestLidAnimatorAccessor) src;
             ChestLidAnimatorAccessor accDst = (ChestLidAnimatorAccessor) dst;
@@ -73,8 +74,8 @@ public class ClientWorldMixin {
                 BlockEntityExt altExt = (BlockEntityExt) alt;
                 if (altExt.getJustReceivedUpdate() && altExt.getRemoveChunkVariant()) {
                     inst.setRemoveChunkVariant(true);
-                    ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getWorld(), pos.asLong());
-                    BlockEntityTracker.animMap.add(alt.getPos().asLong());
+                    ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos.asLong());
+                    BlockEntityTracker.animMap.add(alt.getBlockPos().asLong());
                     inst.setJustReceivedUpdate(true);
                 }
             }
@@ -82,24 +83,24 @@ public class ClientWorldMixin {
     }
 
     @Unique
-    private static ChestBlockEntity getOtherChestHalf(World world, BlockPos pos) {
+    private static ChestBlockEntity getOtherChestHalf(Level world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
 
         if (!(state.getBlock() instanceof ChestBlock)) return null;
 
-        ChestType type = state.get(ChestBlock.CHEST_TYPE);
-        Direction facing = state.get(ChestBlock.FACING);
+        ChestType type = state.getValue(ChestBlock.TYPE);
+        Direction facing = state.getValue(ChestBlock.FACING);
 
         Direction side;
         if (type == ChestType.LEFT) {
-            side = facing.rotateYClockwise();
+            side = facing.getClockWise();
         } else if (type == ChestType.RIGHT) {
-            side = facing.rotateYCounterclockwise();
+            side = facing.getCounterClockWise();
         } else {
             return null;
         }
 
-        BlockPos otherPos = pos.offset(side);
+        BlockPos otherPos = pos.relative(side);
         BlockEntity be = world.getBlockEntity(otherPos);
 
         return be instanceof ChestBlockEntity ? (ChestBlockEntity) be : null;
