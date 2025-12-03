@@ -6,7 +6,7 @@ import betterblockentities.resource.model.ModelGenerator;
 /* gson */
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.minecraft.util.DyeColor;
+
 
 /* java/misc */
 import java.nio.charset.StandardCharsets;

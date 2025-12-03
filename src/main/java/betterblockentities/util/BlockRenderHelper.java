@@ -2,100 +2,167 @@ package betterblockentities.util;
 
 /* fabric */
 
+import betterblockentities.mixin.sodium.AbstractBlockRenderContextAccessor;
+import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
+import net.caffeinemc.mods.sodium.client.model.light.LightMode;
+import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
-import net.fabricmc.fabric.api.util.TriState;
+import net.caffeinemc.mods.sodium.client.render.model.*;
+import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* minecraft */
 
 
 /* java/misc */
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.TriState;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.world.level.block.entity.PotDecorations;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class BlockRenderHelper {
+    private final BlockRenderer ctx;
+    private final BlockEntity blockEntity;
+
+    public BlockRenderHelper(BlockRenderer ctx, BlockEntity blockEntity) {
+        this.ctx = ctx;
+        this.blockEntity = blockEntity;
+    }
+
     /* rebuild, takes List<BlockModelPart> instead of the whole model */
-    public static void emitQuads(List<BlockModelPart> parts, QuadEmitter emitter, Predicate<@Nullable Direction> cullTest) {
-        final int partCount = parts.size();
-        for (int i = 0; i < partCount; i++) {
-            parts.get(i).emitQuads(emitter, cullTest);
+    public static void emitModelPart(List<BlockModelPart> parts, MutableQuadViewImpl quad, BlockState state, Predicate<@Nullable Direction> cullTest, PlatformModelEmitter.Bufferer defaultBuffer) {
+        if (quad instanceof AbstractBlockRenderContext.BlockEmitter emitter) {
+            ChunkSectionLayer type = ItemBlockRenderTypes.getChunkRenderType(state);
+
+            for(int i = 0; i < parts.size(); ++i) {
+                if (PlatformModelAccess.getInstance().getPartRenderType((BlockModelPart)parts.get(i), state, type) != type) {
+                    emitter.markInvalidToDowngrade();
+                    break;
+                }
+            }
+        }
+
+        for(int i = 0; i < parts.size(); ++i) {
+            BlockModelPart part = (BlockModelPart)parts.get(i);
+            defaultBuffer.emit(part, cullTest, MutableQuadViewImpl::emitDirectly);
         }
     }
 
-    /* custom emitQuads implementation with QuadTransforms for dynamically swaping the sprite of each quad */
-    public static void emitDecoratedPotQuads(BlockStateModel model, BlockState state, QuadEmitter emitter, DecoratedPotBlockEntity blockEntity, RandomSource random, Predicate<@Nullable Direction> cullTest) {
-        Sherds sherds = blockEntity.getSherds();
 
-        Sprite[] sideSprites = new Sprite[4];
+    public void emitSignQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+
+        MutableQuadViewImpl editorQuad = ctx.getForEmitting();
+        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
+        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
+        acc.setDefaultRenderType(renderType);
+
+        for(int i = 0; i <= 6; ++i) {
+            Direction cullFace = ModelHelper.faceFromIndex(i);
+            if (!cullTest.test(cullFace)) {
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
+                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
+                int count = quads.size();
+
+                for(int j = 0; j < count; ++j) {
+                    BakedQuad q = (BakedQuad)quads.get(j);
+                    editorQuad.fromBakedQuad(q);
+                    editorQuad.setCullFace(cullFace);
+                    editorQuad.setRenderType(renderType);
+                    editorQuad.setAmbientOcclusion(ao.toTriState());
+
+                    ModelTransform.rotateY(editorQuad, compute16StepRotation(acc.getState()));
+                    emitter.accept(editorQuad);
+                }
+            }
+        }
+        editorQuad.clear();
+        acc.setDefaultRenderType(defaultType);
+    }
+
+    /* custom emitQuads implementation with QuadTransforms for dynamically swaping the sprite of each quad */
+    public void emitDecoratedPotQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
+        PotDecorations sherds = ((DecoratedPotBlockEntity)blockEntity).getDecorations();
+
+        boolean skipTransform = part.getQuads(null).size() > 10;
+        TextureAtlasSprite[] sideSprites = new TextureAtlasSprite[4];
         sideSprites[0] = sherds.back().map(BlockRenderHelper::getSherdSprite).orElse(null);
         sideSprites[1] = sherds.right().map(BlockRenderHelper::getSherdSprite).orElse(null);
         sideSprites[2] = sherds.front().map(BlockRenderHelper::getSherdSprite).orElse(null);
         sideSprites[3] = sherds.left().map(BlockRenderHelper::getSherdSprite).orElse(null);
 
-        QuadTransform[] sideTransforms = new QuadTransform[4];
-        for (int i = 0; i < 4; i++) {
-            Sprite s = sideSprites[i];
-            sideTransforms[i] = (s != null) ? ModelTransform.swapSpriteCached(s) : null;
-        }
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+        int facingIndex = horizontalIndex(acc.getState().getValue(BlockStateProperties.FACING));
 
-        int facingIndex = horizontalIndex(state.getValue(DecoratedPotBlock.HORIZONTAL_FACING));
+        MutableQuadViewImpl editorQuad = ctx.getForEmitting();
+        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
+        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
+        acc.setDefaultRenderType(renderType);
 
-        for (BlockModelPart part : model.collectParts(random)) {
-            boolean skipTransform = part.getQuads(null).size() > 10;
-            TriState ao = part.useAmbientOcclusion() ? TriState.DEFAULT : TriState.FALSE;
+        for(int i = 0; i <= 6; ++i) {
+            Direction cullFace = ModelHelper.faceFromIndex(i);
+            if (!cullTest.test(cullFace)) {
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
+                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
+                int count = quads.size();
 
-            for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
-                Direction cullFace = ModelHelper.faceFromIndex(i);
-                if (cullTest.test(cullFace)) continue;
-
-                for (BakedQuad quad : part.getQuads(cullFace)) {
-
-                    emitter.cullFace(cullFace);
-                    emitter.fromBakedQuad(quad);
-                    emitter.ambientOcclusion(ao);
-                    emitter.shadeMode(ShadeMode.VANILLA);
+                for(int j = 0; j < count; ++j) {
+                    BakedQuad q = (BakedQuad)quads.get(j);
+                    editorQuad.fromBakedQuad(q);
+                    editorQuad.setCullFace(cullFace);
+                    editorQuad.setRenderType(renderType);
+                    editorQuad.setAmbientOcclusion(ao.toTriState());
 
                     if (skipTransform) {
-                        emitter.emit();
+                        emitter.accept(editorQuad);
                         continue;
                     }
 
-                    int dirIndex = horizontalIndex(quad.face());
+                    int dirIndex = horizontalIndex(q.direction());
                     if (dirIndex == -1) {
-                        emitter.emit(); // skip top + bottom faces
+                        emitter.accept(editorQuad);
                         continue;
                     }
 
-                    /* compute rotated index for 180° swap */
                     int delta = (dirIndex - facingIndex + 4) % 4;
-                    QuadTransform transform = sideTransforms[delta];
 
-                    if (transform != null) {
-                        emitter.pushTransform(transform);
-                        emitter.emit();
-                        emitter.popTransform();
-                    } else {
-                        emitter.emit();
-                    }
+                    //transform quad
                 }
             }
         }
+        editorQuad.clear();
+        acc.setDefaultRenderType(defaultType);
     }
 
-    private static Sprite getSherdSprite(Item item) {
+    private static TextureAtlasSprite getSherdSprite(Item item) {
         if (item == null) return null;
         String itemName = item.toString();
         String pattern = parseSherdName(itemName);
@@ -122,10 +189,9 @@ public class BlockRenderHelper {
         };
     }
 
-    /* compute rotation angle in degrees */
-    public static float computeSignRotation(BlockState state) {
-        if (state.getValue(SignBlock.)) {
-            int rot = state.get(SignBlock.ROTATION);
+    public float compute16StepRotation(BlockState state) {
+        if (state.hasProperty(BlockStateProperties.ROTATION_16)) {
+            int rot = state.getValue(BlockStateProperties.ROTATION_16);
             return rot * 22.5f;
         }
         return 0f;

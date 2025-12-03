@@ -2,7 +2,11 @@ package betterblockentities.resource.pack;
 
 /* gson */
 import betterblockentities.resource.model.ModelGenerator;
-import net.minecraft.resource.*;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackSelectionConfig;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.Pack;
 
 /* java/misc */
 import java.util.*;
@@ -23,23 +27,23 @@ public class ResourceBuilder
     }
 
     /* builds the resource pack and its profile, should be called once on mod initialization */
-    public static ResourcePackProfile buildPackProfile() {
+    public static Pack buildPackProfile() {
         byte[] packData = buildZip();
-        ResourcePack pack = new Pack("betterblockentities-generated", packData);
+        PackResources pack = new BBEPack("betterblockentities-generated", packData);
 
-        ResourcePackProfile.PackFactory factory = new ResourcePackProfile.PackFactory() {
+        Pack.ResourcesSupplier factory = new Pack.ResourcesSupplier() {
             @Override
-            public ResourcePack open(ResourcePackInfo info) {
+            public PackResources openPrimary(PackLocationInfo info) {
                 return pack;
             }
 
             @Override
-            public ResourcePack openWithOverlays(ResourcePackInfo info, ResourcePackProfile.Metadata metadata) {
+            public PackResources openFull(PackLocationInfo info, Pack.Metadata metadata) {
                 return pack;
             }
         };
 
-        ResourcePackPosition pos = new ResourcePackPosition(true, ResourcePackProfile.InsertionPosition.TOP, true);
-        return ResourcePackProfile.create(pack.getInfo(), factory, ResourceType.CLIENT_RESOURCES, pos);
+        PackSelectionConfig pos = new PackSelectionConfig(true, Pack.Position.TOP, true);
+        return Pack.readMetaAndCreate(pack.location(), factory, PackType.CLIENT_RESOURCES, pos);
     }
 }

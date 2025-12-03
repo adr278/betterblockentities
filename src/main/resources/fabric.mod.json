@@ -21,9 +21,6 @@
   "entrypoints": {
     "client": [
       "betterblockentities.BetterBlockEntities"
-    ],
-    "modmenu": [
-      "betterblockentities.gui.ModMenu"
     ]
   },
   "mixins": [
@@ -31,18 +28,13 @@
   ],
   "depends": {
     "fabricloader": ">=0.16.7",
-    "fabric-api": ">=0.114.1",
-    "sodium": [">=0.8.0"],
-    "minecraft": ["1.21.11"]
+    "fabric-api": ">=0.114.1"
+
   },
   "breaks": {
     "optifabric": "*"
   },
   "custom": {
-    "modmenu": {
-      "links": {
-        "modmenu.discord": "https://discord.gg/NdX9BYpTtz"
-      }
-    }
+
   }
 }

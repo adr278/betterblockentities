@@ -7,12 +7,17 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 
 /* minecraft */
-import net.minecraft.resource.*;
-import net.minecraft.resource.metadata.ResourceMetadataSerializer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+
 
 /* java/misc */
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.metadata.MetadataSectionType;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.resources.IoSupplier;
 import org.jetbrains.annotations.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -22,13 +27,13 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class Pack implements ResourcePack {
+public class BBEPack implements PackResources {
     private final String name;
     private final byte[] packData;
     private final Map<String, byte[]> entries = new HashMap<>();
-    private final Map<ResourceType, Set<String>> namespaces = new EnumMap<>(ResourceType.class);
+    private final Map<PackType, Set<String>> namespaces = new EnumMap<>(PackType.class);
 
-    public Pack(String name, byte[] packData) {
+    public BBEPack(String name, byte[] packData) {
         this.name = name;
         this.packData = packData;
         buildCache();
@@ -43,7 +48,7 @@ public class Pack implements ResourcePack {
                     entries.put(entry.getName(), data);
 
                     // Track namespaces for each type
-                    for (ResourceType type : ResourceType.values()) {
+                    for (PackType type : PackType.values()) {
                         String dir = type.getDirectory() + "/";
                         if (entry.getName().startsWith(dir)) {
                             String rest = entry.getName().substring(dir.length());
@@ -59,38 +64,38 @@ public class Pack implements ResourcePack {
     }
 
     @Override
-    public @Nullable InputSupplier<InputStream> openRoot(String... segments) {
+    public @Nullable IoSupplier<InputStream> getRootResource(String... segments) {
         String path = String.join("/", segments);
         byte[] data = entries.get(path);
         return data == null ? null : () -> new ByteArrayInputStream(data);
     }
 
     @Override
-    public @Nullable InputSupplier<InputStream> open(ResourceType type, Identifier id) {
+    public @Nullable IoSupplier<InputStream> getResource(PackType type, Identifier id) {
         String path = type.getDirectory() + "/" + id.getNamespace() + "/" + id.getPath();
         byte[] data = entries.get(path);
         return data == null ? null : () -> new ByteArrayInputStream(data);
     }
 
     @Override
-    public void findResources(ResourceType type, String namespace, String prefix, ResultConsumer consumer) {
+    public void listResources(PackType type, String namespace, String prefix, ResourceOutput consumer) {
         String base = type.getDirectory() + "/" + namespace + "/" + prefix;
         entries.forEach((path, data) -> {
             if (path.startsWith(base)) {
                 String relative = path.substring(type.getDirectory().length() + 1 + namespace.length() + 1);
-                consumer.accept(Identifier.of(namespace, relative), () -> new ByteArrayInputStream(data));
+                consumer.accept(Identifier.fromNamespaceAndPath(namespace, relative), () -> new ByteArrayInputStream(data));
             }
         });
     }
 
     @Override
-    public Set<String> getNamespaces(ResourceType type) {
+    public Set<String> getNamespaces(PackType type) {
         return namespaces.getOrDefault(type, Collections.emptySet());
     }
 
     @Override
-    public @Nullable <T> T parseMetadata(ResourceMetadataSerializer<T> metadataSerializer) throws IOException {
-        InputSupplier<InputStream> input = openRoot("pack.mcmeta");
+    public @Nullable <T> T getMetadataSection(MetadataSectionType<T> metadataSerializer) throws IOException {
+        IoSupplier<InputStream> input = getRootResource("pack.mcmeta");
         if (input == null) return null;
         try (InputStream stream = input.get()) {
             JsonObject json = JsonParser.parseReader(new InputStreamReader(stream)).getAsJsonObject();
@@ -101,8 +106,8 @@ public class Pack implements ResourcePack {
     }
 
     @Override
-    public ResourcePackInfo getInfo() {
-        return new ResourcePackInfo(name, Text.literal("BBE-generated"), ResourcePackSource.BUILTIN, Optional.empty());
+    public PackLocationInfo location() {
+        return new PackLocationInfo(name, Component.literal("BBE-generated"), PackSource.BUILT_IN, Optional.empty());
     }
 
     @Override

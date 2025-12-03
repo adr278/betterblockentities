@@ -4,7 +4,6 @@ package betterblockentities.mixin.minecraft;
 import betterblockentities.resource.pack.ResourceBuilder;
 
 /* minecraft */
-import net.minecraft.resource.*;
 
 /* mixin */
 import net.minecraft.server.packs.repository.Pack;

@@ -10,11 +10,11 @@ import betterblockentities.gui.ConfigManager;
 
 /* java/misc */
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
-import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
-import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
@@ -53,15 +53,15 @@ public class BlockEntityManager {
     }
 
     private static boolean isAnimating(BlockEntity blockEntity) {
-        if (chestAnims && blockEntity instanceof LidOpenable lid)
-            return lid.getAnimationProgress(0.5f) > 0f;
+        if (chestAnims && blockEntity instanceof LidBlockEntity lid)
+            return lid.getOpenNess(0.5f) > 0f;
         if (shulkerAnims && blockEntity instanceof ShulkerBoxBlockEntity shulker)
-            return shulker.getAnimationProgress(0.5f) > 0f;
+            return shulker.getProgress(0.5f) > 0f;
         if (bellAnims && blockEntity instanceof BellBlockEntity bell)
-            return bell.ringing;
-        if (potAnims && blockEntity instanceof DecoratedPotBlockEntity pot && pot.lastWobbleType != null) {
-            long now = blockEntity.getWorld().getTime();
-            return now - pot.lastWobbleTime < pot.lastWobbleType.lengthInTicks;
+            return bell.shaking;
+        if (potAnims && blockEntity instanceof DecoratedPotBlockEntity pot && pot.lastWobbleStyle != null) {
+            long now = blockEntity.getLevel().getGameTime();
+            return now - pot.wobbleStartedAtTick < pot.lastWobbleStyle.duration;
         }
         if (signText && blockEntity instanceof SignBlockEntity) {
             //int chunkRenderDistance = MinecraftClient.getInstance().options.getViewDistance().getValue();
@@ -69,8 +69,8 @@ public class BlockEntityManager {
             /* distance in blocks not chunks */
             double maxSignTextDistance = ConfigManager.CONFIG.sign_text_render_distance;
 
-            Entity entity = MinecraftClient.getInstance().getCameraEntity();
-            boolean shouldRenderText = entity.squaredDistanceTo(Vec3d.ofCenter(blockEntity.getPos())) < maxSignTextDistance * maxSignTextDistance;
+            Entity entity = Minecraft.getInstance().getCameraEntity();
+            boolean shouldRenderText = entity.distanceToSqr(Vec3.atCenterOf(blockEntity.getBlockPos())) < maxSignTextDistance * maxSignTextDistance;
             if (shouldRenderText)
                 return true;
         }
@@ -94,21 +94,21 @@ public class BlockEntityManager {
     }
 
     private static boolean handleAnimating(BlockEntity blockEntity, BlockEntityExt inst) {
-        var pos = blockEntity.getPos().asLong();
+        var pos = blockEntity.getBlockPos().asLong();
 
         /* ignore signs as we render the text with its BER  */
         if (!(blockEntity instanceof SignBlockEntity)) {
             /* add to anim map if an entry doesn't exist */
             if (BlockEntityTracker.animMap.add(pos)) {
                 inst.setRemoveChunkVariant(true);
-                ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getWorld(), pos);
+                ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos);
             }
         }
         return true;
     }
 
     private static boolean handleStatic(BlockEntity blockEntity, BlockEntityExt inst) {
-        var pos = blockEntity.getPos().asLong();
+        var pos = blockEntity.getBlockPos().asLong();
 
         if (ConfigManager.CONFIG.updateType == 0) {
             if (!BlockEntityTracker.animMap.contains(pos)) return false;
@@ -123,7 +123,7 @@ public class BlockEntityManager {
 
         if (BlockEntityTracker.animMap.remove(pos)) {
             inst.setRemoveChunkVariant(false);
-            ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getWorld(), pos);
+            ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos);
             BlockEntityTracker.extraRenderPasses.put(pos, smoothness);
         }
 

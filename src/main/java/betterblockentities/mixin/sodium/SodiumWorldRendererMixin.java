@@ -8,13 +8,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 
 /* minecraft */
-import net.minecraft.block.entity.*;
 import net.minecraft.client.Camera;
-import net.minecraft.client.render.*;
-import net.minecraft.client.render.state.WorldRenderState;
 import net.minecraft.client.renderer.state.LevelRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.BlockBreakingInfo;
 
 /* mixin */
 import net.minecraft.server.level.BlockDestructionProgress;

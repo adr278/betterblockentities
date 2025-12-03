@@ -1,15 +1,7 @@
 package betterblockentities.mixin.sodium;
 
-/* sodium */
 
-
-/* fabric */
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
-
-/* minecraft */
-
-
-/* mixin */
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
@@ -18,20 +10,15 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-/* java/misc */
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Random;
-
 @Pseudo
 @Mixin(AbstractBlockRenderContext.class)
-public interface AbstractBlockRenderContextAccessor
-{
+public interface AbstractBlockRenderContextAccessor {
     @Accessor("level")
     BlockAndTintGetter getLevel();
 

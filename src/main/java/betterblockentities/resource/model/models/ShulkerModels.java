@@ -4,11 +4,12 @@ package betterblockentities.resource.model.models;
 import betterblockentities.resource.model.ModelGenerator;
 
 /* minecraft */
-import net.minecraft.util.DyeColor;
+
 
 /* gson */
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
+import net.minecraft.world.item.DyeColor;
 
 /* java/misc */
 import java.nio.charset.StandardCharsets;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class ShulkerModels extends ModelGenerator {
     public static class Model {
         private static String getParticleTexture(DyeColor color) {
-            return "minecraft:block/" + color.getId() + "_shulker_box";
+            return "minecraft:block/" + color.getName() + "_shulker_box";
         }
 
         public static void generateShulkerBase(Map<String, byte[]> map) {
@@ -32,8 +33,8 @@ public class ShulkerModels extends ModelGenerator {
             var elements = loader.readTemplateElements(template);
 
             for (DyeColor color : DyeColor.values()) {
-                String name = color.getId() + "_shulker_box_base";
-                String texture = "minecraft:entity/shulker/shulker_" + color.getId();
+                String name = color.getName() + "_shulker_box_base";
+                String texture = "minecraft:entity/shulker/shulker_" + color.getName();
                 map.put("assets/minecraft/models/block/" + name + ".json",
                         GSON.toJson(makeModelWithParticle("shulker", texture, getParticleTexture(color), elements)).getBytes(StandardCharsets.UTF_8));
             }
@@ -50,8 +51,8 @@ public class ShulkerModels extends ModelGenerator {
             var elements = loader.readTemplateElements(template);
 
             for (DyeColor color : DyeColor.values()) {
-                String name = color.getId() + "_shulker_box_lid";
-                String texture = "minecraft:entity/shulker/shulker_" + color.getId();
+                String name = color.getName() + "_shulker_box_lid";
+                String texture = "minecraft:entity/shulker/shulker_" + color.getName();
                 map.put("assets/minecraft/models/block/" + name + ".json",
                         GSON.toJson(makeModelWithParticle("shulker", texture, getParticleTexture(color), elements)).getBytes(StandardCharsets.UTF_8));
             }
@@ -75,7 +76,7 @@ public class ShulkerModels extends ModelGenerator {
             );
 
             for (DyeColor color : DyeColor.values()) {
-                String baseName = color.getId() + "_shulker_box";
+                String baseName = color.getName() + "_shulker_box";
                 JsonArray multipart = new JsonArray();
 
                 for (var entry : facingRot.entrySet()) {

@@ -49,8 +49,8 @@ public abstract class ChestBlockEntityRendererMixin
         this.BBEdoubleChestRight = new BBEChestBlockModel(context.bakeLayer(ModelLayers.DOUBLE_CHEST_RIGHT));
     }
 
-    @Inject(method = "submit", at = @At("HEAD"))
-    public void submit(ChestRenderState chestRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+    @Inject(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/ChestRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At("HEAD"))
+    public void submit(ChestRenderState chestRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
         if (!ConfigManager.CONFIG.optimize_chests || !ConfigManager.CONFIG.master_optimize) {
             this.singleModel = singleChestOrg;
             this.doubleLeftModel = doubleChestLeftOrg;

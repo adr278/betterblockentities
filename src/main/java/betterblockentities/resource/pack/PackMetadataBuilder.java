@@ -5,8 +5,8 @@ import com.google.gson.*;
 
 /* minecraft */
 import net.minecraft.SharedConstants;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.PackVersion;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.metadata.pack.PackFormat;
 
 /* java/misc */
 import java.io.InputStream;
@@ -31,7 +31,7 @@ public class PackMetadataBuilder
 
     /* generates "pack.mcmeta" file, the format of this file might change between minecraft versions */
     private byte[] createPackMcmeta() {
-        PackVersion version = SharedConstants.getGameVersion().packVersion(ResourceType.CLIENT_RESOURCES);
+        PackFormat version = SharedConstants.getCurrentVersion().packVersion(PackType.CLIENT_RESOURCES);
         int versionNmr = version.major();
 
         JsonObject packJson = new JsonObject();

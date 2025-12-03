@@ -5,9 +5,10 @@ import betterblockentities.resource.model.ModelGenerator;
 
 /* gson */
 import com.google.gson.JsonObject;
+import net.minecraft.world.item.DyeColor;
 
 /* minecraft */
-import net.minecraft.util.DyeColor;
+
 
 /* java/misc */
 import java.nio.charset.StandardCharsets;
@@ -29,8 +30,8 @@ public class BedModels extends ModelGenerator {
             var elements = loader.readTemplateElements(template);
 
             for (DyeColor color : DyeColor.values()) {
-                String name = color.getId() + "_bed_head";
-                String texture = "minecraft:entity/bed/" + color.getId();
+                String name = color.getName() + "_bed_head";
+                String texture = "minecraft:entity/bed/" + color.getName();
                 map.put("assets/minecraft/models/block/" + name + ".json",
                         GSON.toJson(makeModelWithParticle("bed", texture, "minecraft:block/oak_planks", elements)).getBytes(StandardCharsets.UTF_8));
             }
@@ -42,8 +43,8 @@ public class BedModels extends ModelGenerator {
             var elements = loader.readTemplateElements(template);
 
             for (DyeColor color : DyeColor.values()) {
-                String name = color.getId() + "_bed_foot";
-                String texture = "minecraft:entity/bed/" + color.getId();
+                String name = color.getName() + "_bed_foot";
+                String texture = "minecraft:entity/bed/" + color.getName();
                 map.put("assets/minecraft/models/block/" + name + ".json",
                         GSON.toJson(makeModelWithParticle("bed", texture,"minecraft:block/oak_planks", elements)).getBytes(StandardCharsets.UTF_8));
             }
@@ -53,7 +54,7 @@ public class BedModels extends ModelGenerator {
     public static class BlockState {
         public static void generateBedBlockstates(Map<String, byte[]> map) {
             for (DyeColor color : DyeColor.values()) {
-                String name = color.getId() + "_bed";
+                String name = color.getName() + "_bed";
                 JsonObject variants = new JsonObject();
 
                 String[] facings = {"north", "south", "west", "east"};
