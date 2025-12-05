@@ -1,7 +1,6 @@
 package betterblockentities.mixin.minecraft.chest;
 
 /* local */
-import betterblockentities.ModelLoader;
 import betterblockentities.gui.ConfigManager;
 import betterblockentities.model.BBEChestBlockModel;
 
@@ -21,6 +20,7 @@ import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChestRenderer.class)
 public abstract class ChestBlockEntityRendererMixin
@@ -61,5 +61,9 @@ public abstract class ChestBlockEntityRendererMixin
             this.doubleLeftModel = this.BBEdoubleChestLeft;
             this.doubleRightModel = this.BBEdoubleChestRight;
         }
+    }
+    @Inject(method = "xmasTextures", at = @At("HEAD"), cancellable = true)
+    private static void xmasTextures(CallbackInfoReturnable<Boolean> cir) {
+        if (ConfigManager.CONFIG.chest_christmas) cir.setReturnValue(true);
     }
 }

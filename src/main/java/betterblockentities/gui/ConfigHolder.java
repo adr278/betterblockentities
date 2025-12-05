@@ -12,6 +12,7 @@ public class ConfigHolder
     public boolean optimize_decoratedpots = true;
 
     public boolean chest_animations = true;
+    public boolean chest_christmas = false;
     public boolean render_sign_text = true;
     public boolean shulker_animations = true;
     public boolean bell_animations = true;
@@ -31,6 +32,7 @@ public class ConfigHolder
         copy.optimize_bells = optimize_bells;
         copy.optimize_decoratedpots = optimize_decoratedpots;
         copy.chest_animations = chest_animations;
+        copy.chest_christmas = chest_christmas;
         copy.render_sign_text = render_sign_text;
         copy.shulker_animations = shulker_animations;
         copy.bell_animations = bell_animations;
@@ -53,6 +55,7 @@ public class ConfigHolder
                 && optimize_bells == other.optimize_bells
                 && optimize_decoratedpots == other.optimize_decoratedpots
                 && chest_animations == other.chest_animations
+                && chest_christmas == other.chest_christmas
                 && render_sign_text == other.render_sign_text
                 && shulker_animations == other.shulker_animations
                 && bell_animations == other.bell_animations

@@ -25,6 +25,7 @@ public class ConfigScreen extends OptionsSubScreen {
             bellOpt,
             potOpt,
             chestAnimOpt,
+            chestChristmasOpt,
             signTextOpt,
             shulkerAnimOpt,
             bellAnimOpt,
@@ -55,6 +56,7 @@ public class ConfigScreen extends OptionsSubScreen {
         signDistance = signTextRenderDistance();
 
         chestAnimOpt = chestsAnimations();
+        chestChristmasOpt = chestsChristmas();
         signTextOpt = renderSignText();
         shulkerAnimOpt = shulkerAnimations();
         bellAnimOpt = bellAnimations();
@@ -62,7 +64,10 @@ public class ConfigScreen extends OptionsSubScreen {
 
         this.list.addBig(masterToggle);
         this.list.addSmall(
-                chestOpt, chestAnimOpt,
+                chestOpt, chestAnimOpt
+        );
+        this.list.addSmall(chestChristmasOpt);
+        this.list.addSmall(
                 signOpt, signTextOpt,
                 shulkerOpt, shulkerAnimOpt,
                 bellOpt, bellAnimOpt,
@@ -108,6 +113,14 @@ public class ConfigScreen extends OptionsSubScreen {
                 "Chest Animations",
                 ConfigManager.CONFIG.chest_animations,
                 v -> ConfigManager.CONFIG.chest_animations = v
+        );
+    }
+
+    private OptionInstance<Boolean> chestsChristmas() {
+        return booleanOption(
+                "Christmas Chests",
+                ConfigManager.CONFIG.chest_christmas,
+                v -> ConfigManager.CONFIG.chest_christmas = v
         );
     }
 
@@ -270,6 +283,7 @@ public class ConfigScreen extends OptionsSubScreen {
         setOptionActive(potOpt, enabled);
 
         setOptionActive(chestAnimOpt, enabled && chestOpt.get());
+        setOptionActive(chestChristmasOpt, enabled && chestOpt.get());
         setOptionActive(signTextOpt, enabled && signOpt.get());
         setOptionActive(shulkerAnimOpt, enabled && shulkerOpt.get());
         setOptionActive(bellAnimOpt, enabled && bellOpt.get());
