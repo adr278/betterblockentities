@@ -40,12 +40,10 @@ import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.*;
@@ -59,8 +57,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Pseudo
@@ -75,114 +71,134 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
     private void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
-        Block block = state.getBlock();
+        try {
+            Block block = state.getBlock();
 
-        if (BlockEntityManager.isSupportedBlock(block) && !ConfigManager.CONFIG.master_optimize) {
-            if (block instanceof BellBlock) return;
-            if (block instanceof BedBlock) return;
+            if (BlockEntityManager.isSupportedBlock(block) && !ConfigManager.CONFIG.master_optimize) {
+                if (block instanceof BellBlock) return;
+                if (block instanceof BedBlock) return;
 
-            ci.cancel();
-            return;
-        }
-
-        //setup context
-        init(state, pos, origin);
-
-        //grab emitter
-        final MutableQuadViewImpl emitter = this.getForEmitting();
-
-        //get an instance to our accessor and create a new helper
-        BlockEntityExt blockEntity = getBlockEntityInstance(pos);
-        final BlockRenderHelper helper = new BlockRenderHelper(((BlockRenderer)(Object)this), (BlockEntity)blockEntity);
-
-        //signs
-        if (block instanceof SignBlock || block instanceof CeilingHangingSignBlock) {
-            ci.cancel();
-
-            if (!ConfigManager.CONFIG.optimize_signs) return;
-
-            PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitSignQuads);
-        }
-        else if (block instanceof WallHangingSignBlock || block instanceof WallSignBlock) {
-            if (!ConfigManager.CONFIG.optimize_signs)
                 ci.cancel();
-        }
-
-        /* SHULKERS, and CHESTS */
-        else if (block instanceof ChestBlock || block instanceof EnderChestBlock || block instanceof ShulkerBoxBlock) {
-            boolean isShulker = block instanceof ShulkerBoxBlock;
-
-            if ((isShulker && !ConfigManager.CONFIG.optimize_shulkers) || (!isShulker && !ConfigManager.CONFIG.optimize_chests))
                 return;
+            }
 
-            ci.cancel();
+            /* setup context */
+            init(state, pos, origin);
 
-            List<BlockModelPart> parts = model.collectParts(this.random);
+            /* grab emitter */
+            final MutableQuadViewImpl emitter = this.getForEmitting();
 
-            /* splice BlockModelParts from MultipartBlockStateModel */
-            int quadThreshold = isShulker ? 10 : 6;
-            Map<Boolean, List<BlockModelPart>> partitioned = parts.stream()
-                    .collect(Collectors.partitioningBy(p -> p.getQuads(null).size() > quadThreshold));
+            /* get an instance to our accessor and create a new helper */
+            BlockEntityExt blockEntity = getBlockEntityInstance(pos);
+            final BlockRenderHelper helper = new BlockRenderHelper(((BlockRenderer)(Object)this), (BlockEntity)blockEntity);
 
-            List<BlockModelPart> lidParts   = partitioned.get(true);
-            List<BlockModelPart> trunkParts = partitioned.get(false);
+            /* SINGS  */
+            if (block instanceof SignBlock || block instanceof CeilingHangingSignBlock) {
+                ci.cancel();
 
-            List<BlockModelPart> merged =  new ArrayList<>();
+                if (!ConfigManager.CONFIG.optimize_signs) return;
 
-            BlockEntityExt ext = getBlockEntityInstance(pos);
-            boolean shouldRender = shouldRender(ext);
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitSignQuads);
+            }
+            else if (block instanceof WallHangingSignBlock || block instanceof WallSignBlock) {
+                if (!ConfigManager.CONFIG.optimize_signs)
+                    ci.cancel();
+            }
 
-            if (ConfigManager.CONFIG.updateType == 1)
-                merged.addAll(trunkParts);
-            else {
-                if (shouldRender)
+            /* SHULKERS, and CHESTS */
+            else if (block instanceof ChestBlock || block instanceof EnderChestBlock || block instanceof ShulkerBoxBlock) {
+                boolean isShulker = block instanceof ShulkerBoxBlock;
+
+                if ((isShulker && !ConfigManager.CONFIG.optimize_shulkers) || (!isShulker && !ConfigManager.CONFIG.optimize_chests))
+                    return;
+
+                ci.cancel();
+
+                List<BlockModelPart> parts = model.collectParts(this.random);
+
+                /* splice BlockModelParts from MultipartBlockStateModel */
+                int quadThreshold = isShulker ? 10 : 6;
+                Map<Boolean, List<BlockModelPart>> partitioned = parts.stream()
+                        .collect(Collectors.partitioningBy(p -> p.getQuads(null).size() > quadThreshold));
+
+                List<BlockModelPart> lidParts   = partitioned.get(true);
+                List<BlockModelPart> trunkParts = partitioned.get(false);
+
+                List<BlockModelPart> merged =  new ArrayList<>();
+
+                BlockEntityExt ext = getBlockEntityInstance(pos);
+                boolean shouldRender = shouldRender(ext);
+
+                if (ConfigManager.CONFIG.updateType == 1)
                     merged.addAll(trunkParts);
+                else {
+                    if (shouldRender)
+                        merged.addAll(trunkParts);
+                }
+
+                /* merge BlockModelParts after splicing */
+                if (shouldRender) merged.addAll(lidParts);
+
+                BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, this::bufferDefaultModel);
             }
 
-            /* merge BlockModelParts after splicing */
-            if (shouldRender) merged.addAll(lidParts);
+            /* BELLS */
+            else if (block instanceof BellBlock) {
+                if (!ConfigManager.CONFIG.optimize_bells) return;
+                ci.cancel();
 
-            BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, this::bufferDefaultModel);
-        }
+                RandomSource rand = this.random;
+                List<BlockModelPart> bell_part = model.collectParts(rand);
+                List<BlockModelPart> bell_body_part = new ArrayList<>();
 
-        /* BELLS */
-        else if (block instanceof BellBlock) {
-            if (!ConfigManager.CONFIG.optimize_bells) return;
-            ci.cancel();
+                BlockEntityExt ext = getBlockEntityInstance(pos);
+                boolean shouldRender = shouldRender(ext);
 
-            RandomSource rand = this.random;
-            List<BlockModelPart> bell_part = model.collectParts(rand);
-            List<BlockModelPart> bell_body_part = new ArrayList<>();
-
-            BlockEntityExt ext = getBlockEntityInstance(pos);
-            boolean shouldRender = shouldRender(ext);
-
-            if (shouldRender) {
-                try {
-                    ModelManager manager = Minecraft.getInstance().getModelManager();
-                    BlockStateModel bell_body = manager.getModel(ModelLoader.BELL_BODY_KEY);
-                    bell_body_part.addAll(bell_body.collectParts(rand));
+                if (shouldRender) {
+                    try {
+                        ModelManager manager = Minecraft.getInstance().getModelManager();
+                        BlockStateModel bell_body = manager.getModel(ModelLoader.BELL_BODY_KEY);
+                        bell_body_part.addAll(bell_body.collectParts(rand));
+                    }
+                    catch (Exception e) {
+                        BetterBlockEntities.getLogger().error("Error: Retrieving bell body BlockModelPart at {}", pos, e);
+                    }
                 }
-                catch (Exception e) {
-                    BetterBlockEntities.getLogger().error("Error: Retrieving bell body BlockModelPart at {}", pos, e);
-                }
+
+                List<BlockModelPart> merged = new ArrayList<>(bell_part);
+                if (!bell_body_part.isEmpty())
+                    merged.addAll(bell_body_part);
+                BlockRenderHelper.emitModelPart(merged, emitter, this.state, this::isFaceCulled, this::bufferDefaultModel);
             }
 
-            List<BlockModelPart> merged = new ArrayList<>(bell_part);
-            if (!bell_body_part.isEmpty())
-                merged.addAll(bell_body_part);
-            BlockRenderHelper.emitModelPart(merged, emitter, this.state, this::isFaceCulled, this::bufferDefaultModel);
+            /* DECORATED POT  */
+            else if (block instanceof DecoratedPotBlock) {
+                if (!ConfigManager.CONFIG.optimize_decoratedpots) {
+                    ci.cancel();
+                    return;
+                }
+
+                BlockEntityExt ext = getBlockEntityInstance(pos);
+                boolean shouldRender = shouldRender(ext);
+
+                ci.cancel();
+                if (!shouldRender) return;
+
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitDecoratedPotQuads);
+            }
+
+            /* BED  */
+            else if (block instanceof BedBlock) {
+                ci.cancel();
+                if (!ConfigManager.CONFIG.optimize_beds) return;
+
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
+            }
+            destory();
         }
-
-        else if (block instanceof BedBlock) {
-            ci.cancel();
-            if (!ConfigManager.CONFIG.optimize_beds) return;
-
-            PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
+        catch (Exception e) {
+            BetterBlockEntities.getLogger().error("Error: General fault in BlockRenderer at {}", pos, e);
         }
-
-        //restore context
-        destory();
     }
 
     @Unique

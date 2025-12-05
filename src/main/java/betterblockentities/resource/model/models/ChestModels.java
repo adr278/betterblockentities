@@ -1,6 +1,7 @@
 package betterblockentities.resource.model.models;
 
 /* local */
+import betterblockentities.gui.ConfigManager;
 import betterblockentities.resource.model.ModelGenerator;
 
 /* gson */
@@ -110,14 +111,33 @@ public class ChestModels extends ModelGenerator {
         private static void generateChestSide(Map<String, byte[]> map, String templateName, String suffix, Map<String, String> textureMap) {
             JsonObject template = loader.loadTemplate(templateName);
             if (template == null) return;
+
             var elements = loader.readTemplateElements(template);
+            boolean useChristmas = ConfigManager.CONFIG.chest_christmas;
 
             for (var entry : textureMap.entrySet()) {
                 String model = entry.getKey();
-                String texture = "minecraft:entity/chest/" + entry.getValue();
-                map.put("assets/minecraft/models/block/" + model + ".json",
-                        GSON.toJson(makeModelWithParticle("chest", texture, getParticleTexture(texture), elements)).getBytes(StandardCharsets.UTF_8));
+                String baseTexture = entry.getValue();
+
+                String texture = selectChestTexture(model, baseTexture, useChristmas);
+
+                map.put("assets/minecraft/models/block/" + model + ".json", GSON.toJson(makeModelWithParticle("chest", texture, getParticleTexture(texture), elements)).getBytes(StandardCharsets.UTF_8));
             }
+        }
+
+        private static String selectChestTexture(String model, String baseTexture, boolean useChristmas) {
+            boolean isEnderChest = baseTexture.contains("ender");
+
+            if (useChristmas && !isEnderChest) {
+                if (model.contains("left")) {
+                    return "minecraft:entity/chest/christmas_left";
+                }
+                if (model.contains("right")) {
+                    return "minecraft:entity/chest/christmas_right";
+                }
+                return "minecraft:entity/chest/christmas";
+            }
+            return "minecraft:entity/chest/" + baseTexture;
         }
     }
 
