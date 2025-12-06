@@ -40,7 +40,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-model-loading-api-v1:6.0.11+129f1f4c4e"
 
     modImplementation("net.caffeinemc:sodium-fabric:${sodium_version}")
-    modImplementation("net.caffeinemc:sodium-fabric-api:${sodium_version}")
+    //modImplementation("net.caffeinemc:sodium-fabric-api:${sodium_version}")
 }
 
 processResources {
