@@ -5,6 +5,8 @@ package betterblockentities.util;
 
 /* java/misc */
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,6 +32,11 @@ public class BlockVisibilityChecker {
     private static final Map<Integer, Vec3[]> GRID_CACHE = new HashMap<>();
 
     public static boolean isBlockInFOVAndVisible(Frustum frustum, BlockEntity blockEntity) {
+        /* check if we have a screen open (we count this as "not" visible) */
+        Screen curScreen = Minecraft.getInstance().screen;
+        if (curScreen != null && !(curScreen instanceof ChatScreen))
+            return false;
+
         Entity player = Minecraft.getInstance().getCameraEntity();
         if (player == null) return false;
 
@@ -37,6 +44,7 @@ public class BlockVisibilityChecker {
         BlockPos pos = blockEntity.getBlockPos();
         Level world = blockEntity.getLevel();
 
+        /* setup box to use for frustum and los check */
         AABB box = setupBox(blockEntity, pos);
 
         /* distance check max 20 blocks */
