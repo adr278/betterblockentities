@@ -26,7 +26,8 @@
     "minecraft.MinecraftMixin",
     "sodium.AbstractBlockRenderContextAccessor",
     "sodium.BlockRendererMixin",
-    "sodium.SodiumWorldRendererMixin"
+    "sodium.SodiumWorldRendererMixin",
+    "minecraft.ModelCommandRendererMixin"
   ],
   "server": [],
   "injectors": {
