@@ -1,0 +1,21 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "banner": "minecraft:entity/banner_base",
+    "particle": "minecraft:entity/banner_base"
+  },
+  "elements": [
+    {
+      "from": [1.25, -12.5, 13.25],
+      "to": [14.75, 14.75, 14],
+      "faces": {
+        "north": {"uv": [0.25, 0.25, 5.25, 10], "texture": "#banner"},
+        "east": {"uv": [0, 0.25, 0.25, 10.25], "texture": "#banner"},
+        "south": {"uv": [5.5, 0.25, 10.5, 10.25], "texture": "#banner"},
+        "west": {"uv": [5, 0.25, 5.25, 10.25], "texture": "#banner"},
+        "up": {"uv": [0.25, 0, 5.25, 0.25], "texture": "#banner"},
+        "down": {"uv": [0.25, 10, 5.25, 10.25], "texture": "#banner"}
+      }
+    }
+  ]
+}

@@ -31,7 +31,8 @@ public class BlockEntityManager {
                     ChestBlock.class, EnderChestBlock.class, ShulkerBoxBlock.class,
                     BellBlock.class, DecoratedPotBlock.class, BedBlock.class,
                     SignBlock.class, CeilingHangingSignBlock.class,
-                    WallSignBlock.class, WallHangingSignBlock.class
+                    WallSignBlock.class, WallHangingSignBlock.class,
+                    BannerBlock.class, WallBannerBlock.class
             )
     );
 
@@ -74,6 +75,8 @@ public class BlockEntityManager {
             if (shouldRenderText)
                 return true;
         }
+
+        /* banners and beds are handled here */
         return false;
     }
 

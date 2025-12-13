@@ -1,0 +1,13 @@
+{
+  "sources": [
+    { "type": "minecraft:directory", "prefix": "entity/chest/", "source": "entity/chest" },
+    { "type": "minecraft:directory", "prefix": "entity/shulker/", "source": "entity/shulker" },
+    { "type": "minecraft:directory", "prefix": "entity/bell/", "source": "entity/bell" },
+    { "type": "minecraft:directory", "prefix": "entity/decorated_pot/", "source": "entity/decorated_pot" },
+    { "type": "minecraft:directory", "prefix": "entity/bed/", "source": "entity/bed" },
+    { "type": "minecraft:directory", "prefix": "entity/signs/", "source": "entity/signs" },
+    { "type": "minecraft:directory", "prefix": "entity/signs/hanging/", "source": "entity/signs/hanging" },
+    { "type": "minecraft:directory", "prefix": "entity/banner/", "source": "entity/banner" },
+    { "type": "single", "resource": "minecraft:entity/banner_base" }
+  ]
+}

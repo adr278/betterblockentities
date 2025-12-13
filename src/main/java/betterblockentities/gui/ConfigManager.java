@@ -22,8 +22,9 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 public class ConfigManager
 {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final File CONFIG_FILE = FabricLoader.getInstance()
-            .getConfigDir().resolve("betterblockentities.json").toFile();
+
+    private static final File CONFIG_FILE =
+            new File("config", "betterblockentities.json");
 
     public static ConfigHolder CONFIG = new ConfigHolder();
 
@@ -40,6 +41,7 @@ public class ConfigManager
     }
 
     public static void save() {
+        CONFIG_FILE.getParentFile().mkdirs();
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(CONFIG, writer);
         } catch (IOException e) {
@@ -63,6 +65,7 @@ public class ConfigManager
             supported.add(SignBlockEntity.class);
             supported.add(HangingSignBlockEntity.class);
         }
+        if (ConfigManager.CONFIG.optimize_banners) supported.add(BannerBlockEntity.class);
         BlockEntityManager.SUPPORTED_TYPES = supported;
 
         /* set animation/rendering config values in BlockEntityManager */

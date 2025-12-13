@@ -4,8 +4,12 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "minecraft.AbstractBlockMixin",
+    "minecraft.AtlasManagerMixin",
     "minecraft.BlockEntityMixin",
     "minecraft.ClientWorldMixin",
+    "minecraft.MipMapGeneratorMixin",
+    "minecraft.OptionsScreenAccessor",
+    "minecraft.OptionsScreenMixin",
     "minecraft.OrderedRenderCommandQueueImplMixin",
     "minecraft.RenderLayersMixin",
     "minecraft.ResourcePackManagerMixin",
@@ -19,6 +23,7 @@
     "minecraft.decordatedpot.DecoratedPotBlockEntityMixin",
     "minecraft.shulker.ShulkerBoxBlockEntityMixin",
     "minecraft.sign.AbstractSignBlockEntityRendererMixin",
+    "minecraft.MinecraftMixin",
     "sodium.AbstractBlockRenderContextAccessor",
     "sodium.BlockRendererMixin",
     "sodium.SodiumWorldRendererMixin"
@@ -28,7 +33,5 @@
     "defaultRequire": 1
   },
   "client": [
-    "minecraft.OptionsScreenAccessor",
-    "minecraft.OptionsScreenMixin"
   ]
 }
