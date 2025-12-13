@@ -10,6 +10,7 @@ public class ConfigHolder
     public boolean optimize_beds = true;
     public boolean optimize_bells = true;
     public boolean optimize_decoratedpots = true;
+    public boolean optimize_banners = false;
 
     public boolean chest_animations = true;
     public boolean chest_christmas = false;
@@ -31,6 +32,7 @@ public class ConfigHolder
         copy.optimize_beds = optimize_beds;
         copy.optimize_bells = optimize_bells;
         copy.optimize_decoratedpots = optimize_decoratedpots;
+        copy.optimize_banners = optimize_banners;
         copy.chest_animations = chest_animations;
         copy.chest_christmas = chest_christmas;
         copy.render_sign_text = render_sign_text;
@@ -54,6 +56,7 @@ public class ConfigHolder
                 && optimize_beds == other.optimize_beds
                 && optimize_bells == other.optimize_bells
                 && optimize_decoratedpots == other.optimize_decoratedpots
+                && optimize_banners == other.optimize_banners
                 && chest_animations == other.chest_animations
                 && chest_christmas == other.chest_christmas
                 && render_sign_text == other.render_sign_text

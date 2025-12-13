@@ -24,6 +24,7 @@ public class ConfigScreen extends OptionsSubScreen {
             bedOpt,
             bellOpt,
             potOpt,
+            bannerOpt,
             chestAnimOpt,
             chestChristmasOpt,
             signTextOpt,
@@ -51,6 +52,7 @@ public class ConfigScreen extends OptionsSubScreen {
         bedOpt = optimizeBeds();
         bellOpt = optimizeBells();
         potOpt = optimizeDecoratedPots();
+        bannerOpt = optimizeBanners();
         updateType = updateType();
         smoothness = extraRenderPasses();
         signDistance = signTextRenderDistance();
@@ -74,6 +76,7 @@ public class ConfigScreen extends OptionsSubScreen {
                 potOpt, potAnimOpt,
                 bedOpt
         );
+        //this.list.addSmall(bannerOpt);
         this.list.addBig(updateType);
         this.list.addBig(smoothness);
         this.list.addBig(signDistance);
@@ -226,6 +229,19 @@ public class ConfigScreen extends OptionsSubScreen {
         );
     }
 
+    private OptionInstance<Boolean> optimizeBanners() {
+        return new OptionInstance<>(
+                "Optimize Banners",
+                value -> Tooltip.create(Component.literal("§7Turns off all Banner optimizations")),
+                (text, value) -> value ? Component.literal("§aON") : Component.literal("§cOFF"),
+                OptionInstance.BOOLEAN_VALUES,
+                ConfigManager.CONFIG.optimize_banners,
+                v -> {
+                    ConfigManager.CONFIG.optimize_banners = v;
+                }
+        );
+    }
+
     private OptionInstance<Integer> signTextRenderDistance() {
         return new OptionInstance<>(
                 "Sign Text Render Distance",
@@ -281,6 +297,7 @@ public class ConfigScreen extends OptionsSubScreen {
         setOptionActive(bedOpt, enabled);
         setOptionActive(bellOpt, enabled);
         setOptionActive(potOpt, enabled);
+        setOptionActive(bannerOpt, enabled);
 
         setOptionActive(chestAnimOpt, enabled && chestOpt.get());
         setOptionActive(chestChristmasOpt, enabled && chestOpt.get());

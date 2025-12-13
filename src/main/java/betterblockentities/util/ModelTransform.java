@@ -4,16 +4,20 @@ package betterblockentities.util;
 
 
 /* fabric */
+import betterblockentities.resource.BBEAtlasRegistry;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 
 /* minecraft */
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.Direction;
 import net.minecraft.data.AtlasIds;
 import net.minecraft.resources.Identifier;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 
 public class ModelTransform {
-    /* rotates base MutableQuadView from passed degrees and not radians */
+    /* rotates quad from passed degrees and not radians */
     public static void rotateY(MutableQuadViewImpl quad, float degrees) {
         float radians = (float) Math.toRadians(degrees);
         float cos = (float) Math.cos(radians);
@@ -31,25 +35,76 @@ public class ModelTransform {
         }
     }
 
-    /* swaps the sprite of the quad while preserving UV mapping proportions (no caching) recompute for every quad */
-    public static void swapSprite(TextureAtlasSprite newSprite, MutableQuadViewImpl quad) {
-        if (!(quad instanceof MutableQuadViewImpl mQuad)) return;
-        TextureAtlasSprite oldSprite = mQuad.cachedSprite();
-        if (oldSprite == null) return;
-
+    public static void pushAndExpand(float amount, MutableQuadViewImpl quad) {
+        /* compute quad center */
+        float cx = 0, cy = 0, cz = 0;
         for (int i = 0; i < 4; i++) {
-            float uNorm = (mQuad.getTexU(i) - oldSprite.getU0()) / (oldSprite.getU1() - oldSprite.getU0());
-            float vNorm = (mQuad.getTexV(i) - oldSprite.getV0()) / (oldSprite.getV1() - oldSprite.getV0());
-            mQuad.setUV(i,
-                        newSprite.getU0() + uNorm * (newSprite.getU1() - newSprite.getU0()),
-                        newSprite.getV0() + vNorm * (newSprite.getV1() - newSprite.getV0())
-                );
-            }
-            mQuad.cachedSprite(newSprite);
+            cx += quad.getX(i);
+            cy += quad.getY(i);
+            cz += quad.getZ(i);
+        }
+        cx *= 0.25f;
+        cy *= 0.25f;
+        cz *= 0.25f;
+
+        /* face normal */
+        Vector3f normal = quad.faceNormal();
+        normal.normalize();
+
+        /* compute tangent */
+        Vector3f tangent = new Vector3f(
+                quad.getX(1) - quad.getX(0),
+                quad.getY(1) - quad.getY(0),
+                quad.getZ(1) - quad.getZ(0)
+        );
+        tangent.normalize();
+
+        /* bitangent = normal x tangent */
+        Vector3f bitangent = new Vector3f(
+                normal.y() * tangent.z() - normal.z() * tangent.y(),
+                normal.z() * tangent.x() - normal.x() * tangent.z(),
+                normal.x() * tangent.y() - normal.y() * tangent.x()
+        );
+        bitangent.normalize();
+
+        /* scalar for diagonal expansion */
+        float expand = amount;
+
+        /* move each vertex */
+        for (int i = 0; i < 4; i++) {
+            float x = quad.getX(i);
+            float y = quad.getY(i);
+            float z = quad.getZ(i);
+
+            /* local coordinates relative to center */
+            float dx = x - cx;
+            float dy = y - cy;
+            float dz = z - cz;
+
+            /* project vertex into tangent space */
+            float tx = dx * tangent.x() + dy * tangent.y() + dz * tangent.z();
+            float ty = dx * bitangent.x() + dy * bitangent.y() + dz * bitangent.z();
+
+            /* move outward in 2D plane (diagonally) */
+            x += tangent.x() * Math.signum(tx) * expand;
+            y += tangent.y() * Math.signum(tx) * expand;
+            z += tangent.z() * Math.signum(tx) * expand;
+
+            x += bitangent.x() * Math.signum(ty) * expand;
+            y += bitangent.y() * Math.signum(ty) * expand;
+            z += bitangent.z() * Math.signum(ty) * expand;
+
+            /* push outward along face normal */
+            x += normal.x() * amount;
+            y += normal.y() * amount;
+            z += normal.z() * amount;
+
+            quad.setPos(i, x, y, z);
+        }
     }
 
-    /* swaps the sprite of the quad while preserving UV mapping proportions (caching) */
-    public static void swapSpriteCached(TextureAtlasSprite newSprite, MutableQuadViewImpl quad) {
+    /* swaps the sprite of the quad while preserving UV mapping proportions */
+    public static void swapSprite(TextureAtlasSprite newSprite, MutableQuadViewImpl quad) {
         final float uNewMin = newSprite.getU0();
         final float uNewMax = newSprite.getU1();
         final float vNewMin = newSprite.getV0();
@@ -82,7 +137,7 @@ public class ModelTransform {
         mQuad.cachedSprite(newSprite);
     }
 
-    /* gets an existing sprite from the atlas */
+    /* gets an existing sprite from the block atlas */
     public static TextureAtlasSprite getSprite(Identifier id) {
         var atlas = Minecraft.getInstance()
                 .getAtlasManager()

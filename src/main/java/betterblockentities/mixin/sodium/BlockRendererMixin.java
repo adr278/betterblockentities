@@ -2,15 +2,15 @@ package betterblockentities.mixin.sodium;
 
 /* local */
 import betterblockentities.BetterBlockEntities;
-import betterblockentities.ModelLoader;
+//import betterblockentities.ModelLoader;
 import betterblockentities.gui.ConfigManager;
 import betterblockentities.util.*;
 
 /* sodium */
-import com.mojang.authlib.minecraft.client.MinecraftClient;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 
 /* fabric */
@@ -20,27 +20,23 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRend
 
 
 /* mixin */
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
-import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
-import net.caffeinemc.mods.sodium.client.render.model.AmbientOcclusionMode;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
-import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
-import net.minecraft.client.resources.model.ModelManager;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.RandomSource;
 import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -69,13 +65,25 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
     @Shadow protected abstract void tintQuad(MutableQuadViewImpl quad);
     @Shadow protected abstract void bufferQuad(MutableQuadViewImpl quad, float[] brightnesses, Material material);
 
+    @Shadow
+    @Final
+    private ChunkVertexEncoder.Vertex[] vertices;
+
+    @Shadow
+    protected abstract @org.jspecify.annotations.Nullable TerrainRenderPass attemptPassDowngrade(TextureAtlasSprite sprite, TerrainRenderPass pass);
+
+    @Shadow
+    private TranslucentGeometryCollector collector;
+
+    @Shadow
+    private ChunkBuildBuffers buffers;
+
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
     private void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
         try {
             Block block = state.getBlock();
 
             if (BlockEntityManager.isSupportedBlock(block) && !ConfigManager.CONFIG.master_optimize) {
-                if (block instanceof BellBlock) return;
                 if (block instanceof BedBlock) return;
 
                 ci.cancel();
@@ -144,32 +152,39 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
             /* BELLS */
             else if (block instanceof BellBlock) {
-                if (!ConfigManager.CONFIG.optimize_bells) return;
-                ci.cancel();
+                List<BlockModelPart> parts = model.collectParts(this.random);
 
-                RandomSource rand = this.random;
-                List<BlockModelPart> bell_part = model.collectParts(rand);
-                List<BlockModelPart> bell_body_part = new ArrayList<>();
+                /*
+                    splice BlockModelParts from MultipartBlockStateModel
+                    fix this later with proper identifiers (quad size)
+                */
+                int quadThreshold = 12;
+                Map<Boolean, List<BlockModelPart>> partitioned = parts.stream()
+                        .collect(Collectors.partitioningBy(p -> p.particleIcon().contents().name().getPath().contains("bottom")));
+
+                List<BlockModelPart> barParts = partitioned.get(true);       // parts with > 12 quads
+                List<BlockModelPart> bellBodyParts = partitioned.get(false); // parts with <= 12 quads
+
+                List<BlockModelPart> merged =  new ArrayList<>();
 
                 BlockEntityExt ext = getBlockEntityInstance(pos);
                 boolean shouldRender = shouldRender(ext);
 
-                if (shouldRender) {
-                    try {
-                        ModelManager manager = Minecraft.getInstance().getModelManager();
-                        BlockStateModel bell_body = manager.getModel(ModelLoader.BELL_BODY_KEY);
-                        bell_body_part.addAll(bell_body.collectParts(rand));
-                    }
-                    catch (Exception e) {
-                        BetterBlockEntities.getLogger().error("Error: Retrieving bell body BlockModelPart at {}", pos, e);
-                    }
-                }
+                merged.addAll(barParts);
 
-                List<BlockModelPart> merged = new ArrayList<>(bell_part);
-                if (!bell_body_part.isEmpty())
-                    merged.addAll(bell_body_part);
-                BlockRenderHelper.emitModelPart(merged, emitter, this.state, this::isFaceCulled, this::bufferDefaultModel);
+                /* merge BlockModelParts after splicing */
+                if (shouldRender && ConfigManager.CONFIG.optimize_bells) merged.addAll(bellBodyParts);
+
+                BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, this::bufferDefaultModel);
+
+                /*
+                    fix because we never unload the bell model blockstate json from the fabric pack
+                    we should move blockstate json into our RRP. TODO
+                */
+                ci.cancel();
+                return;
             }
+
 
             /* DECORATED POT  */
             else if (block instanceof DecoratedPotBlock) {
@@ -187,13 +202,30 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                 PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitDecoratedPotQuads);
             }
 
-            /* BED  */
+            /* BED */
             else if (block instanceof BedBlock) {
                 ci.cancel();
                 if (!ConfigManager.CONFIG.optimize_beds) return;
 
                 PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
             }
+
+            /* BANNER */
+            else if (block instanceof BannerBlock) {
+                ci.cancel();
+
+                if (!ConfigManager.CONFIG.optimize_banners) return;
+
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitBannerQuads);
+            }
+            else if (block instanceof WallBannerBlock) {
+                ci.cancel();
+
+                if (!ConfigManager.CONFIG.optimize_banners) return;
+
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitBannerQuads);
+            }
+
             destory();
         }
         catch (Exception e) {

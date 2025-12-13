@@ -49,6 +49,14 @@ public class ModelGenerator
                 SignModels.Model.generateSignModels(entries);
                 SignModels.BlockState.generateSignBlockstates(entries);
             }
+
+            if (ConfigManager.CONFIG.optimize_banners) {
+                BannerModels.Model.generateBannerCanvasStanding(entries);
+                BannerModels.Model.generateBannerCanvasWall(entries);
+                BannerModels.Model.generateBannerBaseStanding(entries);
+                BannerModels.Model.generateBannerBaseWall(entries);
+                BannerModels.BlockState.generateBannerBlockstates(entries);
+            }
         }
         return entries;
     }
