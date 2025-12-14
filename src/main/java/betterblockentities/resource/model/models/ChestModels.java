@@ -8,7 +8,6 @@ import betterblockentities.resource.model.ModelGenerator;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-
 /* java/misc */
 import java.nio.charset.StandardCharsets;
 import java.util.Map;

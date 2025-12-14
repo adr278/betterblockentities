@@ -4,9 +4,9 @@ package betterblockentities.mixin.minecraft;
 import betterblockentities.util.BlockEntityExt;
 
 /* minecraft */
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 /* mixin */
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 

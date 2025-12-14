@@ -4,13 +4,10 @@ package betterblockentities.gui;
 import betterblockentities.util.BlockEntityManager;
 
 /* minecraft */
+import net.minecraft.world.level.block.entity.*;
 
 /* gson */
-import net.minecraft.world.level.block.entity.*;
 import org.spongepowered.include.com.google.gson.*;
-
-/* fabric */
-import net.fabricmc.loader.api.FabricLoader;
 
 /* java/misc */
 import java.io.File;

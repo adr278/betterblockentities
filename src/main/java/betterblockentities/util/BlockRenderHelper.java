@@ -1,18 +1,9 @@
 package betterblockentities.util;
 
-/* fabric */
+/* local */
 import betterblockentities.mixin.sodium.AbstractBlockRenderContextAccessor;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
-import net.caffeinemc.mods.sodium.client.render.model.*;
-import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* minecraft */
-
-
-/* java/misc */
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
@@ -26,8 +17,17 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import org.jetbrains.annotations.Nullable;
 
+/* sodium */
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
+import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
+import net.caffeinemc.mods.sodium.client.render.model.*;
+import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
+
+/* java/misc */
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;

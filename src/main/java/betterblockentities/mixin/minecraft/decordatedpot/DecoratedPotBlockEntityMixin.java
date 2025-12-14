@@ -4,9 +4,9 @@ package betterblockentities.mixin.minecraft.decordatedpot;
 import betterblockentities.util.BlockEntityExt;
 
 /* minecraft */
+import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
 
 /* mixin */
-import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

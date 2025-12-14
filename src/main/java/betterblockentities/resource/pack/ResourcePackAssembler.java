@@ -6,8 +6,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ResourcePackAssembler
-{
+public class ResourcePackAssembler {
     public byte[] assemble(Map<String, byte[]> allResources) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ZipOutputStream zip = new ZipOutputStream(baos)) {

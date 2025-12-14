@@ -21,6 +21,9 @@
   "entrypoints": {
     "client": [
       "betterblockentities.BetterBlockEntities"
+    ],
+    "sodium:config_api_user": [
+      "betterblockentities.gui.SodiumUIImpl"
     ]
   },
   "mixins": [

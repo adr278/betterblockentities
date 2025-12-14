@@ -1,14 +1,15 @@
 package betterblockentities.mixin.minecraft;
 
-/* minecraft */
+/* local */
 import betterblockentities.gui.ConfigManager;
 
-
-/* mixin */
+/* minecraft */
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+
+/* mixin */
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

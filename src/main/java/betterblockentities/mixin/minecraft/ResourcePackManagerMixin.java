@@ -4,10 +4,10 @@ package betterblockentities.mixin.minecraft;
 import betterblockentities.resource.pack.ResourceBuilder;
 
 /* minecraft */
-
-/* mixin */
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackRepository;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,13 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 /* java/misc */
 import java.util.Map;
 
-/*
-    there is probably a better way to inject the pack profile
-    but this works like I want it to... might cause issues later on
-    with other mods that modify resource packs though (because of the
-    ResourcePackPosition passed to the pack profile
-    "
-*/
+/* inject our RRP */
 @Mixin(PackRepository.class)
 public class ResourcePackManagerMixin
 {

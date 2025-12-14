@@ -6,23 +6,15 @@ import betterblockentities.chunk.ChunkUpdateDispatcher;
 import betterblockentities.gui.ConfigManager;
 
 /* minecraft */
-
-
-/* java/misc */
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.phys.Vec3;
 
+/* java/misc */
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import java.util.List;
-
-/*
-    TODO: instead of sending chunk updates for each iteration,
-          capture block pos of all blocks that needs a update
-          and just send all the updates after collection.
- */
 
 public class BlockEntityManager {
     public static ReferenceOpenHashSet<Class<? extends BlockEntity>> SUPPORTED_TYPES = new ReferenceOpenHashSet<>();
