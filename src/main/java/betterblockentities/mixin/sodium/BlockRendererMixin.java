@@ -67,8 +67,11 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
             if (BlockEntityManager.isSupportedBlock(block) && !ConfigManager.CONFIG.master_optimize) {
                 if (block instanceof BedBlock) return;
 
-                ci.cancel();
-                return;
+                /* temporary fix for bell, we have to emit some parts always */
+                if (!(block instanceof BellBlock)) {
+                    ci.cancel();
+                    return;
+                }
             }
 
             /* setup context */
@@ -143,8 +146,8 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                 Map<Boolean, List<BlockModelPart>> partitioned = parts.stream()
                         .collect(Collectors.partitioningBy(p -> p.particleIcon().contents().name().getPath().contains("bottom")));
 
-                List<BlockModelPart> barParts = partitioned.get(true);       // parts with > 12 quads
-                List<BlockModelPart> bellBodyParts = partitioned.get(false); // parts with <= 12 quads
+                List<BlockModelPart> barParts = partitioned.get(true);
+                List<BlockModelPart> bellBodyParts = partitioned.get(false);
 
                 List<BlockModelPart> merged =  new ArrayList<>();
 
@@ -154,13 +157,14 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                 merged.addAll(barParts);
 
                 /* merge BlockModelParts after splicing */
-                if (shouldRender && ConfigManager.CONFIG.optimize_bells) merged.addAll(bellBodyParts);
+                if (shouldRender && ConfigManager.CONFIG.optimize_bells && ConfigManager.CONFIG.master_optimize)
+                    merged.addAll(bellBodyParts);
 
                 BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, this::bufferDefaultModel);
 
                 /*
-                    fix because we never unload the bell model blockstate json from the fabric pack
-                    we should move blockstate json into our RRP. TODO
+                    temporary fix related to above. needed because we never unload the bell model blockstate json
+                    from the fabric pack we should move blockstate json into our RRP. TODO
                 */
                 ci.cancel();
                 return;
