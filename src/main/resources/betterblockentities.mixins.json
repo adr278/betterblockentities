@@ -8,8 +8,6 @@
     "minecraft.BlockEntityMixin",
     "minecraft.ClientWorldMixin",
     "minecraft.MipMapGeneratorMixin",
-    "minecraft.OptionsScreenAccessor",
-    "minecraft.OptionsScreenMixin",
     "minecraft.OrderedRenderCommandQueueImplMixin",
     "minecraft.RenderLayersMixin",
     "minecraft.ResourcePackManagerMixin",

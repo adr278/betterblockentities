@@ -1,19 +1,15 @@
 package betterblockentities.util;
 
-/* sodium */
-
-
-/* fabric */
-import betterblockentities.resource.BBEAtlasRegistry;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
-
 /* minecraft */
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.Direction;
 import net.minecraft.data.AtlasIds;
 import net.minecraft.resources.Identifier;
-import org.joml.Vector2f;
+
+/* sodium */
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
+
+/* java/misc */
 import org.joml.Vector3f;
 
 public class ModelTransform {

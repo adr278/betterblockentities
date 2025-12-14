@@ -1,15 +1,18 @@
 package betterblockentities.mixin.minecraft;
 
+/* local */
 import betterblockentities.resource.BBEAtlasRegistry;
-import com.mojang.blaze3d.systems.RenderSystem;
+
+/* minecraft */
 import net.minecraft.client.resources.model.AtlasManager;
 import net.minecraft.resources.Identifier;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/* java/misc */
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

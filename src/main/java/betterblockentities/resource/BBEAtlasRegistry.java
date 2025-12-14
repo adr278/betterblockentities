@@ -1,5 +1,6 @@
 package betterblockentities.resource;
 
+/* minecraft */
 import net.minecraft.resources.Identifier;
 
 public class BBEAtlasRegistry {

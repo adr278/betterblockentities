@@ -1,9 +1,9 @@
 package betterblockentities.mixin.minecraft.chest;
 
 /* minecraft */
+import net.minecraft.world.level.block.entity.ChestLidController;
 
 /* mixin */
-import net.minecraft.world.level.block.entity.ChestLidController;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

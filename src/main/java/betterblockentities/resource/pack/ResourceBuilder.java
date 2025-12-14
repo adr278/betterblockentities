@@ -1,7 +1,9 @@
 package betterblockentities.resource.pack;
 
-/* gson */
+/* local */
 import betterblockentities.resource.model.ModelGenerator;
+
+/* minecraft */
 import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackSelectionConfig;
@@ -11,8 +13,7 @@ import net.minecraft.server.packs.repository.Pack;
 /* java/misc */
 import java.util.*;
 
-public class ResourceBuilder
-{
+public class ResourceBuilder {
     /* generate the "in memory" resource pack to later be passed to our pack profile */
     public static byte[] buildZip() {
         PackMetadataBuilder meta = new PackMetadataBuilder();
@@ -26,7 +27,7 @@ public class ResourceBuilder
         return assembler.assemble(entries);
     }
 
-    /* builds the resource pack and its profile, should be called once on mod initialization */
+    /* builds the resource pack and its profile */
     public static Pack buildPackProfile() {
         byte[] packData = buildZip();
         PackResources pack = new BBEPack("betterblockentities-generated", packData);

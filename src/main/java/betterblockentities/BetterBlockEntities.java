@@ -5,7 +5,11 @@ import betterblockentities.gui.ConfigManager;
 
 /* fabric */
 import net.fabricmc.api.ClientModInitializer;
+
+/* minecraft */
 import net.minecraft.client.renderer.culling.Frustum;
+
+/* java/misc */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

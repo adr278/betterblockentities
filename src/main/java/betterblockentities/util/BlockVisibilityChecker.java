@@ -1,9 +1,6 @@
 package betterblockentities.util;
 
 /* minecraft */
-
-
-/* java/misc */
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -22,6 +19,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+/* java/misc */
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

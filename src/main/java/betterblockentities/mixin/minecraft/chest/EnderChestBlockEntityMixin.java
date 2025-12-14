@@ -4,12 +4,12 @@ package betterblockentities.mixin.minecraft.chest;
 import betterblockentities.util.BlockEntityExt;
 
 /* minecraft */
-
-/* mixin */
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

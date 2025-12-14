@@ -1,8 +1,13 @@
 package betterblockentities.mixin.minecraft;
 
+/* local */
 import betterblockentities.util.BlockEntityTracker;
+
+/* minecraft */
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
