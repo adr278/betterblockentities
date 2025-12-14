@@ -99,6 +99,36 @@ public class ModelTransform {
         }
     }
 
+    public static void insetQuadUvs(MutableQuadViewImpl quad, float insetU, float insetV) {
+        if (!(quad instanceof MutableQuadViewImpl mQuad)) return;
+
+        /* compute quad UV center */
+        float uCenter = 0f;
+        float vCenter = 0f;
+        for (int i = 0; i < 4; i++) {
+            uCenter += mQuad.getTexU(i);
+            vCenter += mQuad.getTexV(i);
+        }
+        uCenter *= 0.25f;
+        vCenter *= 0.25f;
+
+        /* push each UV inward toward center */
+        for (int i = 0; i < 4; i++) {
+            float u = mQuad.getTexU(i);
+            float v = mQuad.getTexV(i);
+
+            /* compute vector from vertex to center */
+            float deltaU = uCenter - u;
+            float deltaV = vCenter - v;
+
+            /* move along diagonal toward center by inset fraction */
+            u += deltaU * insetU;
+            v += deltaV * insetV;
+
+            mQuad.setUV(i, u, v);
+        }
+    }
+
     /* swaps the sprite of the quad while preserving UV mapping proportions */
     public static void swapSprite(TextureAtlasSprite newSprite, MutableQuadViewImpl quad) {
         final float uNewMin = newSprite.getU0();
