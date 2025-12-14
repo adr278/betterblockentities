@@ -131,7 +131,7 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                 /* merge BlockModelParts after splicing */
                 if (shouldRender) merged.addAll(lidParts);
 
-                BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, this::bufferDefaultModel);
+                BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, helper::emitQuadsGE);
             }
 
             /* BELLS */
@@ -192,7 +192,7 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                 ci.cancel();
                 if (!ConfigManager.CONFIG.optimize_beds) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitQuadsGE);
             }
 
             /* BANNER */

@@ -59,12 +59,44 @@ public class BlockRenderHelper {
         }
     }
 
-    /*
-        TODO:
-         Implement a generic emit quads function that applies a transform
-         that shrinks the quads uvs towards the center by a few texels
-         use on models with "seems" at edges
-    */
+    /* generic emit quads function, insets the uvs by 1 texel to prevent texture bleeding */
+    public void emitQuadsGE(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+
+        MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
+        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
+        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
+        acc.setDefaultRenderType(renderType);
+
+        for(int i = 0; i <= 6; ++i) {
+            Direction cullFace = ModelHelper.faceFromIndex(i);
+            if (!cullTest.test(cullFace)) {
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
+                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
+                int count = quads.size();
+
+                for(int j = 0; j < count; ++j) {
+                    BakedQuad q = (BakedQuad)quads.get(j);
+                    editorQuad.fromBakedQuad(q);
+                    editorQuad.setCullFace(cullFace);
+                    editorQuad.setRenderType(renderType);
+                    editorQuad.setAmbientOcclusion(ao.toTriState());
+
+                    /* inset uvs by 1 texel to add some extra padding */
+                    TextureAtlasSprite s = editorQuad.cachedSprite();
+                    float texels = 1.0f;
+                    float insetU = texels / s.contents().width();
+                    float insetV = texels / s.contents().height();
+                    ModelTransform.insetQuadUvs(editorQuad, insetU, insetV);
+
+                    emitter.accept(editorQuad);
+                }
+            }
+        }
+        editorQuad.clear();
+        acc.setDefaultRenderType(defaultType);
+    }
 
     /* added rotation transform */
     public void emitSignQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
@@ -272,7 +304,7 @@ public class BlockRenderHelper {
                             float rotation = (compute16StepRotation(state) + 180f) % 360f;
                             ModelTransform.rotateY(editorQuad, rotation);
 
-                            /* swap this quads sprite to mapped sherd texture */
+                            /* swap this quads sprite to the appropriate layer sprite */
                             ModelTransform.swapSprite(sprite, editorQuad);
 
                             /* apply layer color to all vertices */
