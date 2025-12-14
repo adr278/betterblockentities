@@ -5,10 +5,6 @@ import betterblockentities.gui.ConfigManager;
 import betterblockentities.model.BBEChestBlockModel;
 
 /* minecraft */
-
-
-/* mixin */
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.object.chest.ChestModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -16,6 +12,11 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.ChestRenderer;
 import net.minecraft.client.renderer.blockentity.state.ChestRenderState;
 import net.minecraft.client.renderer.state.CameraRenderState;
+
+/* mojang */
+import com.mojang.blaze3d.vertex.PoseStack;
+
+/* mixin */
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

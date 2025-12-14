@@ -1,14 +1,12 @@
 package betterblockentities.chunk;
 
-/* minecraft */
+/* local */
 import betterblockentities.BetterBlockEntities;
+
+/* minecraft */
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-
-/*
-    TODO: add more rebuild options, like rebuild then perform task...
-*/
 
 public class ChunkUpdateDispatcher {
     public static void queueRebuildAtBlockPos(Level world, long pos) {

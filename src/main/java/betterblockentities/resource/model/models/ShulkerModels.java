@@ -4,12 +4,11 @@ package betterblockentities.resource.model.models;
 import betterblockentities.resource.model.ModelGenerator;
 
 /* minecraft */
-
+import net.minecraft.world.item.DyeColor;
 
 /* gson */
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
-import net.minecraft.world.item.DyeColor;
 
 /* java/misc */
 import java.nio.charset.StandardCharsets;

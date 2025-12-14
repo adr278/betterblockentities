@@ -1,21 +1,24 @@
 package betterblockentities.mixin.minecraft;
 
-import it.unimi.dsi.fastutil.ints.IntArrays;
+/* minecraft */
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/* java/misc */
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import it.unimi.dsi.fastutil.ints.IntArrays;
 
 @Mixin(ModelFeatureRenderer.class)
 public class ModelCommandRendererMixin {
 
-    @Redirect(
-            method = "render(Lnet/minecraft/client/renderer/SubmitNodeCollection;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/OutlineBufferSource;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;)V",
+    @Redirect(method = "render(Lnet/minecraft/client/renderer/SubmitNodeCollection;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/OutlineBufferSource;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;)V",
             at = @At(
                     value = "INVOKE",
                     target = "Ljava/util/List;sort(Ljava/util/Comparator;)V"

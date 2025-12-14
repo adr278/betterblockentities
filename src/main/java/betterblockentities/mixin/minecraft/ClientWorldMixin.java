@@ -10,14 +10,10 @@ import betterblockentities.util.BlockEntityManager;
 import betterblockentities.util.BlockEntityTracker;
 
 /* fabric */
-import betterblockentities.util.BlockVisibilityChecker;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
 /* minecraft */
-
-
-/* mixin */
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,6 +25,8 @@ import net.minecraft.world.level.block.entity.ChestLidController;
 import net.minecraft.world.level.block.entity.LidBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;

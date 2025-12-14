@@ -4,11 +4,11 @@ package betterblockentities.mixin.minecraft;
 import betterblockentities.util.BlockEntityManager;
 
 /* minecraft */
-
-/* mixin */
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

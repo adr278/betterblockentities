@@ -4,11 +4,11 @@ package betterblockentities.mixin.minecraft;
 import betterblockentities.BetterBlockEntities;
 
 /* minecraft */
-
-/* mixin */
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.culling.Frustum;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

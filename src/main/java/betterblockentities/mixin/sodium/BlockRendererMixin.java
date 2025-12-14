@@ -2,33 +2,10 @@ package betterblockentities.mixin.sodium;
 
 /* local */
 import betterblockentities.BetterBlockEntities;
-//import betterblockentities.ModelLoader;
 import betterblockentities.gui.ConfigManager;
 import betterblockentities.util.*;
 
-/* sodium */
-import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
-import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
-import net.caffeinemc.mods.sodium.client.model.light.LightMode;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-
-/* fabric */
-
-
 /* minecraft */
-
-
-/* mixin */
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -42,6 +19,24 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+
+/* sodium */
+import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
+import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
+import net.caffeinemc.mods.sodium.client.model.light.LightMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
+
+/* mixin */
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -61,22 +56,8 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
     @Shadow @Final private Vector3f posOffset;
     @Shadow @Nullable private ColorProvider<BlockState> colorProvider;
     @Shadow @Final private ColorProviderRegistry colorProviderRegistry;
-
     @Shadow protected abstract void tintQuad(MutableQuadViewImpl quad);
     @Shadow protected abstract void bufferQuad(MutableQuadViewImpl quad, float[] brightnesses, Material material);
-
-    @Shadow
-    @Final
-    private ChunkVertexEncoder.Vertex[] vertices;
-
-    @Shadow
-    protected abstract @org.jspecify.annotations.Nullable TerrainRenderPass attemptPassDowngrade(TextureAtlasSprite sprite, TerrainRenderPass pass);
-
-    @Shadow
-    private TranslucentGeometryCollector collector;
-
-    @Shadow
-    private ChunkBuildBuffers buffers;
 
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
     private void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
@@ -211,21 +192,13 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
             }
 
             /* BANNER */
-            else if (block instanceof BannerBlock) {
+            else if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
                 ci.cancel();
 
                 if (!ConfigManager.CONFIG.optimize_banners) return;
 
                 PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitBannerQuads);
             }
-            else if (block instanceof WallBannerBlock) {
-                ci.cancel();
-
-                if (!ConfigManager.CONFIG.optimize_banners) return;
-
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitBannerQuads);
-            }
-
             destory();
         }
         catch (Exception e) {
