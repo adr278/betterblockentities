@@ -7,7 +7,10 @@
     "minecraft.AtlasManagerMixin",
     "minecraft.BlockEntityMixin",
     "minecraft.ClientWorldMixin",
+    "minecraft.MinecraftMixin",
+    "minecraft.MipMapGeneratorAccessor",
     "minecraft.MipMapGeneratorMixin",
+    "minecraft.ModelCommandRendererMixin",
     "minecraft.OrderedRenderCommandQueueImplMixin",
     "minecraft.RenderLayersMixin",
     "minecraft.ResourcePackManagerMixin",
@@ -21,16 +24,15 @@
     "minecraft.decordatedpot.DecoratedPotBlockEntityMixin",
     "minecraft.shulker.ShulkerBoxBlockEntityMixin",
     "minecraft.sign.AbstractSignBlockEntityRendererMixin",
-    "minecraft.MinecraftMixin",
     "sodium.AbstractBlockRenderContextAccessor",
     "sodium.BlockRendererMixin",
-    "sodium.SodiumWorldRendererMixin",
-    "minecraft.ModelCommandRendererMixin"
+    "sodium.SodiumWorldRendererMixin"
   ],
   "server": [],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
+
   ]
 }

@@ -28,6 +28,8 @@ import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* java/misc */
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Unique;
+
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -59,7 +61,7 @@ public class BlockRenderHelper {
         }
     }
 
-    /* generic emit quads function, insets the uvs by 1 texel to prevent texture bleeding */
+    /* generic emit quads function, insets the uvs to prevent texture bleeding */
     public void emitQuadsGE(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
         AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
 
@@ -83,11 +85,10 @@ public class BlockRenderHelper {
                     editorQuad.setRenderType(renderType);
                     editorQuad.setAmbientOcclusion(ao.toTriState());
 
-                    /* inset uvs by 1 texel to add some extra padding */
                     TextureAtlasSprite s = editorQuad.cachedSprite();
-                    float texels = 1.0f;
-                    float insetU = texels / s.contents().width();
-                    float insetV = texels / s.contents().height();
+                    float offset = 0.4f; //try adjusting this, 0.2 seems good
+                    float insetU = offset / s.contents().width();
+                    float insetV = offset / s.contents().height();
                     ModelTransform.insetQuadUvs(editorQuad, insetU, insetV);
 
                     emitter.accept(editorQuad);

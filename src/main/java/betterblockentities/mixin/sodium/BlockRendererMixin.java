@@ -131,7 +131,7 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                 /* merge BlockModelParts after splicing */
                 if (shouldRender) merged.addAll(lidParts);
 
-                BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, helper::emitQuadsGE);
+                BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, isShulker ? this::bufferDefaultModel : helper::emitQuadsGE);
             }
 
             /* BELLS */
