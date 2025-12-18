@@ -118,9 +118,10 @@ public class ChestModels extends ModelGenerator {
                 String model = entry.getKey();
                 String baseTexture = entry.getValue();
 
+                String particleTexture = getParticleTexture(baseTexture);
                 String texture = selectChestTexture(model, baseTexture, useChristmas);
 
-                map.put("assets/minecraft/models/block/" + model + ".json", GSON.toJson(makeModelWithParticle("chest", texture, getParticleTexture(texture), elements)).getBytes(StandardCharsets.UTF_8));
+                map.put("assets/minecraft/models/block/" + model + ".json", GSON.toJson(makeModelWithParticle("chest", texture, particleTexture, elements)).getBytes(StandardCharsets.UTF_8));
             }
         }
 
