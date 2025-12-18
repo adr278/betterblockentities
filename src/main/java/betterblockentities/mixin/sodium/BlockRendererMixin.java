@@ -6,14 +6,20 @@ import betterblockentities.gui.ConfigManager;
 import betterblockentities.util.*;
 
 /* minecraft */
+import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
+import net.caffeinemc.mods.sodium.client.render.model.AmbientOcclusionMode;
+import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -48,6 +54,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Pseudo
@@ -59,19 +67,14 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
     @Shadow protected abstract void tintQuad(MutableQuadViewImpl quad);
     @Shadow protected abstract void bufferQuad(MutableQuadViewImpl quad, float[] brightnesses, Material material);
 
-    @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
-    private void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
+    /** Override this as we need full control over what get added to this mesh */
+    @Overwrite
+    public void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin) {
         try {
             Block block = state.getBlock();
 
             if (BlockEntityManager.isSupportedBlock(block) && !ConfigManager.CONFIG.master_optimize) {
-                if (block instanceof BedBlock) return;
-
-                /* temporary fix for bell, we have to emit some parts always */
-                if (!(block instanceof BellBlock)) {
-                    ci.cancel();
-                    return;
-                }
+                return;
             }
 
             /* setup context */
@@ -86,15 +89,15 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
             /* SINGS  */
             if (block instanceof SignBlock || block instanceof CeilingHangingSignBlock) {
-                ci.cancel();
-
                 if (!ConfigManager.CONFIG.optimize_signs) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitSignQuads);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitSignQuads);
             }
             else if (block instanceof WallHangingSignBlock || block instanceof WallSignBlock) {
-                if (!ConfigManager.CONFIG.optimize_signs)
-                    ci.cancel();
+                if (!ConfigManager.CONFIG.optimize_signs) return;
+
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
             }
 
             /* SHULKERS, and CHESTS */
@@ -103,8 +106,6 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
                 if ((isShulker && !ConfigManager.CONFIG.optimize_shulkers) || (!isShulker && !ConfigManager.CONFIG.optimize_chests))
                     return;
-
-                ci.cancel();
 
                 List<BlockModelPart> parts = model.collectParts(this.random);
 
@@ -161,35 +162,23 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                     merged.addAll(bellBodyParts);
 
                 BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, this::bufferDefaultModel);
-
-                /*
-                    temporary fix related to above. needed because we never unload the bell model blockstate json
-                    from the fabric pack we should move blockstate json into our RRP. TODO
-                */
-                ci.cancel();
-                return;
             }
-
 
             /* DECORATED POT  */
             else if (block instanceof DecoratedPotBlock) {
-                if (!ConfigManager.CONFIG.optimize_decoratedpots) {
-                    ci.cancel();
-                    return;
-                }
+                if (!ConfigManager.CONFIG.optimize_decoratedpots) return;
 
                 BlockEntityExt ext = getBlockEntityInstance(pos);
                 boolean shouldRender = shouldRender(ext);
 
-                ci.cancel();
                 if (!shouldRender) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitDecoratedPotQuads);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitDecoratedPotQuads);
             }
 
             /* BED */
             else if (block instanceof BedBlock) {
-                ci.cancel();
                 if (!ConfigManager.CONFIG.optimize_beds) return;
 
                 PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitQuadsGE);
@@ -197,11 +186,15 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
             /* BANNER */
             else if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
-                ci.cancel();
-
                 if (!ConfigManager.CONFIG.optimize_banners) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitBannerQuads);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitBannerQuads);
+            }
+
+            /* ALL OTHER BLOCKS ARE HANDLED HERE */
+            else {
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
             }
             destory();
         }
