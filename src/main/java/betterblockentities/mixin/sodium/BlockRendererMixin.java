@@ -181,7 +181,8 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
             else if (block instanceof BedBlock) {
                 if (!ConfigManager.CONFIG.optimize_beds) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitQuadsGE);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitQuadsGE);
             }
 
             /* BANNER */
