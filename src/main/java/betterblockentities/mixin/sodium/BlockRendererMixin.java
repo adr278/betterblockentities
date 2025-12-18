@@ -6,20 +6,13 @@ import betterblockentities.gui.ConfigManager;
 import betterblockentities.util.*;
 
 /* minecraft */
-import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
-import net.caffeinemc.mods.sodium.client.render.model.AmbientOcclusionMode;
-import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -30,13 +23,9 @@ import net.minecraft.world.phys.Vec3;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
@@ -44,9 +33,6 @@ import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* mixin */
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /* java/misc */
 import org.joml.Vector3f;
@@ -54,8 +40,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Pseudo
@@ -74,7 +58,9 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
             Block block = state.getBlock();
 
             if (BlockEntityManager.isSupportedBlock(block) && !ConfigManager.CONFIG.master_optimize) {
-                return;
+                /* ignore bells as they have parts in the mesh by default */
+                if (!(block instanceof BellBlock))
+                    return;
             }
 
             /* setup context */
