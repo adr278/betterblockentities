@@ -129,12 +129,13 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                     splice BlockModelParts from MultipartBlockStateModel
                     fix this later with proper identifiers (quad size)
                 */
-                int quadThreshold = 12;
-                Map<Boolean, List<BlockModelPart>> partitioned = parts.stream()
-                        .collect(Collectors.partitioningBy(p -> p.particleIcon().contents().name().getPath().contains("bottom")));
 
-                List<BlockModelPart> barParts = partitioned.get(true);
-                List<BlockModelPart> bellBodyParts = partitioned.get(false);
+                int quadThreshold = 11;
+                Map<Boolean, List<BlockModelPart>> partitioned = parts.stream()
+                        .collect(Collectors.partitioningBy(p -> p.getQuads(null).size() == quadThreshold));
+
+                List<BlockModelPart> barParts = partitioned.get(false);
+                List<BlockModelPart> bellBodyParts = partitioned.get(true);
 
                 List<BlockModelPart> merged =  new ArrayList<>();
 
