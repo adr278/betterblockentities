@@ -123,7 +123,9 @@ public class BlockRenderHelper {
                     editorQuad.setRenderType(ChunkSectionLayer.CUTOUT);
                     editorQuad.setAmbientOcclusion(ao.toTriState());
 
-                    ModelTransform.rotateY(editorQuad, compute16StepRotation(acc.getState()));
+                    float rotDegrees = compute16StepRotation(acc.getState());
+                    ModelTransform.rotateY(editorQuad, rotDegrees);
+
                     emitter.accept(editorQuad);
                 }
             }
@@ -357,7 +359,7 @@ public class BlockRenderHelper {
         };
     }
 
-    public float compute16StepRotation(BlockState state) {
+    public static float compute16StepRotation(BlockState state) {
         if (state.hasProperty(BlockStateProperties.ROTATION_16)) {
             int rot = state.getValue(BlockStateProperties.ROTATION_16);
             return rot * 22.5f;

@@ -65,7 +65,7 @@ public abstract class ChestBlockEntityRendererMixin
     }
     @Inject(method = "xmasTextures", at = @At("HEAD"), cancellable = true)
     private static void xmasTextures(CallbackInfoReturnable<Boolean> cir) {
-        if (ConfigManager.CONFIG.chest_christmas && ConfigManager.CONFIG.master_optimize)
+        if (ConfigManager.CONFIG.chest_christmas && ConfigManager.CONFIG.optimize_chests && ConfigManager.CONFIG.master_optimize)
             cir.setReturnValue(true);
     }
 }
