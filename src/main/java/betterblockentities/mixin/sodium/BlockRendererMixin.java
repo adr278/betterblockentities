@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.*;
@@ -24,13 +23,9 @@ import net.minecraft.world.phys.Vec3;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
@@ -38,9 +33,6 @@ import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* mixin */
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /* java/misc */
 import org.joml.Vector3f;
@@ -59,19 +51,16 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
     @Shadow protected abstract void tintQuad(MutableQuadViewImpl quad);
     @Shadow protected abstract void bufferQuad(MutableQuadViewImpl quad, float[] brightnesses, Material material);
 
-    @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
-    private void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
+    /** Override this as we need full control over what get added to this mesh */
+    @Overwrite
+    public void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin) {
         try {
             Block block = state.getBlock();
 
             if (BlockEntityManager.isSupportedBlock(block) && !ConfigManager.CONFIG.master_optimize) {
-                if (block instanceof BedBlock) return;
-
-                /* temporary fix for bell, we have to emit some parts always */
-                if (!(block instanceof BellBlock)) {
-                    ci.cancel();
+                /* ignore bells as they have parts in the mesh by default */
+                if (!(block instanceof BellBlock))
                     return;
-                }
             }
 
             /* setup context */
@@ -86,15 +75,15 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
             /* SINGS  */
             if (block instanceof SignBlock || block instanceof CeilingHangingSignBlock) {
-                ci.cancel();
-
                 if (!ConfigManager.CONFIG.optimize_signs) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitSignQuads);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitSignQuads);
             }
             else if (block instanceof WallHangingSignBlock || block instanceof WallSignBlock) {
-                if (!ConfigManager.CONFIG.optimize_signs)
-                    ci.cancel();
+                if (!ConfigManager.CONFIG.optimize_signs) return;
+
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
             }
 
             /* SHULKERS, and CHESTS */
@@ -103,8 +92,6 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
                 if ((isShulker && !ConfigManager.CONFIG.optimize_shulkers) || (!isShulker && !ConfigManager.CONFIG.optimize_chests))
                     return;
-
-                ci.cancel();
 
                 List<BlockModelPart> parts = model.collectParts(this.random);
 
@@ -161,47 +148,40 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
                     merged.addAll(bellBodyParts);
 
                 BlockRenderHelper.emitModelPart(merged, emitter, state, this::isFaceCulled, this::bufferDefaultModel);
-
-                /*
-                    temporary fix related to above. needed because we never unload the bell model blockstate json
-                    from the fabric pack we should move blockstate json into our RRP. TODO
-                */
-                ci.cancel();
-                return;
             }
-
 
             /* DECORATED POT  */
             else if (block instanceof DecoratedPotBlock) {
-                if (!ConfigManager.CONFIG.optimize_decoratedpots) {
-                    ci.cancel();
-                    return;
-                }
+                if (!ConfigManager.CONFIG.optimize_decoratedpots) return;
 
                 BlockEntityExt ext = getBlockEntityInstance(pos);
                 boolean shouldRender = shouldRender(ext);
 
-                ci.cancel();
                 if (!shouldRender) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitDecoratedPotQuads);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitDecoratedPotQuads);
             }
 
             /* BED */
             else if (block instanceof BedBlock) {
-                ci.cancel();
                 if (!ConfigManager.CONFIG.optimize_beds) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitQuadsGE);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitQuadsGE);
             }
 
             /* BANNER */
             else if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
-                ci.cancel();
-
                 if (!ConfigManager.CONFIG.optimize_banners) return;
 
-                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, helper::emitBannerQuads);
+                List<BlockModelPart> parts = model.collectParts(this.random);
+                BlockRenderHelper.emitModelPart(parts, emitter, state, this::isFaceCulled, helper::emitBannerQuads);
+            }
+
+            /* ALL OTHER BLOCKS ARE HANDLED HERE */
+            else {
+                PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, emitter, this.random, this.level, pos, state, this::bufferDefaultModel);
             }
             destory();
         }

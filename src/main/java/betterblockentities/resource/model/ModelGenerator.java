@@ -50,6 +50,17 @@ public class ModelGenerator
                 SignModels.BlockState.generateSignBlockstates(entries);
             }
 
+            if (ConfigManager.CONFIG.optimize_decoratedpots) {
+                DecoratedPotModels.Model.generateSides(entries);
+                DecoratedPotModels.Model.generateTop(entries);
+                DecoratedPotModels.BlockState.generateDecoratedPotBlockstate(entries);
+            }
+
+            if (ConfigManager.CONFIG.optimize_bells) {
+                BellModels.Model.generateBell(entries);
+                BellModels.BlockState.generateBellBlockstate(entries);
+            }
+
             if (ConfigManager.CONFIG.optimize_banners) {
                 BannerModels.Model.generateBannerCanvasStanding(entries);
                 BannerModels.Model.generateBannerCanvasWall(entries);

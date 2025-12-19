@@ -107,6 +107,7 @@ public class ConfigScreen extends OptionsSubScreen {
                 v -> {
                     ConfigManager.CONFIG.optimize_chests = v;
                     setOptionActive(chestAnimOpt, v && masterToggle.get());
+                    setOptionActive(chestChristmasOpt, v && masterToggle.get());
                 }
         );
     }
@@ -180,7 +181,6 @@ public class ConfigScreen extends OptionsSubScreen {
                 ConfigManager.CONFIG.optimize_beds,
                 v -> {
                     ConfigManager.CONFIG.optimize_beds = v;
-                    setOptionActive(masterToggle, v && masterToggle.get());
                 }
         );
     }
