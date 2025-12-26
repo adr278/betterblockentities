@@ -3,10 +3,6 @@ plugins {
     id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
-
-archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
@@ -27,7 +23,9 @@ dependencies {
     mappings loom.officialMojangMappings()
 
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation("net.caffeinemc:sodium-fabric:${sodium_version}")
+    modImplementation "net.caffeinemc:sodium-fabric:${sodium_version}"
+
+    modImplementation "maven.modrinth:iris:1.10.3+1.21.11-fabric"
 }
 
 processResources {
@@ -45,9 +43,11 @@ java {
     withSourcesJar()
 }
 
-jar {
+
+tasks.named('jar') {
+    archiveBaseName.set(project.archives_base_name)
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+        rename { "${it}_${project.archives_base_name}" }
     }
 }
 
