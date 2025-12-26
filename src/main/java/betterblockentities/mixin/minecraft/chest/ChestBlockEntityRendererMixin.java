@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.state.CameraRenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /* mixin */
+import net.minecraft.util.SpecialDates;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,8 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChestRenderer.class)
-public abstract class ChestBlockEntityRendererMixin
-{
+public abstract class ChestBlockEntityRendererMixin {
     @Shadow @Mutable private ChestModel singleModel;
     @Shadow @Mutable private ChestModel doubleLeftModel;
     @Shadow @Mutable private ChestModel doubleRightModel;
@@ -63,9 +63,19 @@ public abstract class ChestBlockEntityRendererMixin
             this.doubleRightModel = this.BBEdoubleChestRight;
         }
     }
-    @Inject(method = "xmasTextures", at = @At("HEAD"), cancellable = true)
+
+    @Inject(method = "xmasTextures()Z", at = @At("HEAD"), cancellable = true)
     private static void xmasTextures(CallbackInfoReturnable<Boolean> cir) {
-        if (ConfigManager.CONFIG.chest_christmas && ConfigManager.CONFIG.optimize_chests && ConfigManager.CONFIG.master_optimize)
+        cir.cancel();
+
+        boolean christmas = SpecialDates.isExtendedChristmas();
+        boolean forceChristmasTex = ConfigManager.CONFIG.chest_christmas;
+
+        if (ConfigManager.CONFIG.master_optimize && ConfigManager.CONFIG.optimize_chests) {
+            cir.setReturnValue(forceChristmasTex);
+        }
+        else if (christmas) {
             cir.setReturnValue(true);
+        }
     }
 }
