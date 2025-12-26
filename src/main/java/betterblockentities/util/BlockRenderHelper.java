@@ -28,7 +28,6 @@ import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* java/misc */
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Unique;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,6 +36,9 @@ import java.util.function.Predicate;
 public class BlockRenderHelper {
     private final BlockRenderer ctx;
     private final BlockEntity blockEntity;
+
+    /* this tag is used to push geometry to our own render pass */
+    public static final int BBE_QUAD_TAG = "BBE-QUAD.HASH".hashCode();
 
     public BlockRenderHelper(BlockRenderer ctx, BlockEntity blockEntity) {
         this.ctx = ctx;
@@ -61,7 +63,7 @@ public class BlockRenderHelper {
         }
     }
 
-    /* generic emit quads function, insets the uvs to prevent texture bleeding */
+    /* generic emit quads function */
     public void emitQuadsGE(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
         AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
 
@@ -85,12 +87,7 @@ public class BlockRenderHelper {
                     editorQuad.setRenderType(renderType);
                     editorQuad.setAmbientOcclusion(ao.toTriState());
 
-                    TextureAtlasSprite s = editorQuad.cachedSprite();
-                    float offset = 0.4f; //try adjusting this, 0.2 seems good
-                    float insetU = offset / s.contents().width();
-                    float insetV = offset / s.contents().height();
-                    ModelTransform.insetQuadUvs(editorQuad, insetU, insetV);
-
+                    editorQuad.setTag(BBE_QUAD_TAG);
                     emitter.accept(editorQuad);
                 }
             }
@@ -126,6 +123,7 @@ public class BlockRenderHelper {
                     float rotDegrees = compute16StepRotation(acc.getState());
                     ModelTransform.rotateY(editorQuad, rotDegrees);
 
+                    editorQuad.setTag(BBE_QUAD_TAG);
                     emitter.accept(editorQuad);
                 }
             }
@@ -183,6 +181,8 @@ public class BlockRenderHelper {
                 if (sprite != null) {
                     ModelTransform.swapSprite(sprite, editorQuad);
                 }
+
+                editorQuad.setTag(BBE_QUAD_TAG);
                 emitter.accept(editorQuad);
             }
         }
@@ -229,6 +229,7 @@ public class BlockRenderHelper {
                     float rotation = (compute16StepRotation(state) + 180f) % 360f;
                     ModelTransform.rotateY(editorQuad, rotation);
 
+                    editorQuad.setTag(BBE_QUAD_TAG);
                     emitter.accept(editorQuad);
                 }
             }
@@ -263,6 +264,7 @@ public class BlockRenderHelper {
                         editorQuad.setColor(vertex, color);
                     }
 
+                    //editorQuad.setTag(BBE_QUAD_TAG);
                     emitter.accept(editorQuad);
                     quadIdx++;
                 }
@@ -319,7 +321,7 @@ public class BlockRenderHelper {
                             float offset = layerIndex * 0.0001f;
                             ModelTransform.pushAndExpand(offset, editorQuad);
 
-                            /* "emit" */
+                            //editorQuad.setTag(BBE_QUAD_TAG);
                             emitter.accept(editorQuad);
                         }
                     }
