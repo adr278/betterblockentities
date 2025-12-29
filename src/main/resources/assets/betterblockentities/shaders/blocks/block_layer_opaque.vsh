@@ -1,8 +1,8 @@
 #version 330 core
 
-#import <betterblockentities:include/fog.glsl>
-#import <betterblockentities:include/chunk_vertex.glsl>
-#import <betterblockentities:include/chunk_matrices.glsl>
+#import <sodium:include/fog.glsl>
+#import <sodium:include/chunk_vertex.glsl>
+#import <sodium:include/chunk_matrices.glsl>
 
 out vec4 v_Color;
 out vec2 v_TexCoord;
