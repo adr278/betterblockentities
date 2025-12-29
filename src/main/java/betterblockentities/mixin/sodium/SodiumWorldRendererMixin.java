@@ -5,6 +5,11 @@ import betterblockentities.chunk.BBEDefaultTerrainRenderPasses;
 import betterblockentities.util.BlockEntityManager;
 
 /* minecraft */
+import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
+import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
+import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.state.LevelRenderState;
@@ -25,6 +30,7 @@ import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -48,10 +54,25 @@ public abstract class SodiumWorldRendererMixin {
     @Inject(method = "drawChunkLayer", at = @At("TAIL"))
     private void drawBBELayers(ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, GpuSampler terrainSampler, CallbackInfo ci) {
         if (group == ChunkSectionLayerGroup.OPAQUE) {
-            this.renderSectionManager.renderLayer(matrices, BBEDefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, terrainSampler);
-            this.renderSectionManager.renderLayer(matrices, BBEDefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, terrainSampler);
-        } else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
-            this.renderSectionManager.renderLayer(matrices, BBEDefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, terrainSampler);
+            renderBBELayer(matrices, BBEDefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, terrainSampler);
+            renderBBELayer(matrices, BBEDefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, terrainSampler);
         }
+
+        /*
+        else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
+            renderBBELayer(matrices, BBEDefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, terrainSampler);
+        }
+         */
+    }
+
+    @Unique
+    public void renderBBELayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
+        RenderDevice device = RenderDevice.INSTANCE;
+        CommandList commandList = device.createCommandList();
+
+        RenderSectionManagerAccessor sectionAcc = ((RenderSectionManagerAccessor)this.renderSectionManager);
+
+        sectionAcc.getChunkRenderer().render(matrices, commandList, this.renderSectionManager.getRenderLists(), pass, new CameraTransform(x, y, z), fogParameters, sectionAcc.getSortBehavior() != SortBehavior.OFF, terrainSampler);
+        commandList.flush();
     }
 }

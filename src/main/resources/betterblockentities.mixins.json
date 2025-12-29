@@ -28,10 +28,9 @@
     "minecraft.sign.AbstractSignBlockEntityRendererMixin",
     "sodium.AbstractBlockRenderContextAccessor",
     "sodium.BlockRendererMixin",
-    "sodium.DefaultShaderInterfaceMixin",
     "sodium.DefaultTerrainRenderPassesMixin",
+    "sodium.RenderSectionManagerAccessor",
     "sodium.ResourcePackScannerMixin",
-    "sodium.ShaderChunkRendererAccessor",
     "sodium.ShaderChunkRendererMixin",
     "sodium.SodiumWorldRendererMixin"
   ],
