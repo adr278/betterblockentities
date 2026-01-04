@@ -1,19 +1,31 @@
 package betterblockentities.util;
 
 /* local */
+import betterblockentities.gui.ConfigManager;
+import betterblockentities.mixin.minecraft.chest.ChestBlockEntityRendererAccessor;
 import betterblockentities.mixin.sodium.AbstractBlockRenderContextAccessor;
 
 /* minecraft */
+import betterblockentities.model.ModelPartWrapper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -27,15 +39,20 @@ import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* java/misc */
+import net.minecraft.world.level.block.state.properties.ChestType;
 import org.jetbrains.annotations.Nullable;
-
+import org.joml.Vector3f;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class BlockRenderHelper {
     private final BlockRenderer ctx;
     private final BlockEntity blockEntity;
+    private final BlockEntityRenderDispatcher dispatcher;
+    private final BlockEntityRenderer ber;
+    private final Block block;
 
     /* this tag is used to push geometry to our own render pass */
     public static final int BBE_QUAD_TAG = "BBE-QUAD.HASH".hashCode();
@@ -43,6 +60,9 @@ public class BlockRenderHelper {
     public BlockRenderHelper(BlockRenderer ctx, BlockEntity blockEntity) {
         this.ctx = ctx;
         this.blockEntity = blockEntity;
+        this.dispatcher = Minecraft.getInstance().getBlockEntityRenderDispatcher();
+        this.ber = this.dispatcher.getRenderer(this.blockEntity);
+        this.block = blockEntity.getBlockState().getBlock();
     }
 
     /* rebuild of DefaultModelEmitter->emitModel */
@@ -61,39 +81,6 @@ public class BlockRenderHelper {
             BlockModelPart part = (BlockModelPart)parts.get(i);
             defaultBuffer.emit(part, cullTest, MutableQuadViewImpl::emitDirectly);
         }
-    }
-
-    /* generic emit quads function */
-    public void emitQuadsGE(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
-        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
-
-        MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
-        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
-        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
-        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
-        acc.setDefaultRenderType(renderType);
-
-        for(int i = 0; i <= 6; ++i) {
-            Direction cullFace = ModelHelper.faceFromIndex(i);
-            if (!cullTest.test(cullFace)) {
-                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
-                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
-                int count = quads.size();
-
-                for(int j = 0; j < count; ++j) {
-                    BakedQuad q = (BakedQuad)quads.get(j);
-                    editorQuad.fromBakedQuad(q);
-                    editorQuad.setCullFace(cullFace);
-                    editorQuad.setRenderType(renderType);
-                    editorQuad.setAmbientOcclusion(ao.toTriState());
-
-                    editorQuad.setTag(BBE_QUAD_TAG);
-                    emitter.accept(editorQuad);
-                }
-            }
-        }
-        editorQuad.clear();
-        acc.setDefaultRenderType(defaultType);
     }
 
     /* added rotation transform */
@@ -132,12 +119,214 @@ public class BlockRenderHelper {
         acc.setDefaultRenderType(defaultType);
     }
 
+    /* generic emit quads function */
+    public void emitChestQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+
+        /* compute rotation */
+        BlockState state = acc.getState();
+        Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
+                ? state.getValue(BlockStateProperties.HORIZONTAL_FACING)
+                : Direction.NORTH;
+        float rotation = getRotationFromFacingHorizontal(facing);
+
+        /* get sprite */
+        boolean christmas = ConfigManager.CONFIG.chest_christmas;
+        var ChestMaterial = ((ChestBlockEntityRendererAccessor)this.ber).getChestMaterialInvoke(this.blockEntity, christmas);
+        ChestType type = state.hasProperty(ChestBlock.TYPE) ? (ChestType)state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
+        Material material = Sheets.chooseMaterial(ChestMaterial, type);
+        TextureAtlasSprite sprite = ModelTransform.getSprite(material.texture());
+
+        MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
+        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
+        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
+        acc.setDefaultRenderType(renderType);
+
+        for(int i = 0; i <= 6; ++i) {
+            Direction cullFace = ModelHelper.faceFromIndex(i);
+            if (!cullTest.test(cullFace)) {
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
+                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
+                int count = quads.size();
+
+                for(int j = 0; j < count; ++j) {
+                    BakedQuad q = (BakedQuad)quads.get(j);
+                    editorQuad.fromBakedQuad(q);
+                    editorQuad.setCullFace(cullFace);
+                    editorQuad.setRenderType(renderType);
+                    editorQuad.setAmbientOcclusion(ao.toTriState());
+
+                    /* rotate */
+                    ModelTransform.rotateY(editorQuad, rotation);
+
+                    /* swap sprite */
+                    ModelTransform.swapSprite(sprite, editorQuad);
+
+                    editorQuad.setTag(BBE_QUAD_TAG);
+                    emitter.accept(editorQuad);
+                }
+            }
+        }
+        editorQuad.clear();
+        acc.setDefaultRenderType(defaultType);
+    }
+
+    public void emitShulkerQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+
+        /* compute rotation */
+        BlockState state = acc.getState();
+        Direction facing = state.hasProperty(ShulkerBoxBlock.FACING)
+                ? state.getValue(ShulkerBoxBlock.FACING)
+                : Direction.UP;
+
+        Map<Direction, float[]> facingRot = Map.of(
+                Direction.UP, new float[]{180, 180},
+                Direction.DOWN, new float[]{0, 180},
+                Direction.NORTH, new float[]{90, 0},
+                Direction.SOUTH, new float[]{90, 180},
+                Direction.WEST, new float[]{90, 270},
+                Direction.EAST, new float[]{90, 90}
+        );
+        float[] rotation = facingRot.get(facing);
+
+        /* get sprite */
+        DyeColor color = ((ShulkerBoxBlock)block).getColor();
+        Material material = color == null ?
+                Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION :
+                Sheets.getShulkerBoxMaterial(color);
+        TextureAtlasSprite sprite = ModelTransform.getSprite(material.texture());
+
+        MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
+        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
+        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
+        acc.setDefaultRenderType(renderType);
+
+        for(int i = 0; i <= 6; ++i) {
+            Direction cullFace = ModelHelper.faceFromIndex(i);
+            if (!cullTest.test(cullFace)) {
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
+                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
+                int count = quads.size();
+
+                for(int j = 0; j < count; ++j) {
+                    BakedQuad q = (BakedQuad)quads.get(j);
+                    editorQuad.fromBakedQuad(q);
+                    editorQuad.setCullFace(cullFace);
+                    editorQuad.setRenderType(renderType);
+                    editorQuad.setAmbientOcclusion(ao.toTriState());
+
+                    /* rotate */
+                    ModelTransform.rotateX(editorQuad, rotation[0]);
+                    ModelTransform.rotateY(editorQuad, rotation[1]);
+
+                    /* swap sprite */
+                    ModelTransform.swapSprite(sprite, editorQuad);
+
+                    editorQuad.setTag(BBE_QUAD_TAG);
+                    emitter.accept(editorQuad);
+                }
+            }
+        }
+        editorQuad.clear();
+        acc.setDefaultRenderType(defaultType);
+    }
+
+    public void emitBellQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+
+        Material bellBodyMaterial = Sheets.BLOCK_ENTITIES_MAPPER.defaultNamespaceApply("bell/bell_body");
+        TextureAtlasSprite bellBodySprite = ModelTransform.getSprite(bellBodyMaterial.texture());
+
+        MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
+        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
+        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
+        acc.setDefaultRenderType(renderType);
+
+        for(int i = 0; i <= 6; ++i) {
+            Direction cullFace = ModelHelper.faceFromIndex(i);
+            if (!cullTest.test(cullFace)) {
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
+                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
+                int count = quads.size();
+
+                for(int j = 0; j < count; ++j) {
+                    BakedQuad q = (BakedQuad)quads.get(j);
+                    editorQuad.fromBakedQuad(q);
+                    editorQuad.setCullFace(cullFace);
+                    editorQuad.setRenderType(renderType);
+                    editorQuad.setAmbientOcclusion(ao.toTriState());
+
+                    ModelTransform.swapSprite(bellBodySprite, editorQuad);
+
+                    editorQuad.setTag(BBE_QUAD_TAG);
+                    emitter.accept(editorQuad);
+                }
+            }
+        }
+        editorQuad.clear();
+        acc.setDefaultRenderType(defaultType);
+    }
+
+    public void emitBedQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+
+        /* compute rotation */
+        BlockState state = acc.getState();
+        Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
+                ? state.getValue(BlockStateProperties.HORIZONTAL_FACING)
+                : Direction.NORTH;
+        float rotation = getRotationFromFacingHorizontal(facing);
+
+        /* get sprite */
+        DyeColor color = ((BedBlock)this.block).getColor();
+        Material material = Sheets.getBedMaterial(color);
+        TextureAtlasSprite sprite = ModelTransform.getSprite(material.texture());
+
+        MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
+        acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, acc.getState(), acc.getDefaultRenderType());
+        ChunkSectionLayer defaultType = acc.getDefaultRenderType();
+        acc.setDefaultRenderType(renderType);
+
+        for(int i = 0; i <= 6; ++i) {
+            Direction cullFace = ModelHelper.faceFromIndex(i);
+            if (!cullTest.test(cullFace)) {
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), renderType, acc.getSlice(), acc.getPos());
+                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), renderType);
+                int count = quads.size();
+
+                for(int j = 0; j < count; ++j) {
+                    BakedQuad q = (BakedQuad)quads.get(j);
+                    editorQuad.fromBakedQuad(q);
+                    editorQuad.setCullFace(cullFace);
+                    editorQuad.setRenderType(renderType);
+                    editorQuad.setAmbientOcclusion(ao.toTriState());
+
+                    /* rotate */
+                    ModelTransform.rotateY(editorQuad, rotation);
+
+                    /* swap sprite */
+                    ModelTransform.swapSprite(sprite, editorQuad);
+
+                    editorQuad.setTag(BBE_QUAD_TAG);
+                    emitter.accept(editorQuad);
+                }
+            }
+        }
+        editorQuad.clear();
+        acc.setDefaultRenderType(defaultType);
+    }
+
     /* custom impl. maps the sherds from the block entity data and swaps the "side" quads sprites to the appropriate one */
     public void emitDecoratedPotQuads(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
         AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
         PotDecorations sherds = ((DecoratedPotBlockEntity)blockEntity).getDecorations();
 
-        boolean skipTransform = part.getQuads(null).size() > 10;
+        boolean skipTransform = part.getQuads(null).size() > 1;
 
         TextureAtlasSprite[] sideSprites = new TextureAtlasSprite[4];
         sideSprites[0] = sherds.back().map(BlockRenderHelper::getSherdSprite).orElse(null);
@@ -147,7 +336,13 @@ public class BlockRenderHelper {
 
         BlockState state = acc.getState();
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-        int facingIndex = horizontalIndex(facing);
+        float rotation = getRotationFromFacingHorizontal(facing);
+
+        /* get base sprite */
+        Material baseMaterial = Sheets.DECORATED_POT_BASE;
+        Material sidesMaterial = Sheets.DECORATED_POT_SIDE;
+        TextureAtlasSprite baseSprite = ModelTransform.getSprite(baseMaterial.texture());
+        TextureAtlasSprite sidesSprite = ModelTransform.getSprite(sidesMaterial.texture());
 
         MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
         acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
@@ -166,21 +361,29 @@ public class BlockRenderHelper {
                 BakedQuad q = (BakedQuad)quads.get(j);
                 editorQuad.fromBakedQuad(q);
                 editorQuad.setCullFace(cullFace);
-                editorQuad.setRenderType(ChunkSectionLayer.CUTOUT);
+                editorQuad.setRenderType(ChunkSectionLayer.SOLID);
                 editorQuad.setAmbientOcclusion(ao.toTriState());
 
-                int dirIndex = horizontalIndex(q.direction());
-                if (skipTransform || dirIndex == -1) {
-                    emitter.accept(editorQuad);
-                    continue;
+                if (!skipTransform) {
+                    Vector3f normal = editorQuad.faceNormal();
+                    Direction dir = ModelPartWrapper.normalToDirection(normal).getOpposite();
+
+                    int dirIndex = horizontalIndex(dir);
+
+                    if (dirIndex == -1) {
+                        emitter.accept(editorQuad);
+                        continue;
+                    }
+
+                    TextureAtlasSprite sprite = sideSprites[dirIndex];
+                    ModelTransform.swapSprite(sprite != null ? sprite : sidesSprite, editorQuad);
+                }
+                else {
+                    ModelTransform.swapSprite(baseSprite, editorQuad);
                 }
 
-                int delta = (dirIndex - facingIndex + 4) % 4;
-                TextureAtlasSprite sprite = sideSprites[delta];
-
-                if (sprite != null) {
-                    ModelTransform.swapSprite(sprite, editorQuad);
-                }
+                /* rotate */
+                ModelTransform.rotateY(editorQuad, rotation);
 
                 editorQuad.setTag(BBE_QUAD_TAG);
                 emitter.accept(editorQuad);
@@ -334,6 +537,7 @@ public class BlockRenderHelper {
         }
     }
 
+    /* parse item path into a texture path, retrieve stitched sherd sprite from the block atlas */
     private static TextureAtlasSprite getSherdSprite(Item item) {
         if (item == null) return null;
         String itemName = item.toString();
@@ -341,7 +545,6 @@ public class BlockRenderHelper {
         Identifier spriteId = Identifier.withDefaultNamespace("entity/decorated_pot/" + pattern + "_pottery_pattern");
         return ModelTransform.getSprite(spriteId);
     }
-
     private static String parseSherdName(String id) {
         int colonIndex = id.indexOf(':');
         String path = colonIndex >= 0 ? id.substring(colonIndex + 1) : id;
@@ -351,6 +554,7 @@ public class BlockRenderHelper {
         return path;
     }
 
+    /* map quad direction to sprite index */
     private static int horizontalIndex(Direction dir) {
         return switch (dir) {
             case NORTH -> 0;
@@ -361,6 +565,27 @@ public class BlockRenderHelper {
         };
     }
 
+    /* compute rotation degrees from block state property HORIZONTAL_FACING (cardinal directions) */
+    private static float getRotationFromFacingHorizontal(Direction facing) {
+        return switch (facing) {
+            case NORTH -> 180f;
+            case EAST  -> 270f;
+            case SOUTH -> 0f;
+            case WEST  -> 90f;
+            default    -> 0f;
+        };
+    }
+
+    /* compute rotation degrees from block state property HORIZONTAL_FACING (cardinal directions) */
+    private static float getRotationFromFacingVertical(Direction facing) {
+        return switch (facing) {
+            case UP -> 0f;
+            case DOWN  -> 180f;
+            default    -> 0f;
+        };
+    }
+
+    /* compute rotation degrees from block state property ROTATION_16, return 0 (NORTH) if property is not available or set */
     public static float compute16StepRotation(BlockState state) {
         if (state.hasProperty(BlockStateProperties.ROTATION_16)) {
             int rot = state.getValue(BlockStateProperties.ROTATION_16);

@@ -17,16 +17,13 @@ import net.minecraft.client.renderer.state.CameraRenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /* mixin */
-import net.minecraft.util.SpecialDates;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = ChestRenderer.class, priority = Integer.MAX_VALUE)
+@Mixin(ChestRenderer.class)
 public abstract class ChestBlockEntityRendererMixin {
     @Shadow @Mutable private ChestModel singleModel;
     @Shadow @Mutable private ChestModel doubleLeftModel;
@@ -64,5 +61,10 @@ public abstract class ChestBlockEntityRendererMixin {
             this.doubleLeftModel = this.BBEdoubleChestLeft;
             this.doubleRightModel = this.BBEdoubleChestRight;
         }
+    }
+    @Inject(method = "xmasTextures", at = @At("HEAD"), cancellable = true)
+    private static void xmasTextures(CallbackInfoReturnable<Boolean> cir) {
+        if (ConfigManager.CONFIG.chest_christmas && ConfigManager.CONFIG.optimize_chests && ConfigManager.CONFIG.master_optimize)
+            cir.setReturnValue(true);
     }
 }

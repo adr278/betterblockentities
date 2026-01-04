@@ -13,7 +13,7 @@ import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import org.joml.Vector3f;
 
 public class ModelTransform {
-    /* rotates quad from passed degrees and not radians */
+    /* rotates quad by passed degrees "around the Y axis" */
     public static void rotateY(MutableQuadViewImpl quad, float degrees) {
         float radians = (float) Math.toRadians(degrees);
         float cos = (float) Math.cos(radians);
@@ -28,6 +28,27 @@ public class ModelTransform {
             float newX = x * cos - z * sin;
             float newZ = x * sin + z * cos;
             quad.setPos(i, newX + centerX, y, newZ + centerZ);
+        }
+    }
+
+    /* rotates quad by passed degrees "around the X axis" */
+    public static void rotateX(MutableQuadViewImpl quad, float degrees) {
+        float radians = (float) Math.toRadians(degrees);
+        float cos = (float) Math.cos(radians);
+        float sin = (float) Math.sin(radians);
+
+        float centerY = 0.5f;
+        float centerZ = 0.5f;
+
+        for (int i = 0; i < 4; i++) {
+            float x = quad.getX(i);
+            float y = quad.getY(i) - centerY;
+            float z = quad.getZ(i) - centerZ;
+
+            float newY = y * cos - z * sin;
+            float newZ = y * sin + z * cos;
+
+            quad.setPos(i, x, newY + centerY, newZ + centerZ);
         }
     }
 
@@ -96,36 +117,6 @@ public class ModelTransform {
             z += normal.z() * amount;
 
             quad.setPos(i, x, y, z);
-        }
-    }
-
-    public static void insetQuadUvs(MutableQuadViewImpl quad, float insetU, float insetV) {
-        if (!(quad instanceof MutableQuadViewImpl mQuad)) return;
-
-        /* compute quad UV center */
-        float uCenter = 0f;
-        float vCenter = 0f;
-        for (int i = 0; i < 4; i++) {
-            uCenter += mQuad.getTexU(i);
-            vCenter += mQuad.getTexV(i);
-        }
-        uCenter *= 0.25f;
-        vCenter *= 0.25f;
-
-        /* push each UV inward toward center */
-        for (int i = 0; i < 4; i++) {
-            float u = mQuad.getTexU(i);
-            float v = mQuad.getTexV(i);
-
-            /* compute vector from vertex to center */
-            float deltaU = uCenter - u;
-            float deltaV = vCenter - v;
-
-            /* move along diagonal toward center by inset fraction */
-            u += deltaU * insetU;
-            v += deltaV * insetV;
-
-            mQuad.setUV(i, u, v);
         }
     }
 

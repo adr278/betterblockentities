@@ -20,9 +20,10 @@ public class BlockEntityManager {
     public static ReferenceOpenHashSet<Class<? extends BlockEntity>> SUPPORTED_TYPES = new ReferenceOpenHashSet<>();
     public static final ReferenceOpenHashSet<Class<? extends Block>> SUPPORTED_BLOCKS = new ReferenceOpenHashSet<>(
             List.of(
-                    ChestBlock.class, EnderChestBlock.class, ShulkerBoxBlock.class,
-                    BellBlock.class, DecoratedPotBlock.class, BedBlock.class,
-                    SignBlock.class, CeilingHangingSignBlock.class,
+                    ChestBlock.class, EnderChestBlock.class, TrappedChestBlock.class,
+                    CopperChestBlock.class, WeatheringCopperChestBlock.class,
+                    ShulkerBoxBlock.class, BellBlock.class, DecoratedPotBlock.class,
+                    BedBlock.class, SignBlock.class, CeilingHangingSignBlock.class,
                     WallSignBlock.class, WallHangingSignBlock.class,
                     BannerBlock.class, WallBannerBlock.class
             )

@@ -12,10 +12,12 @@
     "minecraft.MipMapGeneratorAccessor",
     "minecraft.MipMapGeneratorMixin",
     "minecraft.ModelCommandRendererMixin",
+    "minecraft.ModelManagerMixin",
+    "minecraft.ModelPartAccessor",
+    "minecraft.ModelPartPolygonAccessor",
+    "minecraft.ModelPartVertexAccessor",
     "minecraft.OrderedRenderCommandQueueImplMixin",
     "minecraft.RenderLayersMixin",
-    "minecraft.ResourcePackManagerMixin",
-    "minecraft.SpecialDatesMixin",
     "minecraft.WorldRendererMixin",
     "minecraft.bell.BellBlockEntityMixin",
     "minecraft.chest.ChestBlockEntityAccessor",
@@ -39,5 +41,6 @@
     "defaultRequire": 1
   },
   "client": [
+    "minecraft.chest.ChestBlockEntityRendererAccessor"
   ]
 }
