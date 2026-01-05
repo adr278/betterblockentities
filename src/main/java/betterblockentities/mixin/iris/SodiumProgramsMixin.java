@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.Pseudo;
 @Pseudo
 @Mixin(SodiumPrograms.class)
 public class SodiumProgramsMixin {
-    /** maybe not compleatly overwrite this? */
+    /** maybe not completely overwrite this? */
     @Overwrite
     private SodiumPrograms.Pass mapTerrainRenderPass(TerrainRenderPass pass) {
         if (pass == DefaultTerrainRenderPasses.SOLID || pass == BBEDefaultTerrainRenderPasses.SOLID) {
