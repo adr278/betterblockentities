@@ -25,7 +25,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.caffeinemc:sodium-fabric:${sodium_version}"
 
-    modImplementation "maven.modrinth:iris:1.10.3+1.21.11-fabric"
+    compileOnly "maven.modrinth:iris:1.10.3+1.21.11-fabric"
 }
 
 processResources {

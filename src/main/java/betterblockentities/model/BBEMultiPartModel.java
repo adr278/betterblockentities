@@ -27,10 +27,6 @@ public class BBEMultiPartModel implements BlockStateModel {
     private final Map<String, BlockStateModel> pairs = new HashMap<>();
 
     /* construct models from geometry class Model and passed sprite. assumes that all ModelParts shares the same PoseStack */
-    public BBEMultiPartModel(Model model, TextureAtlasSprite sprite, PoseStack stack) {
-        ModelPart root = model.root();
-        generateMeshModel(root, sprite, stack);
-    }
     public BBEMultiPartModel(ModelPart root, TextureAtlasSprite sprite, PoseStack stack) {
         generateMeshModel(root, sprite, stack);
     }
@@ -43,7 +39,10 @@ public class BBEMultiPartModel implements BlockStateModel {
             List<BlockModelPart> blockParts = new ArrayList<>();
 
             /* if there are any nested children in this part, this function should be able to traverse all of them */
-            ModelPartWrapper.toBakedQuadsWithTransforms(part, outputQuads, sprite, stack);
+            if (part.getClass() != ModelPart.class)
+                ModelPartWrapper.toBakedQuadsVanilla(part, outputQuads, sprite, stack);
+            else
+                ModelPartWrapper.toBakedQuadsWithTransforms(part, outputQuads, sprite, stack);
 
             /* TODO: fix culling */
             QuadCollection.Builder builder = new QuadCollection.Builder();

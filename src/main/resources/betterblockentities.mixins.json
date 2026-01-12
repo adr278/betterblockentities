@@ -3,7 +3,6 @@
   "package": "betterblockentities.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "iris.SodiumProgramsMixin",
     "minecraft.AbstractBlockMixin",
     "minecraft.AtlasManagerMixin",
     "minecraft.BlockEntityMixin",
@@ -22,6 +21,7 @@
     "minecraft.bell.BellBlockEntityMixin",
     "minecraft.chest.ChestBlockEntityAccessor",
     "minecraft.chest.ChestBlockEntityMixin",
+    "minecraft.chest.ChestBlockEntityRendererAccessor",
     "minecraft.chest.ChestBlockEntityRendererMixin",
     "minecraft.chest.ChestLidAnimatorAccessor",
     "minecraft.chest.EnderChestBlockEntityMixin",
@@ -30,10 +30,6 @@
     "minecraft.sign.AbstractSignBlockEntityRendererMixin",
     "sodium.AbstractBlockRenderContextAccessor",
     "sodium.BlockRendererMixin",
-    "sodium.DefaultTerrainRenderPassesMixin",
-    "sodium.RenderSectionManagerAccessor",
-    "sodium.ResourcePackScannerMixin",
-    "sodium.ShaderChunkRendererMixin",
     "sodium.SodiumWorldRendererMixin"
   ],
   "server": [],
@@ -41,6 +37,8 @@
     "defaultRequire": 1
   },
   "client": [
-    "minecraft.chest.ChestBlockEntityRendererAccessor"
+    "minecraft.sign.HangingSignRendererMixin",
+    "minecraft.sign.SignRendererMixin",
+    "minecraft.sign.SignRendererModelsAccessor"
   ]
 }

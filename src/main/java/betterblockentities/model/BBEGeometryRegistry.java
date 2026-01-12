@@ -4,10 +4,12 @@ package betterblockentities.model;
 import betterblockentities.util.ModelTransform;
 
 /* minecraft */
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.blockentity.HangingSignRenderer;
 import net.minecraft.resources.Identifier;
 
 /* mojang */
@@ -18,15 +20,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BBEGeometryRegistry {
-    /* fastutil here is unnecessary as these only gets accessed on ModelManager reload */
-    public static Map<ModelLayerLocation, BlockStateModel> cache = new HashMap<>();
+    private static final Map<ModelLayerLocation, BlockStateModel> cache = new HashMap<>();
+    public static Map<HangingSignRenderer.ModelKey, Model.Simple> hangingSignModels = new HashMap<>();
 
     public static void cacheGeometry(ModelLayerLocation key, ModelPart root, Identifier texture, PoseStack stack) {
         BBEMultiPartModel model = new BBEMultiPartModel(root, ModelTransform.getSprite(texture), stack);
-        BBEGeometryRegistry.cache.put(key, model);
+        cache.put(key, model);
     }
 
-    public static class SupportedModelLayers {
+    public static BlockStateModel getModel(ModelLayerLocation layer) {
+        return cache.get(layer);
+    }
+
+    public static void clearCache() {
+        cache.clear();
+    }
+
+    public static Map<ModelLayerLocation, BlockStateModel> getCache() {
+        return cache;
+    }
+
+    /* supported vanilla model layers which are mapped inside the entityModelSet */
+    public static class SupportedVanillaModelLayers {
         public static final ModelLayerLocation CHEST;
         public static final ModelLayerLocation LEFT_CHEST;
         public static final ModelLayerLocation RIGHT_CHEST;
@@ -62,6 +77,38 @@ public class BBEGeometryRegistry {
         }
     }
 
+    /* either totally custom model layers or "vanilla" model layers for geometry that didn't get mapped in the entityModelSet */
+    public static class BBEModelLayers {
+        public static final ModelLayerLocation SIGN_STANDING;
+        public static final ModelLayerLocation SIGN_WALL;
+        public static final ModelLayerLocation HANGING_SIGN_CEILING;
+        public static final ModelLayerLocation HANGING_SIGN_CEILING_MIDDLE;
+        public static final ModelLayerLocation HANGING_SIGN_WALL;
+        public static final ModelLayerLocation HANGING_SIGN_CEILING_INVERTED;
+        public static final ModelLayerLocation HANGING_SIGN_CEILING_MIDDLE_INVERTED;
+        public static final ModelLayerLocation HANGING_SIGN_WALL_INVERTED;
+
+        public static final ModelLayerLocation[] ALL;
+
+        static {
+            SIGN_STANDING = new ModelLayerLocation(Identifier.withDefaultNamespace("sign/standing"), "main");
+            SIGN_WALL = new ModelLayerLocation(Identifier.withDefaultNamespace("sign/wall"), "main");
+            HANGING_SIGN_CEILING = new ModelLayerLocation(Identifier.withDefaultNamespace("hanging_sign/ceiling"), "main");
+            HANGING_SIGN_CEILING_MIDDLE = new ModelLayerLocation(Identifier.withDefaultNamespace("hanging_sign/ceiling_middle"), "main");
+            HANGING_SIGN_WALL = new ModelLayerLocation(Identifier.withDefaultNamespace("hanging_sign/wall"), "main");
+            HANGING_SIGN_CEILING_INVERTED = new ModelLayerLocation(Identifier.withDefaultNamespace("hanging_sign/ceiling_inverted"), "main");
+            HANGING_SIGN_CEILING_MIDDLE_INVERTED = new ModelLayerLocation(Identifier.withDefaultNamespace("hanging_sign/ceiling_middle_inverted"), "main");
+            HANGING_SIGN_WALL_INVERTED = new ModelLayerLocation(Identifier.withDefaultNamespace("hanging_sign/wall_inverted"), "main");
+
+            ALL = new ModelLayerLocation[]{SIGN_STANDING, SIGN_WALL, HANGING_SIGN_CEILING, HANGING_SIGN_CEILING_MIDDLE, HANGING_SIGN_WALL, HANGING_SIGN_CEILING_INVERTED, HANGING_SIGN_CEILING_MIDDLE_INVERTED, HANGING_SIGN_WALL_INVERTED};
+        }
+    }
+    public static ModelLayerLocation createHangingSignLayer(HangingSignRenderer.AttachmentType attachmentType, boolean chains) {
+        Identifier identifier = Identifier.withDefaultNamespace("hanging_sign/" + attachmentType.getSerializedName() + (chains ? "_inverted" : ""));
+        return new ModelLayerLocation(identifier, "main");
+    }
+
+    /* placeholder sprite identifiers for the model part wrapper */
     public static class PlaceHolderSpriteIdentifiers {
         public static final Identifier CHEST;
         public static final Identifier BELL_BODY;
@@ -70,7 +117,7 @@ public class BBEGeometryRegistry {
         public static final Identifier SHULKER;
         public static final Identifier BED_HEAD;
         public static final Identifier BED_FOOT;
-        public static final Identifier BANNER;;
+        public static final Identifier BANNER;
 
         public static final Identifier[] ALL;
 
