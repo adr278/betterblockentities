@@ -1,9 +1,7 @@
 package betterblockentities.mixin.sodium;
 
 /* local */
-import betterblockentities.chunk.BBEDefaultMaterials;
 import betterblockentities.chunk.BBEEmitter;
-import betterblockentities.util.*;
 
 /* minecraft */
 import net.minecraft.client.renderer.block.model.BlockStateModel;
@@ -38,7 +36,7 @@ import java.util.function.Predicate;
 public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
     @Shadow protected abstract void tintQuad(MutableQuadViewImpl quad);
     @Shadow protected abstract void bufferQuad(MutableQuadViewImpl quad, float[] brightnesses, Material material);
-
+    
     @Redirect(
             method = "renderModel(Lnet/minecraft/client/renderer/block/model/BlockStateModel;" +
                     "Lnet/minecraft/world/level/block/state/BlockState;" +
@@ -75,10 +73,7 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
         boolean emissive = quad.emissive();
         ChunkSectionLayer blendMode = quad.getRenderType();
 
-        /* if we have tagged this quad, push it to our terrain pass */
-        Material material = quad.getTag() == BlockRenderHelper.BBE_QUAD_TAG ?
-            BBEDefaultMaterials.forChunkLayer(blendMode == null ? this.defaultRenderType : blendMode) :
-            DefaultMaterials.forChunkLayer(blendMode == null ? this.defaultRenderType : blendMode);
+        Material material = DefaultMaterials.forChunkLayer(blendMode == null ? this.defaultRenderType : blendMode);
 
         this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);

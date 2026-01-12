@@ -116,13 +116,10 @@ public class ModelPartWrapper {
         });
     }
 
+    /* skips applying (xRot, yRot, zRot), this seems to mess up geometry coming from mods like EMF (we shouldn't need it anyway) */
     public static void toBakedQuadsVanilla(ModelPart part, List<BakedQuad> output, TextureAtlasSprite sprite, PoseStack stack) {
         ModelPartAccessor modelAcc = (ModelPartAccessor)(Object)part;
-
         stack.pushPose();
-
-        //modelAcc.translateAndRotateInvoke(stack);
-
         float modelX = modelAcc.getX();
         float modelY = modelAcc.getY();
         float modelZ = modelAcc.getZ();
@@ -131,18 +128,11 @@ public class ModelPartWrapper {
         float nModelY = modelY / 16;
         float nModelZ = modelZ / 16;
 
-        float modelXRot = modelAcc.getXRot();
-        float modelYRot = modelAcc.getYRot();
-        float modelZRot = modelAcc.getZRot();
-
         float modelXScale = modelAcc.getXScale();
         float modelYScale = modelAcc.getYScale();
         float modelZScale = modelAcc.getZScale();
 
         stack.translate(nModelX, nModelY, nModelZ);
-        if (modelXRot != 0.0F || modelYRot != 0.0F || modelZRot != 0.0F) {
-            stack.mulPose((new Quaternionf()).rotationZYX(modelZRot, modelYRot, modelXRot));
-        }
         if (modelXScale != 1.0F || modelYScale != 1.0F || modelZScale != 1.0F) {
             stack.scale(modelXScale, modelYScale, modelZScale);
         }

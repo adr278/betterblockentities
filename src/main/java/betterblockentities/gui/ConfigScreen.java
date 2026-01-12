@@ -1,6 +1,7 @@
 package betterblockentities.gui;
 
 /* minecraft */
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -33,6 +34,7 @@ public class ConfigScreen extends OptionsSubScreen {
             potAnimOpt;
     private OptionInstance<Integer>
             updateType,
+            bannerLayerOpt,
             smoothness;
     private OptionInstance<Integer> signDistance;
 
@@ -45,6 +47,9 @@ public class ConfigScreen extends OptionsSubScreen {
     protected void addOptions() {
         if (this.list == null) return;
 
+        if (FabricLoader.getInstance().isModLoaded("entity_model_features"))
+            ConfigManager.CONFIG.updateType = 0;
+
         masterToggle = masterToggle();
         chestOpt = optimizeChests();
         signOpt = optimizeSigns();
@@ -53,6 +58,7 @@ public class ConfigScreen extends OptionsSubScreen {
         bellOpt = optimizeBells();
         potOpt = optimizeDecoratedPots();
         bannerOpt = optimizeBanners();
+        bannerLayerOpt = bannerLayer();
         updateType = updateType();
         smoothness = extraRenderPasses();
         signDistance = signTextRenderDistance();
@@ -76,7 +82,7 @@ public class ConfigScreen extends OptionsSubScreen {
                 potOpt, potAnimOpt,
                 bedOpt
         );
-        //this.list.addSmall(bannerOpt);
+        this.list.addSmall(bannerOpt, bannerLayerOpt);
         this.list.addBig(updateType);
         this.list.addBig(smoothness);
         this.list.addBig(signDistance);
@@ -238,7 +244,23 @@ public class ConfigScreen extends OptionsSubScreen {
                 ConfigManager.CONFIG.optimize_banners,
                 v -> {
                     ConfigManager.CONFIG.optimize_banners = v;
+                    setOptionActive(bannerLayerOpt, v && masterToggle.get());
                 }
+        );
+    }
+
+    private OptionInstance<Integer> bannerLayer() {
+        return new OptionInstance<>(
+                "Banner Graphics",
+                value -> Tooltip.create(Component.literal("§7Decides what render pass banners gets rendered in. §l§nFast§r §7may break some banner patterns")),
+                (text, value) -> switch (value) {
+                    case 0 -> Component.literal("Fancy");
+                    case 1 -> Component.literal("Fast");
+                    default -> Component.literal("Fancy");
+                },
+                new OptionInstance.ClampingLazyMaxIntRange(0, () -> 1, 1),
+                ConfigManager.CONFIG.bannerLayer,
+                value -> ConfigManager.CONFIG.bannerLayer = value
         );
     }
 
@@ -298,6 +320,7 @@ public class ConfigScreen extends OptionsSubScreen {
         setOptionActive(bellOpt, enabled);
         setOptionActive(potOpt, enabled);
         setOptionActive(bannerOpt, enabled);
+        setOptionActive(bannerLayerOpt, enabled);
 
         setOptionActive(chestAnimOpt, enabled && chestOpt.get());
         setOptionActive(chestChristmasOpt, enabled && chestOpt.get());
@@ -307,7 +330,7 @@ public class ConfigScreen extends OptionsSubScreen {
         setOptionActive(potAnimOpt, enabled && potOpt.get());
 
         setOptionActive(smoothness, enabled);
-        setOptionActive(updateType, enabled);
+        setOptionActive(updateType, !FabricLoader.getInstance().isModLoaded("entity_model_features") && enabled);
         setOptionActive(signDistance, enabled);
     }
 

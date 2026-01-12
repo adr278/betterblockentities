@@ -7,9 +7,13 @@ import betterblockentities.gui.ConfigManager;
 
 /* minecraft */
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 /* java/misc */
@@ -23,8 +27,8 @@ public class BlockEntityManager {
                     ChestBlock.class, EnderChestBlock.class, TrappedChestBlock.class,
                     CopperChestBlock.class, WeatheringCopperChestBlock.class,
                     ShulkerBoxBlock.class, BellBlock.class, DecoratedPotBlock.class,
-                    BedBlock.class, SignBlock.class, CeilingHangingSignBlock.class,
-                    WallSignBlock.class, WallHangingSignBlock.class,
+                    BedBlock.class, CeilingHangingSignBlock.class, WallHangingSignBlock.class,
+                    StandingSignBlock.class, WallSignBlock.class,
                     BannerBlock.class, WallBannerBlock.class
             )
     );
@@ -58,19 +62,21 @@ public class BlockEntityManager {
             return now - pot.wobbleStartedAtTick < pot.lastWobbleStyle.duration;
         }
         if (signText && blockEntity instanceof SignBlockEntity) {
-            //int chunkRenderDistance = MinecraftClient.getInstance().options.getViewDistance().getValue();
-
-            /* distance in blocks not chunks */
-            double maxSignTextDistance = ConfigManager.CONFIG.sign_text_render_distance;
-
-            Entity entity = Minecraft.getInstance().getCameraEntity();
-            boolean shouldRenderText = entity.distanceToSqr(Vec3.atCenterOf(blockEntity.getBlockPos())) < maxSignTextDistance * maxSignTextDistance;
-            if (shouldRenderText)
-                return true;
+                return shouldRenderSignText((SignBlockEntity)blockEntity);
         }
 
         /* banners and beds are handled here */
         return false;
+    }
+
+    /* quick check for text before we reach the ber (where we cull the text) */
+    private static boolean shouldRenderSignText(SignBlockEntity blockEntity) {
+        if (blockEntity.getBackText() == null && blockEntity.getFrontText() == null)
+            return false;
+
+        double maxSignTextDistance = ConfigManager.CONFIG.sign_text_render_distance;
+        Entity entity = Minecraft.getInstance().getCameraEntity();
+        return entity.distanceToSqr(Vec3.atCenterOf(blockEntity.getBlockPos())) < maxSignTextDistance * maxSignTextDistance;
     }
 
     public static boolean shouldRender(BlockEntity blockEntity) {

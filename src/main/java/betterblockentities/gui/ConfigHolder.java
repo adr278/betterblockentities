@@ -18,6 +18,7 @@ public class ConfigHolder
     public boolean shulker_animations = true;
     public boolean bell_animations = true;
     public boolean pot_animations = true;
+    public int bannerLayer = 0;
 
     public int sign_text_render_distance = 16;
     public int updateType = 0;
@@ -33,6 +34,7 @@ public class ConfigHolder
         copy.optimize_bells = optimize_bells;
         copy.optimize_decoratedpots = optimize_decoratedpots;
         copy.optimize_banners = optimize_banners;
+        copy.bannerLayer = bannerLayer;
         copy.chest_animations = chest_animations;
         copy.chest_christmas = chest_christmas;
         copy.render_sign_text = render_sign_text;
@@ -57,6 +59,7 @@ public class ConfigHolder
                 && optimize_bells == other.optimize_bells
                 && optimize_decoratedpots == other.optimize_decoratedpots
                 && optimize_banners == other.optimize_banners
+                && bannerLayer == other.bannerLayer
                 && chest_animations == other.chest_animations
                 && chest_christmas == other.chest_christmas
                 && render_sign_text == other.render_sign_text

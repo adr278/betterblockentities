@@ -1,10 +1,9 @@
 package betterblockentities.mixin.minecraft;
 
-/* local */
-import betterblockentities.resource.BBEAtlasRegistry;
-
 /* minecraft */
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.AtlasManager;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.resources.Identifier;
 
 /* mixin */
@@ -13,28 +12,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /* java/misc */
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 @Mixin(AtlasManager.class)
 public class AtlasManagerMixin {
-    /*
-        injects our custom atlas into the KNOWN_ATLASES list at class load.
-        KNOWN_ATLASES is static final, so we modify the constant when the list is created.
-        This is for a future implementation
-
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;"))
-    private Iterator<AtlasManager.AtlasConfig> addCustomAtlasIterator(List<AtlasManager.AtlasConfig> original) {
-        List<AtlasManager.AtlasConfig> modified = new ArrayList<>(original);
-
-        //output png atlas spritesheet
-        Identifier textureId = Identifier.withDefaultNamespace("textures/atlas/bbe_atlas.png");
-
-        //inject atlas entry
-        modified.add(new AtlasManager.AtlasConfig(textureId, BBEAtlasRegistry.BBE_ATLAS, true));
-
-        return modified.iterator();
+    /* skips checking all entity textures for duplicate atlas entries */
+    @Redirect(method = "updateSpriteMaps", at = @At(value = "INVOKE", target = "Ljava/util/Map;forEach(Ljava/util/function/BiConsumer;)V"))
+    private void cancelForEach(Map<Material, TextureAtlasSprite> instance, BiConsumer<Material, TextureAtlasSprite> consumer) {
+        instance.forEach((material, sprite) -> {
+            Identifier tex = material.texture();
+            if (tex != null && tex.getPath().startsWith("entity/")) return;
+            consumer.accept(material, sprite);
+        });
     }
-     */
 }

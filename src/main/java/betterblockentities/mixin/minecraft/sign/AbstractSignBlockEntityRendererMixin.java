@@ -8,9 +8,12 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.AbstractSignRenderer;
 import net.minecraft.client.renderer.blockentity.state.SignRenderState;
 import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -23,47 +26,68 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/*
-    this whole mixin will probably get removed once we move to baking the sign text into meshes
-    as this implementation is not as efficient
-*/
 @Mixin(AbstractSignRenderer.class)
 public abstract class AbstractSignBlockEntityRendererMixin {
     @Shadow protected abstract void translateSign(PoseStack matrices, float blockRotationDegrees, BlockState state);
     @Shadow protected abstract void submitSignText(SignRenderState renderState, PoseStack matrices, SubmitNodeCollector queue, boolean front);
 
-    @Inject(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At("HEAD"), cancellable = true)
+    /* hacky culling implementation for sign text */
+    @Inject(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
     public void render(SignRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
-        if (!ConfigManager.CONFIG.optimize_signs || !ConfigManager.CONFIG.master_optimize) return;
+        if (!ConfigManager.CONFIG.master_optimize || !ConfigManager.CONFIG.optimize_signs) return;
 
         ci.cancel();
 
-        /* sanity check */
-        if (state.frontText == null || state.backText == null) return;
+        /* remove text filtering as it adds a bit of overhead */
+        final boolean hasFront = hasAnyText(state.frontText, false);
+        final boolean hasBack  = hasAnyText(state.backText, false);
+        if (!hasFront && !hasBack) return;
 
-        /* check if we have text */
-        boolean hasTextFront = hasText(state.frontText.getMessages(false));
-        boolean hasTextBack = hasText(state.backText.getMessages(false));
+        final BlockState bs = state.blockState;
+        final BlockPos bp = state.blockPos;
+        final Vec3 camPos = cameraRenderState.pos;
 
-        /* if no text then don't render */
-        if (!hasTextFront && !hasTextBack) return;
+        SignBlock signBlock = (SignBlock)bs.getBlock();
+        final Vec3 off = signBlock.getSignHitboxCenterPosition(bs);
+        final double sx = bp.getX() + off.x;
+        final double sz = bp.getZ() + off.z;
 
-        BlockState blockState = state.blockState;
-        SignBlock block = (SignBlock) blockState.getBlock();
+        /* vector from sign center to camera (XZ only) */
+        final double dx = camPos.x - sx;
+        final double dz = camPos.z - sz;
+
+        /* fast side test: dot(frontNormal, toCam) > 0, front normal is derived from the sign's yaw degrees */
+        final double rotRad = signBlock.getYRotationDegrees(bs) * (Math.PI / 180.0);
+        final double nx = -Math.sin(rotRad);
+        final double nz =  Math.cos(rotRad);
+
+        /* small epsilon, reduces flicker */
+        final boolean camFront = (nx * dx + nz * dz) > 1e-3;
+
+        final boolean drawFront = hasFront && camFront;
+        final boolean drawBack  = hasBack  && !camFront;
+
+        /* if the visible side has no text, skip */
+        if (!drawFront && !drawBack) return;
 
         poseStack.pushPose();
-        this.translateSign(poseStack, -block.getYRotationDegrees(blockState), blockState);
+        this.translateSign(poseStack, -((SignBlock)bs.getBlock()).getYRotationDegrees(bs), bs);
 
-        if (hasTextFront) this.submitSignText(state, poseStack, submitNodeCollector, true);
-        if (hasTextBack)  this.submitSignText(state, poseStack, submitNodeCollector, false);
+        if (drawFront) this.submitSignText(state, poseStack, submitNodeCollector, true);
+        if (drawBack)  this.submitSignText(state, poseStack, submitNodeCollector, false);
 
         poseStack.popPose();
     }
 
     @Unique
-    private boolean hasText(Component[] lines) {
-        for (Component line : lines) {
-            if (line != null && !line.getString().isEmpty()) return true;
+    private static boolean hasAnyText(SignText text, boolean filtered) {
+        if (text == null) return false;
+        Component[] lines = text.getMessages(filtered);
+        for (int i = 0; i < 4; i++) {
+            if (!lines[i].getString().isEmpty()) return true;
         }
         return false;
     }
