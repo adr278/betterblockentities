@@ -56,7 +56,7 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
             )
     )
     public void emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
-        BBEEmitter.emit(instance, model, isFaceCulled, emitter, random, level, pos, state, bufferer, (BlockRenderer)(Object)this);
+        BBEEmitter.emit(instance, model, isFaceCulled, emitter, random, level, this.slice, pos, state, bufferer, (BlockRenderer)(Object)this);
     }
 
     @Override
