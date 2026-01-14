@@ -3,7 +3,6 @@
   "package": "betterblockentities.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "minecraft.AbstractBlockMixin",
     "minecraft.AtlasManagerMixin",
     "minecraft.BlockEntityMixin",
     "minecraft.ClientWorldMixin",
@@ -16,7 +15,6 @@
     "minecraft.ModelPartPolygonAccessor",
     "minecraft.ModelPartVertexAccessor",
     "minecraft.OrderedRenderCommandQueueImplMixin",
-    "minecraft.RenderLayersMixin",
     "minecraft.WorldRendererMixin",
     "minecraft.bell.BellBlockEntityMixin",
     "minecraft.chest.ChestBlockEntityAccessor",
@@ -28,6 +26,9 @@
     "minecraft.decordatedpot.DecoratedPotBlockEntityMixin",
     "minecraft.shulker.ShulkerBoxBlockEntityMixin",
     "minecraft.sign.AbstractSignBlockEntityRendererMixin",
+    "minecraft.sign.HangingSignRendererMixin",
+    "minecraft.sign.SignRendererMixin",
+    "minecraft.sign.SignRendererModelsAccessor",
     "sodium.AbstractBlockRenderContextAccessor",
     "sodium.BlockRendererMixin",
     "sodium.SodiumWorldRendererMixin"
@@ -37,8 +38,6 @@
     "defaultRequire": 1
   },
   "client": [
-    "minecraft.sign.HangingSignRendererMixin",
-    "minecraft.sign.SignRendererMixin",
-    "minecraft.sign.SignRendererModelsAccessor"
+
   ]
 }
