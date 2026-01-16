@@ -16,67 +16,17 @@ import net.minecraft.core.Direction;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /* java/misc */
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import java.util.List;
 
+
+/**
+ * A utility class for converting an entire Model root tree or a child ModelPart into a single list of BakedQuads
+ * Each implementation respects PoseStack transforms and these should be applied before calling.
+ */
 public class ModelPartWrapper {
-    /* takes a single ModelPart (with no children) and spits out a bunch of quads */
-    public static void toBakedQuads(ModelPart part, List<BakedQuad> output, TextureAtlasSprite sprite) {
-        ModelPartAccessor modelAcc = (ModelPartAccessor)(Object)part;
-        for (ModelPart.Cube cube : modelAcc.getCubes()) {
-            for (ModelPart.Polygon polygon : cube.polygons) {
-                /* skip non-quad polygons */
-                if (polygon.vertices().length != 4) {
-                    continue;
-                }
-
-                ModelPartPolygonAccessor polyAcc = (ModelPartPolygonAccessor)(Object)polygon;
-
-                /* polygon vertices */
-                ModelPart.Vertex[] vertices = polyAcc.getVertices();
-
-                /* four vertex positions */
-                Vector3f[] bakedQuadVertices = new Vector3f[vertices.length];
-
-                /* four packed uvs, one for each vertex */
-                long[] packedUvs = new long[vertices.length];
-
-                /* convert polygon normal to a direction */
-                Direction direction = normalToDirection(polyAcc.getNormal());
-
-                for (int i = 0; i < polyAcc.getVertices().length; i++) {
-                    ModelPart.Vertex vertex = vertices[i];
-                    ModelPartVertexAccessor vertexAcc = (ModelPartVertexAccessor)(Object)vertex;
-
-                    /* construct baked quad vertex */
-                    Vector3f bakedQuadvertex = new Vector3f(vertex.worldX(), vertex.worldY(), vertex.worldZ()); //normalized to [0,1] block space
-                    bakedQuadVertices[i] = bakedQuadvertex;
-
-                    /* pack vertex uvs */
-                    //packedUvs[i] = UVPair.pack(vertexAcc.getU(), vertexAcc.getV());
-                    float u = sprite.getU(vertexAcc.getU());
-                    float v = sprite.getV(vertexAcc.getV());
-                    packedUvs[i] = UVPair.pack(u, v);
-                }
-                BakedQuad baked = new BakedQuad(
-                        bakedQuadVertices[0], bakedQuadVertices[1], bakedQuadVertices[2], bakedQuadVertices[3],
-                        packedUvs[0], packedUvs[1], packedUvs[2], packedUvs[3],
-                        -1, //tint index
-                        direction, //face direction
-                        sprite, //sprite
-                        true, //shade
-                        0 //light emission
-                );
-                output.add(baked);
-            }
-        }
-    }
-
-    /*
-        takes in a model part (could be the whole root or children in the root part for example), and spits out quads
-        this respects pose stack transforms so this impl will most likely be used the most when converting "BER" geometry
-    */
     public static void toBakedQuadsWithTransforms(ModelPart part, List<BakedQuad> output, TextureAtlasSprite sprite, PoseStack stack) {
         part.visit(stack, (pose, name, idx, cube) -> {
             for (ModelPart.Polygon poly : cube.polygons) {
@@ -115,7 +65,9 @@ public class ModelPartWrapper {
         });
     }
 
-    /* skips applying (xRot, yRot, zRot), this seems to mess up geometry coming from mods like EMF (we shouldn't need it anyway) */
+    /**
+     * skips applying (xRot, yRot, zRot) axis rotation, this seems to mess up geometry coming from mods like EMF (we shouldn't need it anyway)
+     */
     public static void toBakedQuadsVanilla(ModelPart part, List<BakedQuad> output, TextureAtlasSprite sprite, PoseStack stack) {
         ModelPartAccessor modelAcc = (ModelPartAccessor)(Object)part;
         stack.pushPose();
@@ -183,10 +135,12 @@ public class ModelPartWrapper {
         stack.popPose();
     }
 
-    /*
-        we should be able to decide direction by comparing the passed normal against the predefined normal vectors
-        inside the Direction enum else fallback to the axis with the largest component
-    */
+    /**
+     * Takes in a normal and outputs a Direction by comparing the normal components
+     * in each cardinal direction, else we fall back to the axis with the largest component
+     * @param normal Normal (x, y, z)
+     * @return Direction
+     */
     public static Direction normalToDirection(Vector3fc normal) {
         for (Direction dir : Direction.values()) {
             if (dir.getStepX() == normal.x() &&

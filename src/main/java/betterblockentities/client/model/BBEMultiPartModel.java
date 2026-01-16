@@ -19,11 +19,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A wrapper for {@link net.minecraft.client.renderer.block.model.multipart.MultiPartModel}
+ * This implementation assembles a "MultiPart" type BlockStateModel from either a list of
+ * BlockModelPart(s) or runs some extra logic for block models which use the Model pipeline
+ * inorder to convert the underlying render data to a list of BakedQuad(s) which we then wrap
+ * in SimpleModelWrapper{BlockModelPart} and SingleVariant{BlockStateModel} There is also
+ * additional render data added to this implementation to easily sort out each BlockStateModel
+ * from the tree with the generated {@link #pairs} list. The pairs list will only be populated
+ * if {@link #BBEMultiPartModel(ModelPart, TextureAtlasSprite, PoseStack)} constructor is called
+ * and each key is derived from each Model Root child key
+ */
 public class BBEMultiPartModel implements BlockStateModel {
     private final List<BlockStateModel> models = new ArrayList<>();
 
     /* pairs of model and key, will only be populated if type Model constructor is called */
     private final Map<String, BlockStateModel> pairs = new HashMap<>();
+    public Map<String, BlockStateModel> getPairs() {
+        return pairs;
+    }
 
     /* construct models from geometry class Model and passed sprite. assumes that all ModelParts shares the same PoseStack */
     public BBEMultiPartModel(ModelPart root, TextureAtlasSprite sprite, PoseStack stack) {
@@ -32,7 +46,6 @@ public class BBEMultiPartModel implements BlockStateModel {
     private void generateMeshModel(ModelPart root, TextureAtlasSprite sprite, PoseStack stack) {
         ModelPartAccessor modelAcc = (ModelPartAccessor)(Object)(root);
 
-        /* maybe we cant split up the root like this, we might need to pass the root itself to toBakedQuads{...} to avoid stack issues */
         modelAcc.getChildren().forEach((key, part) -> {
             List<BakedQuad> outputQuads = new ArrayList<>();
             List<BlockModelPart> blockParts = new ArrayList<>();
@@ -72,10 +85,6 @@ public class BBEMultiPartModel implements BlockStateModel {
             var model = new SingleVariant(variant);
             models.add(model);
         }
-    }
-
-    public Map<String, BlockStateModel> getPairs() {
-        return pairs;
     }
 
     @Override

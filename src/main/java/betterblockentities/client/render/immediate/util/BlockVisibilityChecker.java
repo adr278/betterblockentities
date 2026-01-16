@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Utility class for checking if a AABB voxel-shape is inside the view Frustum and has Line of Sight to the local player
+ */
 public class BlockVisibilityChecker {
     /* cache grids so they are not regenerated every call */
     private static final Map<Integer, Vec3[]> GRID_CACHE = new HashMap<>();
@@ -63,11 +66,16 @@ public class BlockVisibilityChecker {
         return frustum != null && frustum.isVisible(box);
     }
 
-    /*
-        multipoint voxel raycast - this implementation is a bit janky and is highly customized for our needs
-        there is probably a much cheaper way to check LOS, im not to read up on this kind of stuff,
-        voxel raytracing should be cheaper than RaycastContext anyway, this works fine for our purposes
-    */
+
+    /**
+     * multipoint voxel raycast - this implementation is a bit janky and is highly customized for our needs
+     * there is probably a much cheaper way to check LOS, voxel raytracing with a ray march like this should
+     * be way cheaper than RaycastContext anyway, this works fine for our purposes
+     * @param world level
+     * @param eye players "eye" position
+     * @param box the voxel AABB shape to raycast to
+     * @return true if the player has Line of Sight to the voxel shape
+     */
     private static boolean hasLOS(Level world, Vec3 eye, AABB box) {
         double distance = eye.distanceTo(box.getCenter());
 
@@ -90,6 +98,14 @@ public class BlockVisibilityChecker {
     }
 
     /* voxel raycast from eye to target point */
+
+    /**
+     * Performs a single ray march / cast to one point on the AABB box
+     * @param world level
+     * @param eye players "eye" position
+     * @param target target point
+     * @return true if the player has Line of Sight to the voxel shape
+     */
     private static boolean raycastVoxel(Level world, Vec3 eye, Vec3 target) {
         Vec3 ray = target.subtract(eye);
         double maxDistSq = ray.lengthSqr();
@@ -158,11 +174,6 @@ public class BlockVisibilityChecker {
         return list.toArray(new Vec3[0]);
     }
 
-    /*
-        setup bounding box, we could probably skip the function above
-        and just expand the existing box instead of using box union
-        which should be slightly more efficient. guess this is a TODO
-    */
     private static AABB setupBox(BlockEntity be, BlockPos pos) {
         if (be instanceof BannerBlockEntity)
             return new AABB(pos).inflate(0, 1, 0);
@@ -170,6 +181,7 @@ public class BlockVisibilityChecker {
         if (!(be instanceof ChestBlockEntity))
             return new AABB(pos);
 
+        /* special case, combined both voxel-shapes into one union */
         BlockPos other = getOtherChestHalf(be.getLevel(), pos);
         return (other == null) ?
                 new AABB(pos) :

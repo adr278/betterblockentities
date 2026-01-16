@@ -7,7 +7,11 @@ import betterblockentities.client.gui.ConfigManager;
 
 /* minecraft */
 import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
+import com.mojang.blaze3d.vertex.PoseStack;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
@@ -17,6 +21,13 @@ import net.minecraft.world.phys.Vec3;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import java.util.List;
 
+/**
+ * This manager handles each BlockEntity present in {@link "net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer#extractBlockEntity"}
+ * We take data like animation state, BlockEntity type, block visibility and overall state changes into account to decide whether to extract
+ * this BlockEntity or not. The end Node of this manager sets {@link betterblockentities.client.render.immediate.blockentity.BlockEntityExt}
+ * -> getRemoveChunkVariant which is unique to each BlockEntity and decides if we should mesh its geometry or not and triggers a section
+ * remesh and stop the immediate rendering pipeline from rendering this BlockEntity
+ */
 public class BlockEntityManager {
     public static ReferenceOpenHashSet<Class<? extends BlockEntity>> SUPPORTED_TYPES = new ReferenceOpenHashSet<>();
     public static final ReferenceOpenHashSet<Class<? extends Block>> SUPPORTED_BLOCKS = new ReferenceOpenHashSet<>(

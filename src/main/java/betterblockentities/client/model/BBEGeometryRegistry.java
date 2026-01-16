@@ -19,6 +19,15 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A Registry which holds the base geometry for all our supported block entity models, which is then
+ * later used when meshing happens in  {@link betterblockentities.client.chunk.pipeline.BBEEmitter}
+ * -We append geometry to the registry cache with {@link #cacheGeometry}
+ * -Clear the whole registry cache with {@link #clearCache}
+ * -And get an entry from the cache with {@link #getModel}
+ * Most of the entries to this cache comes from {@link betterblockentities.mixin.model.ModelManagerMixin}
+ * but there are unique cases where an entry comes from elsewhere
+ */
 public class BBEGeometryRegistry {
     private static final Map<ModelLayerLocation, BlockStateModel> cache = new HashMap<>();
     public static Map<HangingSignRenderer.ModelKey, Model.Simple> hangingSignModels = new HashMap<>();
@@ -34,10 +43,6 @@ public class BBEGeometryRegistry {
 
     public static void clearCache() {
         cache.clear();
-    }
-
-    public static Map<ModelLayerLocation, BlockStateModel> getCache() {
-        return cache;
     }
 
     /* supported vanilla model layers which are mapped inside the entityModelSet */
