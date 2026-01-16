@@ -43,16 +43,8 @@ public class ModelManagerMixin {
                 stack.mulPose(Axis.YP.rotationDegrees(180.0F));
                 BBEGeometryRegistry.cacheGeometry(layer, root, BBEGeometryRegistry.PlaceHolderSpriteIdentifiers.SHULKER, stack);
                 stack.popPose();
-            } else if (layer == ModelLayers.CHEST) {
+            } else if (layer == ModelLayers.DOUBLE_CHEST_RIGHT || layer == ModelLayers.DOUBLE_CHEST_LEFT || layer == ModelLayers.CHEST) {
                 stack.pushPose();
-                stack.translate(0.5F, 0.0F, 0.5F);
-                BBEGeometryRegistry.cacheGeometry(layer, root, BBEGeometryRegistry.PlaceHolderSpriteIdentifiers.CHEST, stack);
-                stack.popPose();
-            } else if (layer == ModelLayers.DOUBLE_CHEST_RIGHT || layer == ModelLayers.DOUBLE_CHEST_LEFT) {
-                stack.pushPose();
-                stack.translate(0.5F, 0.5F, 0.5F);
-                stack.mulPose(Axis.YP.rotationDegrees(-0));
-                stack.translate(-0.5F, -0.5F, -0.5F);
                 BBEGeometryRegistry.cacheGeometry(layer, root, BBEGeometryRegistry.PlaceHolderSpriteIdentifiers.CHEST, stack);
                 stack.popPose();
             } else if (layer == ModelLayers.BELL) {

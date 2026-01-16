@@ -12,8 +12,10 @@ import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 /* java/misc */
 import org.joml.Vector3f;
 
+/**
+ * Utility class for transforming Sodium's {@link net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl } emitter / render data
+ */
 public class QuadTransform {
-    /* rotates quad by passed degrees "around the Y axis" */
     public static void rotateY(MutableQuadViewImpl quad, float degrees) {
         float radians = (float) Math.toRadians(degrees);
         float cos = (float) Math.cos(radians);
@@ -31,7 +33,6 @@ public class QuadTransform {
         }
     }
 
-    /* rotates quad by passed degrees "around the X axis" */
     public static void rotateX(MutableQuadViewImpl quad, float degrees) {
         float radians = (float) Math.toRadians(degrees);
         float cos = (float) Math.cos(radians);
@@ -120,7 +121,6 @@ public class QuadTransform {
         }
     }
 
-    /* swaps the sprite of the quad while preserving UV mapping proportions */
     public static void swapSprite(TextureAtlasSprite newSprite, MutableQuadViewImpl quad) {
         final float uNewMin = newSprite.getU0();
         final float uNewMax = newSprite.getU1();
@@ -154,7 +154,6 @@ public class QuadTransform {
         mQuad.cachedSprite(newSprite);
     }
 
-    /* gets an existing sprite from the block atlas */
     public static TextureAtlasSprite getSprite(Identifier id) {
         var atlas = Minecraft.getInstance()
                 .getAtlasManager()

@@ -10,6 +10,7 @@ import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityManager;
 
 /* minecraft */
+import betterblockentities.mixin.render.immediate.blockentity.decordatedpot.DecoratedPotRendererAccessor;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -23,13 +24,12 @@ import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BannerBlockEntity;
-import net.minecraft.world.level.block.entity.BannerPatternLayers;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -40,19 +40,23 @@ import net.minecraft.world.level.block.state.properties.WoodType;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
+import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
 
 /* java/misc */
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
+/**
+ * A wrapper/redirect for {@link net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer#renderModel} ->
+ * {@link net.caffeinemc.mods.sodium.client.services.DefaultModelEmitter#emitModel} which hands over mesh assembly to us
+ */
 public class BBEEmitter {
     private static final BlockEntityRenderDispatcher dispatcher = Minecraft.getInstance().getBlockEntityRenderDispatcher();
 
-    /* handle each block accordingly */
     public static void emit(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer, BlockRenderer blockRenderer) {
         Block block = state.getBlock();
 
@@ -68,7 +72,7 @@ public class BBEEmitter {
             return;
         }
 
-        final BlockRenderHelper helper = new BlockRenderHelper(blockRenderer, blockEntity);
+        final BlockRenderHelper helper = new BlockRenderHelper(blockRenderer);
 
         /* NON EMISSIVE CHESTS */
         if (block instanceof ChestBlock) {
@@ -270,11 +274,29 @@ public class BBEEmitter {
         Map<String, BlockStateModel> basePairs  = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layers[0])).getPairs();
         Map<String, BlockStateModel> sidePairs  = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layers[1])).getPairs();
 
-        List<BlockModelPart> merged = Stream.concat(basePairs.values().stream(), sidePairs.values().stream())
-                .flatMap(model -> model.collectParts(random).stream())
-                .toList();
+        List<BlockModelPart> baseParts = new java.util.ArrayList<>(basePairs.values().stream().flatMap(m -> m.collectParts(random).stream()).toList());
 
-        BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitDecoratedPotQuads);
+        helper.setMaterial(Sheets.DECORATED_POT_BASE);
+        helper.setRendertype(ChunkSectionLayer.SOLID);
+        BlockRenderHelper.emitModelPart(baseParts, emitter, state, isFaceCulled, helper::emitGE);
+
+        DecoratedPotRendererAccessor ber = (DecoratedPotRendererAccessor)dispatcher.getRenderer(blockEntity);
+        PotDecorations decorations = ((DecoratedPotBlockEntity)blockEntity).getDecorations();
+
+        if (ber == null) return;
+        sidePairs.forEach((key, model) -> {
+            List<BlockModelPart> sideParts = model.collectParts(random);
+            Material sideMaterial = switch (key) {
+                case "back"  -> ber.getSideMaterialInvoke(decorations.back());
+                case "front" -> ber.getSideMaterialInvoke(decorations.front());
+                case "left" -> ber.getSideMaterialInvoke(decorations.left());
+                case "right" -> ber.getSideMaterialInvoke(decorations.right());
+                default    -> ber.getSideMaterialInvoke(Optional.empty());
+            };
+            helper.setMaterial(sideMaterial);
+            helper.setRendertype(ChunkSectionLayer.SOLID);
+            BlockRenderHelper.emitModelPart(sideParts, emitter, state, isFaceCulled, helper::emitGE);
+        });
     }
 
     private static void emitBanner(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
@@ -308,7 +330,11 @@ public class BBEEmitter {
         }
     }
 
-    /* safely retrieve this block entity, if we fail, try getting it from the slice data, if fallback fails, abort and skip meshing this block entity */
+    /**
+     * Safely retrieve this block entity, if we fail, try getting it from the slice data, if fallback fails,
+     * abort and skip meshing this block entity. The only reason this should fail is if another mod mutilates
+     * the block entity-list. See {@link "net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection#tryCopyBlockEntities" }
+     */
     private static @Nullable BlockEntity tryGetBlockEntity(BlockPos pos, BlockAndTintGetter level, LevelSlice slice) {
         try {
             return level.getBlockEntity(pos);
@@ -323,7 +349,12 @@ public class BBEEmitter {
         }
     }
 
-    /* should we emit this block entity into this mesh  */
+    /**
+     * Checks if a BlockEntity should be meshed or not by checking a flag in the vanilla BlockEntity class
+     * added by BBE through mixin, this flag is mostly controlled by {@link betterblockentities.client.render.immediate.blockentity.BlockEntityManager}
+     * @param ext Extension interface of the vanilla BlockEntity class
+     * @return true if the cast from BlockEntity failed or if the extension flag getRemoveChunkVariant is NOT high (true)
+     */
     private static boolean shouldRender(BlockEntityExt ext) {
         return ext == null || !ext.getRemoveChunkVariant();
     }
