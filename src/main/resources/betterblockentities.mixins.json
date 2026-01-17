@@ -9,6 +9,8 @@
     "model.ModelPartAccessor",
     "model.ModelPartPolygonAccessor",
     "model.ModelPartVertexAccessor",
+    "model.ChestSpecialRendererMixin",
+    "model.ClientItemInfoLoaderMixin",
     "render.WorldRendererMixin",
     "render.immediate.ModelFeatureRendererMixin",
     "render.immediate.SubmitNodeCollectionMixin",
