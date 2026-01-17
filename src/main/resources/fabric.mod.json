@@ -20,10 +20,10 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "betterblockentities.BetterBlockEntities"
+      "betterblockentities.client.BetterBlockEntities"
     ],
-    "modmenu": [
-      "betterblockentities.gui.ModMenu"
+    "sodium:config_api_user": [
+      "betterblockentities.client.gui.SodiumUIImpl"
     ]
   },
   "mixins": [
@@ -31,18 +31,13 @@
   ],
   "depends": {
     "fabricloader": ">=0.16.7",
-    "fabric-api": ">=0.114.1",
-    "sodium": [">=0.7.0", "<=0.7.3"],
-    "minecraft": ["1.21.9", "1.21.10"]
+    "minecraft": ">=1.21.11",
+    "sodium": ">=0.8.0"
   },
   "breaks": {
     "optifabric": "*"
   },
   "custom": {
-    "modmenu": {
-      "links": {
-        "modmenu.discord": "https://discord.gg/NdX9BYpTtz"
-      }
-    }
+
   }
 }
