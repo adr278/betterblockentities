@@ -20,10 +20,10 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "betterblockentities.client.BetterBlockEntities"
+      "betterblockentities.client.BBE"
     ],
     "sodium:config_api_user": [
-      "betterblockentities.client.gui.SodiumUIImpl"
+      "betterblockentities.client.gui.config.builder.SodiumConfigBuilder"
     ]
   },
   "mixins": [

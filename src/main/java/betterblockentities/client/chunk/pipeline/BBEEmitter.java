@@ -1,31 +1,33 @@
 package betterblockentities.client.chunk.pipeline;
 
 /* local */
-import betterblockentities.client.BetterBlockEntities;
-import betterblockentities.client.gui.ConfigManager;
-import betterblockentities.mixin.render.immediate.blockentity.chest.ChestRendererAccessor;
-import betterblockentities.client.model.BBEGeometryRegistry;
-import betterblockentities.client.model.BBEMultiPartModel;
+import betterblockentities.client.BBE;
+import betterblockentities.client.chunk.util.QuadTransform;
+import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.gui.option.EnumTypes;
+import betterblockentities.client.model.geometry.GeometryRegistry;
+import betterblockentities.client.model.MaterialSelector;
+import betterblockentities.client.model.MultiPartBlockModel;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityManager;
+import betterblockentities.client.tasks.TaskScheduler;
+import betterblockentities.client.tasks.Tasks;
 
 /* minecraft */
-import betterblockentities.mixin.render.immediate.blockentity.decordatedpot.DecoratedPotRendererAccessor;
-import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.*;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.state.ChestRenderState;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.SectionPos;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.animal.golem.CopperGolemOxidationLevels;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.*;
@@ -40,28 +42,23 @@ import net.minecraft.world.level.block.state.properties.WoodType;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
-import net.minecraft.world.level.chunk.LevelChunk;
-import org.jetbrains.annotations.Nullable;
+import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 
 /* java/misc */
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A wrapper/redirect for {@link net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer#renderModel} ->
  * {@link net.caffeinemc.mods.sodium.client.services.DefaultModelEmitter#emitModel} which hands over mesh assembly to us
  */
 public class BBEEmitter {
-    private static final BlockEntityRenderDispatcher dispatcher = Minecraft.getInstance().getBlockEntityRenderDispatcher();
-
     public static void emit(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer, BlockRenderer blockRenderer) {
         Block block = state.getBlock();
 
         /* not a valid block (regular terrain or not supported) emit like normal */
-        if (!BlockEntityManager.isSupportedBlock(block) || !ConfigManager.CONFIG.master_optimize) {
+        if (!BlockEntityManager.isSupportedBlock(block) || !ConfigCache.masterOptimize) {
             instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
             return;
         }
@@ -76,56 +73,61 @@ public class BBEEmitter {
 
         /* NON EMISSIVE CHESTS */
         if (block instanceof ChestBlock) {
-            if (ConfigManager.CONFIG.optimize_chests)
+            if (ConfigCache.optimizeChests)
                 emitChest(isFaceCulled, emitter, random, pos, state, helper, false, blockEntity);
         }
 
         /* EMISSIVE CHESTS (Ender) */
         else if (block instanceof EnderChestBlock) {
-            if (ConfigManager.CONFIG.optimize_chests)
+            if (ConfigCache.optimizeChests)
                 emitChest(isFaceCulled, emitter, random, pos, state, helper, true, blockEntity);
         }
 
         /* SHULKER BOX */
         else if (block instanceof ShulkerBoxBlock) {
-            if (ConfigManager.CONFIG.optimize_shulkers)
+            if (ConfigCache.optimizeShulker)
                 emitShulker(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
         }
 
         /* 16 STEP ROTATION SIGNS */
         else if (block instanceof CeilingHangingSignBlock || block instanceof WallHangingSignBlock) {
-            if (ConfigManager.CONFIG.optimize_signs)
+            if (ConfigCache.optimizeSigns)
                 emitHangingSign(isFaceCulled, emitter, random, pos, state, helper);
         }
 
         /* CARDINAL SIGNS */
         else if (block instanceof WallSignBlock || block instanceof StandingSignBlock) {
-            if (ConfigManager.CONFIG.optimize_signs)
+            if (ConfigCache.optimizeSigns)
                 emitSign(isFaceCulled, emitter, random, pos, state, helper);
         }
 
         /* BELL */
         else if (block instanceof BellBlock) {
-            if (ConfigManager.CONFIG.optimize_bells)
+            if (ConfigCache.optimizeBells)
                 emitBell(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
         }
 
         /* DECORATED POT */
         else if (block instanceof DecoratedPotBlock) {
-            if (ConfigManager.CONFIG.optimize_decoratedpots)
+            if (ConfigCache.optimizeDecoratedPots)
                 emitDecoratedPot(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
         }
 
         /* BED */
         else if (block instanceof BedBlock) {
-            if (ConfigManager.CONFIG.optimize_beds)
+            if (ConfigCache.optimizeBeds)
                 emitBed(isFaceCulled, emitter, random, state, helper);
         }
 
         /* BANNERS */
         else if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
-            if (ConfigManager.CONFIG.optimize_banners)
+            if (ConfigCache.optimizeBanners)
                 emitBanner(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
+        }
+
+        else if (block instanceof CopperGolemStatueBlock) {
+            if (ConfigCache.optimizeCopperGolemStatue)
+                emitCopperGolemStatue(isFaceCulled, emitter, random, pos, state, helper);
         }
 
         /* emit any accessory parts if there are any */
@@ -144,11 +146,14 @@ public class BBEEmitter {
             };
         }
 
-        Map<String, BlockStateModel> pairs = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layer)).getPairs();
+        Map<String, BlockStateModel> pairs = tryGetPairs(layer);
+        if (pairs.isEmpty()) return;
 
-
+        int updateType = ConfigCache.updateType;
         boolean drawLid = shouldRender((BlockEntityExt)blockEntity);
-        boolean addBase  = ConfigManager.CONFIG.updateType == 1 || (drawLid && ConfigManager.CONFIG.updateType == 0);
+        boolean addBase = updateType == EnumTypes.UpdateSchedulerType.FAST.ordinal() ||
+                (drawLid && updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal());
+
         List<BlockModelPart> merged = new ArrayList<>();
         if (addBase) merged.addAll(pairs.get("bottom").collectParts(random));
         if (drawLid) {
@@ -156,10 +161,9 @@ public class BBEEmitter {
             merged.addAll(pairs.get("lock").collectParts(random));
         }
 
-        ChestRendererAccessor ber = (ChestRendererAccessor)dispatcher.getRenderer(blockEntity);
-        boolean christmas = ConfigManager.CONFIG.chest_christmas;
-        ChestRenderState.ChestMaterialType ChestMaterial = ber.getChestMaterialInvoke(blockEntity, christmas);
-        ChestType type = state.hasProperty(ChestBlock.TYPE) ? (ChestType)state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
+        boolean christmas = ConfigCache.christmasChests;
+        ChestRenderState.ChestMaterialType ChestMaterial = MaterialSelector.getChestMaterial(blockEntity, christmas);
+        ChestType type = state.hasProperty(ChestBlock.TYPE) ? state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
         Material material = Sheets.chooseMaterial(ChestMaterial, type);
 
         helper.setMaterial(material);
@@ -168,10 +172,14 @@ public class BBEEmitter {
     }
 
     private static void emitShulker(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
-        Map<String, BlockStateModel> pairs = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(ModelLayers.SHULKER_BOX)).getPairs();
+        Map<String, BlockStateModel> pairs = tryGetPairs(ModelLayers.SHULKER_BOX);
+        if (pairs.isEmpty()) return;
 
+        int updateType = ConfigCache.updateType;
         boolean drawLid = shouldRender((BlockEntityExt)blockEntity);
-        boolean addBase  = ConfigManager.CONFIG.updateType == 1 || (drawLid && ConfigManager.CONFIG.updateType == 0);
+        boolean addBase = updateType == EnumTypes.UpdateSchedulerType.FAST.ordinal() ||
+                (drawLid && updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal());
+
         List<BlockModelPart> merged = new ArrayList<>();
         if (addBase) merged.addAll(pairs.get("base").collectParts(random));
         if (drawLid) merged.addAll(pairs.get("lid").collectParts(random));
@@ -198,9 +206,11 @@ public class BBEEmitter {
     private static void emitSign(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper) {
         boolean isWallSign = !state.hasProperty(BlockStateProperties.ROTATION_16);
 
-        ModelLayerLocation layerLocation = isWallSign ? BBEGeometryRegistry.BBEModelLayers.SIGN_WALL : BBEGeometryRegistry.BBEModelLayers.SIGN_STANDING;
+        ModelLayerLocation layerLocation = isWallSign ? GeometryRegistry.SupportedVanillaModelLayers.SIGN_WALL : GeometryRegistry.SupportedVanillaModelLayers.SIGN_STANDING;
 
-        Map<String, BlockStateModel> pairs = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layerLocation)).getPairs();
+        Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation);
+        if (pairs.isEmpty()) return;
+
         List<BlockModelPart> merged = pairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
 
         WoodType woodType = ((SignBlock)state.getBlock()).type();
@@ -215,25 +225,31 @@ public class BBEEmitter {
         boolean isWall = !state.hasProperty(CeilingHangingSignBlock.ATTACHED);
         boolean attached = !isWall && state.getValue(CeilingHangingSignBlock.ATTACHED);
 
-        ModelLayerLocation layerLocation1 = isWall ? BBEGeometryRegistry.BBEModelLayers.HANGING_SIGN_WALL
-                : attached ? BBEGeometryRegistry.BBEModelLayers.HANGING_SIGN_CEILING_MIDDLE : BBEGeometryRegistry.BBEModelLayers.HANGING_SIGN_CEILING;
-        ModelLayerLocation layerLocation2 = isWall ? BBEGeometryRegistry.BBEModelLayers.HANGING_SIGN_WALL_INVERTED
-                : attached ? BBEGeometryRegistry.BBEModelLayers.HANGING_SIGN_CEILING_MIDDLE_INVERTED : BBEGeometryRegistry.BBEModelLayers.HANGING_SIGN_CEILING_INVERTED;
+        ModelLayerLocation layerLocation1 = isWall ? GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_WALL
+                : attached ? GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_CEILING_MIDDLE : GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_CEILING;
 
-        Map<String, BlockStateModel> pairs = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layerLocation1)).getPairs();
-        Map<String, BlockStateModel> pairs2 = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layerLocation2)).getPairs();
+        Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation1);
+        if (pairs.isEmpty()) return;
 
         List<BlockModelPart> merged = new java.util.ArrayList<>(
                 pairs.values().stream().flatMap(m -> m.collectParts(random).stream()).toList()
         );
 
-        /* backface culling fix for chains... vanilla chains "parts" are only one quad thick, so we need to double render them but inverted */
-        BlockStateModel chains = pairs2.get(attached ? "vChains" : "normalChains");
-        if (chains != null) merged.addAll(chains.collectParts(random));
-
         WoodType woodType = ((SignBlock)state.getBlock()).type();
         Material signMaterial = Sheets.getHangingSignMaterial(woodType);
 
+        /* backface culling fix for chains... vanilla chains "parts" are only one quad thick, so we need to double render them but inverted */
+        BlockStateModel chains = pairs.get(attached ? "vChains" : "normalChains");
+        if (chains != null) {
+            List<BlockModelPart> chainParts = chains.collectParts(random);
+            float[] rotation = { 0, (BlockRenderHelper.getRotationFromBlockState(state) + 180) % 360 };
+
+            helper.setRotation(rotation);
+            helper.setMaterial(signMaterial);
+            helper.setRendertype(ChunkSectionLayer.CUTOUT);
+            BlockRenderHelper.emitModelPart(chainParts, emitter, state, isFaceCulled, helper::emitGE);
+        }
+        helper.setRotation(null);
         helper.setMaterial(signMaterial);
         helper.setRendertype(ChunkSectionLayer.CUTOUT);
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
@@ -242,7 +258,9 @@ public class BBEEmitter {
     private static void emitBell(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
         if (!shouldRender((BlockEntityExt)blockEntity)) return;
 
-        Map<String, BlockStateModel> pairs = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(ModelLayers.BELL)).getPairs();
+        Map<String, BlockStateModel> pairs = tryGetPairs(ModelLayers.BELL);
+        if (pairs.isEmpty()) return;
+
         List<BlockModelPart> bellBodyParts = pairs.get("bell_body").collectParts(random);
 
         Material bellBodyMaterial = Sheets.BLOCK_ENTITIES_MAPPER.defaultNamespaceApply("bell/bell_body");
@@ -255,7 +273,9 @@ public class BBEEmitter {
     private static void emitBed(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper) {
         ModelLayerLocation layer = state.getValue(BedBlock.PART) == BedPart.HEAD ? ModelLayers.BED_HEAD : ModelLayers.BED_FOOT;
 
-        Map<String, BlockStateModel> pairs = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layer)).getPairs();
+        Map<String, BlockStateModel> pairs = tryGetPairs(layer);
+        if (pairs.isEmpty()) return;
+
         List<BlockModelPart> merged = pairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
 
         DyeColor color = ((BedBlock)state.getBlock()).getColor();
@@ -271,8 +291,10 @@ public class BBEEmitter {
 
         ModelLayerLocation[] layers = { ModelLayers.DECORATED_POT_BASE, ModelLayers.DECORATED_POT_SIDES };
 
-        Map<String, BlockStateModel> basePairs  = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layers[0])).getPairs();
-        Map<String, BlockStateModel> sidePairs  = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layers[1])).getPairs();
+        Map<String, BlockStateModel> basePairs = tryGetPairs(layers[0]);
+        Map<String, BlockStateModel> sidePairs = tryGetPairs(layers[1]);
+
+        if (basePairs.isEmpty() || sidePairs.isEmpty()) return;
 
         List<BlockModelPart> baseParts = new java.util.ArrayList<>(basePairs.values().stream().flatMap(m -> m.collectParts(random).stream()).toList());
 
@@ -280,18 +302,15 @@ public class BBEEmitter {
         helper.setRendertype(ChunkSectionLayer.SOLID);
         BlockRenderHelper.emitModelPart(baseParts, emitter, state, isFaceCulled, helper::emitGE);
 
-        DecoratedPotRendererAccessor ber = (DecoratedPotRendererAccessor)dispatcher.getRenderer(blockEntity);
         PotDecorations decorations = ((DecoratedPotBlockEntity)blockEntity).getDecorations();
-
-        if (ber == null) return;
         sidePairs.forEach((key, model) -> {
             List<BlockModelPart> sideParts = model.collectParts(random);
             Material sideMaterial = switch (key) {
-                case "back"  -> ber.getSideMaterialInvoke(decorations.back());
-                case "front" -> ber.getSideMaterialInvoke(decorations.front());
-                case "left" -> ber.getSideMaterialInvoke(decorations.left());
-                case "right" -> ber.getSideMaterialInvoke(decorations.right());
-                default    -> ber.getSideMaterialInvoke(Optional.empty());
+                case "back"  -> MaterialSelector.getDPSideMaterial(decorations.back());
+                case "front" -> MaterialSelector.getDPSideMaterial(decorations.front());
+                case "left"  -> MaterialSelector.getDPSideMaterial(decorations.left());
+                case "right" -> MaterialSelector.getDPSideMaterial(decorations.right());
+                default      -> MaterialSelector.getDPSideMaterial(Optional.empty());
             };
             helper.setMaterial(sideMaterial);
             helper.setRendertype(ChunkSectionLayer.SOLID);
@@ -306,8 +325,10 @@ public class BBEEmitter {
         ModelLayerLocation layerLocation = isWallBanner ? ModelLayers.WALL_BANNER : ModelLayers.STANDING_BANNER;
         ModelLayerLocation layerLocation2 = isWallBanner ? ModelLayers.WALL_BANNER_FLAG : ModelLayers.STANDING_BANNER_FLAG;
 
-        Map<String, BlockStateModel> basePairs  = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layerLocation)).getPairs();
-        Map<String, BlockStateModel> canvasPairs  = ((BBEMultiPartModel) BBEGeometryRegistry.getModel(layerLocation2)).getPairs();
+        Map<String, BlockStateModel> basePairs = tryGetPairs(layerLocation);
+        Map<String, BlockStateModel> canvasPairs = tryGetPairs(layerLocation2);
+
+        if (basePairs.isEmpty() || canvasPairs.isEmpty()) return;
 
         List<BlockModelPart> baseParts = basePairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
         List<BlockModelPart> canvasParts = canvasPairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
@@ -324,28 +345,85 @@ public class BBEEmitter {
             DyeColor layerColor = layer.color();
 
             helper.setMaterial(layerMaterial);
-            helper.setRendertype(ConfigManager.CONFIG.bannerLayer == 0 ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT);
+            helper.setRendertype(ConfigCache.bannerGraphics == EnumTypes.BannerGraphicsType.FANCY.ordinal() ?
+                    ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT);
             helper.setColor(layerColor.getTextureDiffuseColor());
             BlockRenderHelper.emitModelPart(canvasParts, emitter, state, isFaceCulled, helper::emitGE);
         }
     }
 
+    private static void emitCopperGolemStatue(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper) {
+        ModelLayerLocation layerLocation = ModelLayers.COPPER_GOLEM;
+
+        CopperGolemStatueBlock.Pose pose = state.getValue(BlockStateProperties.COPPER_GOLEM_POSE);
+        switch (pose) {
+            case CopperGolemStatueBlock.Pose.SITTING  -> layerLocation = ModelLayers.COPPER_GOLEM_SITTING;
+            case CopperGolemStatueBlock.Pose.RUNNING  -> layerLocation = ModelLayers.COPPER_GOLEM_RUNNING;
+            case CopperGolemStatueBlock.Pose.STAR -> layerLocation = ModelLayers.COPPER_GOLEM_STAR;
+        }
+
+        Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation);
+        if (pairs.isEmpty()) return;
+
+        List<BlockModelPart> merged = pairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
+
+        Direction facing = state.getValue(CopperGolemStatueBlock.FACING);
+        float[] rotation = {180, BlockRenderHelper.getRotationFromFacing(facing)};
+
+        /*
+         * this is so crappy, but we have to do it :( this is the only path we can use to retrieve the correct
+         * texture, but it exposes ".png" and has the "textures/" path in the beginning so we have to manual strip.
+         * vanilla does some gymnastics with the passed (render-layer and CopperGolemOxidationLevels) to submitModel
+         * inorder to "choose the correct texture" (this happens internally in the immediate pipeline somewhere)
+        */
+        Identifier texture = CopperGolemOxidationLevels.getOxidationLevel(((CopperGolemStatueBlock)state.getBlock()).getWeatheringState()).texture();
+        String strippedFirst = texture.getPath().replace(".png", "");
+        String strippedFinal = strippedFirst.replace("textures/", "");
+        Identifier strippedTexture = Identifier.withDefaultNamespace(strippedFinal);
+
+        TextureAtlasSprite sprite = QuadTransform.getSprite(strippedTexture);
+
+        helper.setRotation(rotation);
+        helper.setSprite(sprite);
+        helper.setRendertype(ChunkSectionLayer.SOLID);
+        BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
+    }
+
     /**
      * Safely retrieve this block entity, if we fail, try getting it from the slice data, if fallback fails,
      * abort and skip meshing this block entity. The only reason this should fail is if another mod mutilates
-     * the block entity-list. See {@link "net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection#tryCopyBlockEntities" }
+     * the block entity-list. See {@link "net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection#tryCopyBlockEntities"}
      */
     private static @Nullable BlockEntity tryGetBlockEntity(BlockPos pos, BlockAndTintGetter level, LevelSlice slice) {
         try {
             return level.getBlockEntity(pos);
         } catch (Exception e) {
-            BetterBlockEntities.getLogger().error("Failed to get block entity at {}. Attempting fallback.", pos, e);
+            BBE.getLogger().error("Failed to get block entity at {}. Attempting fallback.", pos, e);
             try {
                 return slice.getBlockEntity(pos);
             } catch (Throwable t) {
-                BetterBlockEntities.getLogger().error("Fallback failed! This block entity will be skipped and not added to this mesh!", t);
+                BBE.getLogger().error("Fallback failed! This block entity will be skipped and not added to this mesh!", t);
                 return null;
             }
+        }
+    }
+
+    /**
+     * if we fail to get this ModelLayerLocation from the registry, schedule a task for registry "rebake",
+     * skip meshing, and reload all render sections. this is the best we can do while still being "thread-safe"
+     */
+    private static Map<String, BlockStateModel> tryGetPairs(ModelLayerLocation location) {
+        try {
+            MultiPartBlockModel model = (MultiPartBlockModel)GeometryRegistry.getModel(location);
+            return model.getPairs();
+        } catch (Exception e) {
+            TaskScheduler.schedule(() -> {
+                if (Tasks.populateGeometryRegistry() == Tasks.TASK_FAILED) {
+                    throw new RuntimeException("Failed to repopulate geometry registry after failed location lookup!");
+                }
+                Tasks.reloadRenderSections();
+            });
+            return Map.of();
         }
     }
 

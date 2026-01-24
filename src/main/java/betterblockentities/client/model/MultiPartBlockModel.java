@@ -1,0 +1,116 @@
+package betterblockentities.client.model;
+
+/* local */
+import betterblockentities.client.BBE;
+import betterblockentities.client.model.geometry.ModelUtility;
+import betterblockentities.mixin.model.modelpart.ModelPartAccessor;
+
+/* minecraft */
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.block.model.*;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.QuadCollection;
+import net.minecraft.util.RandomSource;
+
+/* mojang */
+import com.mojang.blaze3d.vertex.PoseStack;
+
+/* java/misc */
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * A wrapper for {@link net.minecraft.client.renderer.block.model.multipart.MultiPartModel}
+ * This implementation assembles a "MultiPart" type BlockStateModel from either a list of
+ * BlockModelPart(s) or runs some extra logic for block models which use the Model pipeline
+ * inorder to convert the underlying render data to a list of BakedQuad(s) which we then wrap
+ * in SimpleModelWrapper{BlockModelPart} and SingleVariant{BlockStateModel} There is also
+ * additional render data added to this implementation to easily sort out each BlockStateModel
+ * from the tree with the generated {@link #pairs} list. The pairs list will only be populated
+ * if {@link #MultiPartBlockModel(ModelPart, TextureAtlasSprite, PoseStack)} constructor is called
+ * and each key is derived from each Model Root child key
+ */
+public class MultiPartBlockModel implements BlockStateModel {
+    private final List<BlockStateModel> models = new ArrayList<>();
+    private final Map<String, BlockStateModel> pairs = new HashMap<>();
+
+    public MultiPartBlockModel(ModelPart root, TextureAtlasSprite sprite, PoseStack stack) {
+        generateMeshModel(root, sprite, stack);
+    }
+
+    public MultiPartBlockModel(List<BlockModelPart> parts) {
+        constructSingleVariants(parts);
+    }
+
+    public Map<String, BlockStateModel> getPairs() {
+        return pairs;
+    }
+
+    private void generateMeshModel(ModelPart root, TextureAtlasSprite sprite, PoseStack stack) {
+        ModelPartAccessor modelAcc = (ModelPartAccessor)(Object)root;
+        if (modelAcc == null) {
+            BBE.getLogger().error("Failed to invoke accessor on root model part with sprite {}", sprite.contents().name());
+            return;
+        }
+
+        Map<String, ModelPart> children = modelAcc.getChildren();
+        if (children.isEmpty()) {
+            BBE.getLogger().error("Root model part with sprite {} has no children, skipping!", sprite.contents().name());
+            return;
+        }
+
+        children.forEach((key, part) -> {
+            List<BakedQuad> quads = new ArrayList<>();
+            bakePartToQuads(part, quads, sprite, stack);
+
+            QuadCollection collection = toUnculledCollection(quads);
+            SimpleModelWrapper wrapper = new SimpleModelWrapper(collection, true, null);
+
+            constructSingleVariants(List.of(wrapper));
+            createModelPairs(key);
+        });
+    }
+
+    /**
+     * if there are any nested children in this part, this should traverse all of them
+     */
+    private void bakePartToQuads(ModelPart part, List<BakedQuad> outputQuads, TextureAtlasSprite sprite, PoseStack stack) {
+            ModelUtility.toBakedQuads(part, outputQuads, sprite, stack);
+    }
+
+    private QuadCollection toUnculledCollection(List<BakedQuad> quads) {
+        QuadCollection.Builder builder = new QuadCollection.Builder();
+        for (BakedQuad quad : quads) {
+            builder.addUnculledFace(quad);
+        }
+        return builder.build();
+    }
+
+    private void createModelPairs(String key) {
+        pairs.put(key, models.getLast());
+    }
+
+    private void constructSingleVariants(List<BlockModelPart> parts) {
+        for (BlockModelPart variant : parts) {
+            models.add(new SingleVariant(variant));
+        }
+    }
+
+    @Override
+    public void collectParts(RandomSource randomSource, List<BlockModelPart> list) {
+        if (models.isEmpty()) return;
+
+        long seed = randomSource.nextLong();
+        for (BlockStateModel model : models) {
+            randomSource.setSeed(seed);
+            model.collectParts(randomSource, list);
+        }
+    }
+
+    @Override
+    public TextureAtlasSprite particleIcon() {
+        return null;
+    }
+}

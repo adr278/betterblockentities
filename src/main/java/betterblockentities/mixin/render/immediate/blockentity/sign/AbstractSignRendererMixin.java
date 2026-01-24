@@ -1,7 +1,7 @@
 package betterblockentities.mixin.render.immediate.blockentity.sign;
 
 /* local */
-import betterblockentities.client.gui.ConfigManager;
+import betterblockentities.client.gui.config.ConfigCache;
 
 /* minecraft */
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -37,16 +37,27 @@ public abstract class AbstractSignRendererMixin {
             cancellable = true
     )
     public void render(SignRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
-        if (!ConfigManager.CONFIG.master_optimize || !ConfigManager.CONFIG.optimize_signs) return;
+        if (!ConfigCache.masterOptimize || !ConfigCache.optimizeSigns) return;
 
         ci.cancel();
+
+        final BlockState bs = state.blockState;
+        if (!ConfigCache.signTextCulling) {
+            poseStack.pushPose();
+            this.translateSign(poseStack, -((SignBlock)bs.getBlock()).getYRotationDegrees(bs), bs);
+
+            this.submitSignText(state, poseStack, submitNodeCollector, true);
+            this.submitSignText(state, poseStack, submitNodeCollector, false);
+
+            poseStack.popPose();
+            return;
+        }
 
         /* remove text filtering as it adds a bit of overhead */
         final boolean hasFront = hasAnyText(state.frontText, false);
         final boolean hasBack  = hasAnyText(state.backText, false);
         if (!hasFront && !hasBack) return;
 
-        final BlockState bs = state.blockState;
         final BlockPos bp = state.blockPos;
         final Vec3 camPos = cameraRenderState.pos;
 
