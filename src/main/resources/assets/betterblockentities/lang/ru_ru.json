@@ -1,0 +1,64 @@
+{
+  "bbe.config.sodium.pagetext" : "Конфигурация BBE",
+
+  "bbe.config.storage.main.optimize.master" : "Включить BBE",
+  "bbe.config.storage.main.optimize.master.tooltip" : "Используется для включения или выключения BBE и всех его оптимизаций",
+
+  "bbe.config.storage.main.optimize.chest" : "Оптимизация сундуков",
+  "bbe.config.storage.main.optimize.chest.tooltip" : "Используется для включения или выключения оптимизации сундуков",
+
+  "bbe.config.storage.main.optimize.shulker" :  "Оптимизация шалкеров",
+  "bbe.config.storage.main.optimize.shulker.tooltip" : "Используется для включения или выключения оптимизации шалкеров",
+
+  "bbe.config.storage.main.optimize.sign" : "Оптимизация табличек",
+  "bbe.config.storage.main.optimize.sign.tooltip" : "Используется для включения или выключения оптимизации табличек",
+
+  "bbe.config.storage.main.optimize.decoratedpot" : "Оптимизация ваз",
+  "bbe.config.storage.main.optimize.decoratedpot.tooltip" : "Используется для включения или выключения оптимизации ваз",
+
+  "bbe.config.storage.main.optimize.banner" : "Оптимизация баннеров",
+  "bbe.config.storage.main.optimize.banner.tooltip" : "Используется для включения или выключения оптимизации баннеров",
+
+  "bbe.config.storage.main.optimize.bell" :  "Оптимизация колоколов",
+  "bbe.config.storage.main.optimize.bell.tooltip" : "Используется для включения или выключения оптимизации колоколов",
+
+  "bbe.config.storage.main.optimize.bed" : "Оптимизация кроватей",
+  "bbe.config.storage.main.optimize.bed.tooltip" : "Используется для включения или выключения оптимизации кроватей",
+
+  "bbe.config.storage.main.animation.chest" : "Анимация сундуков",
+  "bbe.config.storage.main.animation.chest.tooltip" : "Используется для включения или выключения анимаций сундуков",
+
+  "bbe.config.storage.main.animation.shulker" : "Анимация шалкеров",
+  "bbe.config.storage.main.animation.shulker.tooltip" : "Используется для включения или выключения анимаций шалкеров",
+
+  "bbe.config.storage.main.animation.bell" : "Анимация колоколов",
+  "bbe.config.storage.main.animation.bell.tooltip" : "Используется для включения или выключения анимаций колоколов",
+
+  "bbe.config.storage.main.animation.decoratedpot" : "Анимация ваз",
+  "bbe.config.storage.main.animation.decoratedpot.tooltip" : "Используется для включения или выключения анимаций ваз",
+
+  "bbe.config.storage.main.misc.banner_graphics" : "Графика баннеров",
+  "bbe.config.storage.main.misc.banner_graphics.tooltip" : "Определяет, в каком режиме рендеринга следует отображать баннеры (Быстро = вырезанный), (Детально = полупрозрачный).",
+
+  "bbe.config.storage.main.misc.christmas_chest" : "Рождественские сундуки",
+  "bbe.config.storage.main.misc.christmas_chest.tooltip" : "Используется для включения или выключения рождественских сундуков",
+
+  "bbe.config.storage.main.misc.render_passes" : "Дополнительные проходы рендеринга",
+  "bbe.config.storage.main.misc.render_passes.tooltip" : "Определяет, сколько дополнительных проходов рендеринга потребуется для сохранения блока-сущности в его анимационном состоянии после завершения анимации",
+
+  "bbe.config.storage.main.misc.sign_text" : "Текст таблички",
+  "bbe.config.storage.main.misc.sign_text.tooltip" : "Используется для включения или выключения отображения текстового знака",
+
+  "bbe.config.storage.main.misc.sign_text_distance" : "Расстояние прорисовки текста таблички",
+  "bbe.config.storage.main.misc.sign_text_distance.tooltip" : "Определяет, на каком расстоянии (в блоках) начинать рендеринг текста на табличке",
+
+  "bbe.config.storage.main.misc.update_scheduler" : "Планировщик обновлений",
+  "bbe.config.storage.main.misc.update_scheduler.tooltip" : "Решает, какой планировщик обновлений использовать, Умно обновляет блоки-сущности на основе нескольких факторов, таких как видимость (без прямых обновлений), в то время как Быстро обновляет сразу",
+  "bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable" : "Эта опция недоступна: установлен мод EMF!",
+
+  "bbe.config.storage.main.misc.update_scheduler.type.fast" : "Быстро",
+  "bbe.config.storage.main.misc.update_scheduler.type.smart" : "Умно",
+
+  "bbe.config.storage.main.misc.banner_graphics.type.fast" : "Быстро",
+  "bbe.config.storage.main.misc.banner_graphics.type.fancy" : "Детально"
+}

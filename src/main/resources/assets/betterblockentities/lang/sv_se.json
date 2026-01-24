@@ -1,0 +1,64 @@
+{
+  "bbe.config.sodium.pagetext": "BBE Inställningar",
+
+  "bbe.config.storage.main.optimize.master": "Aktivera BBE",
+  "bbe.config.storage.main.optimize.master.tooltip": "Används för att stänga av BBE och alla dess optimeringar",
+
+  "bbe.config.storage.main.optimize.chest": "Optimera Kista",
+  "bbe.config.storage.main.optimize.chest.tooltip": "Används för att stänga AV eller PÅ optimeringar för kistor",
+
+  "bbe.config.storage.main.optimize.shulker": "Optimera Shulkerlåda",
+  "bbe.config.storage.main.optimize.shulker.tooltip": "Används för att stänga AV eller PÅ optimeringar för shulkerlådor",
+
+  "bbe.config.storage.main.optimize.sign": "Optimera Skylt",
+  "bbe.config.storage.main.optimize.sign.tooltip": "Används för att stänga AV eller PÅ optimeringar för skyltar",
+
+  "bbe.config.storage.main.optimize.decoratedpot": "Optimera Dekorerad Kruka",
+  "bbe.config.storage.main.optimize.decoratedpot.tooltip": "Används för att stänga AV eller PÅ optimeringar för dekorerade krukor",
+
+  "bbe.config.storage.main.optimize.banner": "Optimera Baner",
+  "bbe.config.storage.main.optimize.banner.tooltip": "Används för att stänga AV eller PÅ optimeringar för baners",
+
+  "bbe.config.storage.main.optimize.bell": "Optimera Klocka",
+  "bbe.config.storage.main.optimize.bell.tooltip": "Används för att stänga AV eller PÅ optimeringar för klockor",
+
+  "bbe.config.storage.main.optimize.bed": "Optimera Säng",
+  "bbe.config.storage.main.optimize.bed.tooltip": "Används för att stänga AV eller PÅ optimeringar för sängar",
+
+  "bbe.config.storage.main.animation.chest": "Animera kista",
+  "bbe.config.storage.main.animation.chest.tooltip": "Används för att stänga AV eller PÅ animationer för kistor",
+
+  "bbe.config.storage.main.animation.shulker": "Animera Shulkerlåda",
+  "bbe.config.storage.main.animation.shulker.tooltip": "Används för att stänga AV eller PÅ animationer för shulkerlådor",
+
+  "bbe.config.storage.main.animation.bell": "Animera Klocka",
+  "bbe.config.storage.main.animation.bell.tooltip": "Används för att stänga AV eller PÅ animationer för Klockor",
+
+  "bbe.config.storage.main.animation.decoratedpot": "Animera Dekorerad Kruka",
+  "bbe.config.storage.main.animation.decoratedpot.tooltip": "Används för att stänga AV eller PÅ animationer för dekorerade krukor",
+
+  "bbe.config.storage.main.misc.banner_graphics" : "Baner Grafik",
+  "bbe.config.storage.main.misc.banner_graphics.tooltip" : "Bestämmer vilket renderings passage baners kommer rendrera i, (Snabb = cutout), (Snygg = Translucent)",
+
+  "bbe.config.storage.main.misc.christmas_chest" : "Jul Kistor",
+  "bbe.config.storage.main.misc.christmas_chest.tooltip" : "Används för att stänga AV eller PÅ Jul texturer för kistor",
+
+  "bbe.config.storage.main.misc.render_passes": "Extra rendering passager",
+  "bbe.config.storage.main.misc.render_passes.tooltip": "Bestämmer hur många extra rendering passager en block entitet ska undergå när animering är klar",
+
+  "bbe.config.storage.main.misc.sign_text" : "Skylt Text",
+  "bbe.config.storage.main.misc.sign_text.tooltip" : "Används för att stänga AV eller PÅ skylt text",
+
+  "bbe.config.storage.main.misc.sign_text_distance": "Skylt Text Renderings Avstånd",
+  "bbe.config.storage.main.misc.sign_text_distance.tooltip": "Bestämmer på vilket avstånd (block) att börja rendera skylt text vid",
+
+  "bbe.config.storage.main.misc.update_scheduler": "Schemaläggare",
+  "bbe.config.storage.main.misc.update_scheduler.tooltip": "Bestämmer vilken updaterings-schemaläggare som ska användas, Smart uppdaterar block entiteter baserat på flera faktorer som synlighet (inga direkta uppdateringar) medan Snabb uppdateringar omedelbart",
+  "bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable" : "Inställningen är inte tillgänglig eftersom EMF-modden är laddad!",
+
+  "bbe.config.storage.main.misc.update_scheduler.type.fast": "Snabb",
+  "bbe.config.storage.main.misc.update_scheduler.type.smart": "Smart",
+
+  "bbe.config.storage.main.misc.banner_graphics.type.fast" : "Snabb",
+  "bbe.config.storage.main.misc.banner_graphics.type.fancy" : "Snygg"
+}

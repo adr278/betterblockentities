@@ -1,17 +1,14 @@
 package betterblockentities.client.render.immediate.blockentity;
 
 /* local */
-import betterblockentities.client.BetterBlockEntities;
-import betterblockentities.client.chunk.ChunkUpdateDispatcher;
-import betterblockentities.client.gui.ConfigManager;
+import betterblockentities.client.BBE;
+import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.gui.option.EnumTypes;
+import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
+import betterblockentities.client.chunk.SectionUpdateDispatcher;
 
 /* minecraft */
-import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
-import com.mojang.blaze3d.vertex.PoseStack;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
@@ -37,12 +34,10 @@ public class BlockEntityManager {
                     ShulkerBoxBlock.class, BellBlock.class, DecoratedPotBlock.class,
                     BedBlock.class, CeilingHangingSignBlock.class, WallHangingSignBlock.class,
                     StandingSignBlock.class, WallSignBlock.class,
-                    BannerBlock.class, WallBannerBlock.class
+                    BannerBlock.class, WallBannerBlock.class, CopperGolemStatueBlock.class,
+                    WeatheringCopperGolemStatueBlock.class
             )
     );
-
-    public static boolean chestAnims, shulkerAnims, bellAnims, potAnims, signText, masterOptimize;
-    public static int smoothness;
 
     public static boolean isSupportedBlock(Block block) {
         return block != null && SUPPORTED_BLOCKS.contains(block.getClass());
@@ -59,17 +54,17 @@ public class BlockEntityManager {
     }
 
     private static boolean isAnimating(BlockEntity blockEntity) {
-        if (chestAnims && blockEntity instanceof LidBlockEntity lid)
+        if (ConfigCache.chestAnims && blockEntity instanceof LidBlockEntity lid)
             return lid.getOpenNess(0.5f) > 0f;
-        if (shulkerAnims && blockEntity instanceof ShulkerBoxBlockEntity shulker)
+        if (ConfigCache.shulkerAnims && blockEntity instanceof ShulkerBoxBlockEntity shulker)
             return shulker.getProgress(0.5f) > 0f;
-        if (bellAnims && blockEntity instanceof BellBlockEntity bell)
+        if (ConfigCache.bellAnims && blockEntity instanceof BellBlockEntity bell)
             return bell.shaking;
-        if (potAnims && blockEntity instanceof DecoratedPotBlockEntity pot && pot.lastWobbleStyle != null) {
+        if (ConfigCache.potAnims && blockEntity instanceof DecoratedPotBlockEntity pot && pot.lastWobbleStyle != null) {
             long now = blockEntity.getLevel().getGameTime();
             return now - pot.wobbleStartedAtTick < pot.lastWobbleStyle.duration;
         }
-        if (signText && blockEntity instanceof SignBlockEntity) {
+        if (ConfigCache.signText && blockEntity instanceof SignBlockEntity) {
                 return shouldRenderSignText((SignBlockEntity)blockEntity);
         }
 
@@ -82,13 +77,12 @@ public class BlockEntityManager {
         if (blockEntity.getBackText() == null && blockEntity.getFrontText() == null)
             return false;
 
-        double maxSignTextDistance = ConfigManager.CONFIG.sign_text_render_distance;
         Entity entity = Minecraft.getInstance().getCameraEntity();
-        return entity.distanceToSqr(Vec3.atCenterOf(blockEntity.getBlockPos())) < maxSignTextDistance * maxSignTextDistance;
+        return entity.distanceToSqr(Vec3.atCenterOf(blockEntity.getBlockPos())) < ConfigCache.signTextRenderDistance * ConfigCache.signTextRenderDistance;
     }
 
     public static boolean shouldRender(BlockEntity blockEntity) {
-        if (!masterOptimize) return true;
+        if (!ConfigCache.masterOptimize) return true;
 
         /* are we a supported BE and are the config options enabled */
         if (!isSupportedEntity(blockEntity)) return true;
@@ -111,7 +105,7 @@ public class BlockEntityManager {
             /* add to anim map if an entry doesn't exist */
             if (BlockEntityTracker.animMap.add(pos)) {
                 inst.setRemoveChunkVariant(true);
-                ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos);
+                SectionUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos);
             }
         }
         return true;
@@ -120,11 +114,11 @@ public class BlockEntityManager {
     private static boolean handleStatic(BlockEntity blockEntity, BlockEntityExt inst) {
         var pos = blockEntity.getBlockPos().asLong();
 
-        if (ConfigManager.CONFIG.updateType == 0) {
+        if (ConfigCache.updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal()) {
             if (!BlockEntityTracker.animMap.contains(pos)) return false;
 
             /* captured frustum */
-            var frustum = BetterBlockEntities.curFrustum;
+            var frustum = BBE.curFrustum;
 
             /* check sanity (visible or not) */
             if (BlockVisibilityChecker.isBlockInFOVAndVisible(frustum, blockEntity))
@@ -133,8 +127,8 @@ public class BlockEntityManager {
 
         if (BlockEntityTracker.animMap.remove(pos)) {
             inst.setRemoveChunkVariant(false);
-            ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos);
-            BlockEntityTracker.extraRenderPasses.put(pos, smoothness);
+            SectionUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos);
+            BlockEntityTracker.extraRenderPasses.put(pos, ConfigCache.renderpasses);
         }
 
         int passes = BlockEntityTracker.extraRenderPasses.compute(pos, (p, v) -> {

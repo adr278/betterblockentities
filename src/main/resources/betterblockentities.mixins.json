@@ -5,15 +5,13 @@
   "mixins": [
     "core.ClientWorldMixin",
     "core.MinecraftMixin",
-    "model.ModelManagerMixin",
-    "model.ModelPartAccessor",
-    "model.ModelPartPolygonAccessor",
-    "model.ModelPartVertexAccessor",
-    "model.ChestSpecialRendererMixin",
-    "model.ClientItemInfoLoaderMixin",
-    "render.WorldRendererMixin",
+    "model.item.ChestSpecialRendererMixin",
+    "model.item.ClientItemInfoLoaderMixin",
+    "model.modelpart.ModelPartAccessor",
+    "model.modelpart.ModelPartPolygonAccessor",
+    "model.modelpart.ModelPartVertexAccessor",
+    "render.LevelRendererMixin",
     "render.immediate.ModelFeatureRendererMixin",
-    "render.immediate.SubmitNodeCollectionMixin",
     "render.immediate.blockentity.BlockEntityMixin",
     "render.immediate.blockentity.bell.BellBlockEntityMixin",
     "render.immediate.blockentity.chest.ChestBlockEntityAccessor",
@@ -23,14 +21,14 @@
     "render.immediate.blockentity.chest.ChestRendererMixin",
     "render.immediate.blockentity.chest.EnderChestBlockEntityMixin",
     "render.immediate.blockentity.decordatedpot.DecoratedPotBlockEntityMixin",
+    "render.immediate.blockentity.decordatedpot.DecoratedPotRendererAccessor",
     "render.immediate.blockentity.shulker.ShulkerBoxBlockEntityMixin",
     "render.immediate.blockentity.sign.AbstractSignRendererMixin",
-    "render.immediate.blockentity.sign.HangingSignRendererMixin",
-    "render.immediate.blockentity.sign.SignRendererMixin",
-    "render.immediate.blockentity.sign.SignRendererModelsAccessor",
     "render.texture.AtlasManagerMixin",
     "render.texture.MipMapGeneratorAccessor",
     "render.texture.MipMapGeneratorMixin",
+    "resource.ReloadableResourceManagerMixin",
+    "sodium.config.ConfigMixin",
     "sodium.pipeline.AbstractBlockRenderContextAccessor",
     "sodium.pipeline.BlockRendererMixin",
     "sodium.render.SodiumWorldRendererMixin"
@@ -40,6 +38,5 @@
     "defaultRequire": 1
   },
   "client": [
-    "render.immediate.blockentity.decordatedpot.DecoratedPotRendererAccessor"
   ]
 }

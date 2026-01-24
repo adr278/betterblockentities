@@ -1,8 +1,9 @@
 package betterblockentities.mixin.core;
 
 /* local */
-import betterblockentities.client.chunk.ChunkUpdateDispatcher;
-import betterblockentities.client.gui.ConfigManager;
+import betterblockentities.client.chunk.SectionUpdateDispatcher;
+import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.gui.option.EnumTypes;
 import betterblockentities.mixin.render.immediate.blockentity.chest.ChestBlockEntityAccessor;
 import betterblockentities.mixin.render.immediate.blockentity.chest.ChestLidControllerAccessor;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
@@ -38,7 +39,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ClientWorldMixin {
     @Inject(method = "setServerVerifiedBlockState", at = @At("TAIL"), cancellable = true)
     public void handleBlockUpdate(BlockPos pos, BlockState blockState, int i, CallbackInfo ci) {
-        if (!ConfigManager.CONFIG.master_optimize) return;
+        if (!ConfigCache.masterOptimize) return;
 
         ClientLevel world = (ClientLevel) (Object) this;
         if (!world.isClientSide()) return;
@@ -67,12 +68,12 @@ public class ClientWorldMixin {
         }
 
         /* force smart updates on other half if needed */
-        else if (ConfigManager.CONFIG.updateType == 0) {
+        else if (ConfigCache.updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal()) {
             if (alt != null) {
                 BlockEntityExt altExt = (BlockEntityExt) alt;
                 if (altExt.getJustReceivedUpdate() && altExt.getRemoveChunkVariant()) {
                     inst.setRemoveChunkVariant(true);
-                    ChunkUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos.asLong());
+                    SectionUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getLevel(), pos.asLong());
                     BlockEntityTracker.animMap.add(alt.getBlockPos().asLong());
                     inst.setJustReceivedUpdate(true);
                 }

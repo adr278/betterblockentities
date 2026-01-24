@@ -2,23 +2,15 @@ package betterblockentities.client.chunk.pipeline;
 
 /* local */
 import betterblockentities.client.chunk.util.QuadTransform;
-import betterblockentities.client.model.ModelPartWrapper;
 import betterblockentities.mixin.sodium.pipeline.AbstractBlockRenderContextAccessor;
 
 /* minecraft */
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.Material;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -33,7 +25,6 @@ import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 
 /* java/misc */
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3f;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -45,11 +36,11 @@ import java.util.function.Predicate;
  */
 public class BlockRenderHelper {
     private final BlockRenderer ctx;
-
     private Material material;
     private ChunkSectionLayer rendertype;
-    private float rotation[];
+    private float[] rotation;
     private int color = -1;
+    private TextureAtlasSprite sprite;
 
     public BlockRenderHelper(BlockRenderer ctx) {
         this.ctx = ctx;
@@ -71,6 +62,11 @@ public class BlockRenderHelper {
         this.color = color;
     }
 
+    public void setSprite(TextureAtlasSprite sprite) {
+        this.sprite = sprite;
+    }
+
+
     /**
      * Rebuild of DefaultModelEmitter->emitModel
      * see {@link net.caffeinemc.mods.sodium.client.services.DefaultModelEmitter#emitModel}
@@ -83,52 +79,61 @@ public class BlockRenderHelper {
     }
 
     /**
-     * Generic emitter, applies local render data (material, rotations, vertex color, rendertype) if set,
+     * Generic emitter, applies local render data (material/sprite, rotations, vertex color, rendertype) if set,
      * else we fall back on "arbitrary" methods to handle this for us. The actual logic for attaining this
      * render data should be done in {@link betterblockentities.client.chunk.pipeline.BBEEmitter} and passed
      * through the setters in this class
      */
     public void emitGE(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
-        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)ctx;
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor) ctx;
 
-        TextureAtlasSprite sprite = this.material != null ? QuadTransform.getSprite(this.material.texture()) : null;
-        float rotation = getRotationFromBlockState(acc.getState());
+        TextureAtlasSprite sprite = (this.sprite != null) ?
+                this.sprite :
+                (this.material != null ? QuadTransform.getSprite(this.material.texture()) : null);
+
+        float stateRotation = getRotationFromBlockState(acc.getState());
 
         MutableQuadViewImpl editorQuad = acc.getEmitterInvoke();
         acc.prepareAoInfoInvoke(part.useAmbientOcclusion());
 
-        for(int i = 0; i <= 6; ++i) {
+        for (int i = 0; i <= 6; ++i) {
             Direction cullFace = ModelHelper.faceFromIndex(i);
-            if (!cullTest.test(cullFace)) {
-                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, acc.getState(), this.rendertype, acc.getSlice(), acc.getPos());
-                List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), this.rendertype);
-                int count = quads.size();
+            if (cullTest.test(cullFace)) continue;
 
-                for(int j = 0; j < count; ++j) {
-                    BakedQuad q = (BakedQuad)quads.get(j);
-                    editorQuad.fromBakedQuad(q);
-                    editorQuad.setCullFace(cullFace);
-                    editorQuad.setRenderType(this.rendertype);
-                    editorQuad.setAmbientOcclusion(ao.toTriState());
+            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(
+                    part, acc.getState(), this.rendertype, acc.getSlice(), acc.getPos()
+            );
 
-                    if (sprite != null)
-                        QuadTransform.swapSprite(sprite, editorQuad);
+            List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(
+                    acc.getLevel(), acc.getPos(), part, acc.getState(), cullFace, acc.getRandom(), this.rendertype
+            );
 
-                    if (this.rotation != null) {
-                        QuadTransform.rotateX(editorQuad, this.rotation[0]);
-                        QuadTransform.rotateY(editorQuad, this.rotation[1]);
-                    }
-                    else
-                        QuadTransform.rotateY(editorQuad, rotation);
+            for (int j = 0, count = quads.size(); j < count; ++j) {
+                BakedQuad q = quads.get(j);
 
-                    if (this.color != -1) {
-                        int diffuseColor = this.color;
-                        for (int vertex = 0; vertex < 4; ++vertex) {
-                            editorQuad.setColor(vertex, diffuseColor);
-                        }
-                    }
-                    emitter.accept(editorQuad);
+                editorQuad.fromBakedQuad(q);
+                editorQuad.setCullFace(cullFace);
+                editorQuad.setRenderType(this.rendertype);
+                editorQuad.setAmbientOcclusion(ao.toTriState());
+
+                if (sprite != null) {
+                    QuadTransform.swapSprite(sprite, editorQuad);
                 }
+
+                if (this.rotation != null) {
+                    if (this.rotation[0] != 0) QuadTransform.rotateX(editorQuad, this.rotation[0]);
+                    if (this.rotation[1] != 0) QuadTransform.rotateY(editorQuad, this.rotation[1]);
+                } else {
+                    QuadTransform.rotateY(editorQuad, stateRotation);
+                }
+
+                if (this.color != -1) {
+                    int diffuseColor = this.color;
+                    for (int vertex = 0; vertex < 4; ++vertex) {
+                        editorQuad.setColor(vertex, diffuseColor);
+                    }
+                }
+                emitter.accept(editorQuad);
             }
         }
         editorQuad.clear();
@@ -139,7 +144,7 @@ public class BlockRenderHelper {
      * this function should not be used, instead you should pass a rotation array with {@link #setRotation(float[])}
      * where element [0] is the X axis rotation, and element [1] is the Y axis rotation
      */
-    private static float getRotationFromBlockState(BlockState state) {
+    public static float getRotationFromBlockState(BlockState state) {
         if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING))
             return getRotationFromFacing(state.getValue(BlockStateProperties.HORIZONTAL_FACING));
         if (state.hasProperty(BlockStateProperties.ROTATION_16))
@@ -147,7 +152,7 @@ public class BlockRenderHelper {
         return 0f;
     }
 
-    private static float getRotationFromFacing(Direction facing) {
+    public static float getRotationFromFacing(Direction facing) {
         return switch (facing) {
             case NORTH, DOWN -> 180f;
             case EAST  -> 270f;

@@ -1,11 +1,12 @@
 package betterblockentities.mixin.render.immediate.blockentity.chest;
 
 /* local */
-import betterblockentities.client.gui.ConfigManager;
-import betterblockentities.client.model.BBEChestBlockModel;
+import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.model.overrides.ChestModelOverride;
 
 /* minecraft */
 import net.minecraft.client.model.geom.ModelLayers;
+
 import net.minecraft.client.model.object.chest.ChestModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -37,21 +38,21 @@ public abstract class ChestRendererMixin {
     @Unique private ChestModel doubleChestLeftOrg;
     @Unique private ChestModel doubleChestRightOrg;
 
-    /* replace the original built models with our own that removes the trunk */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void cacheAndInitModels(BlockEntityRendererProvider.Context context, CallbackInfo ci) {
         this.singleChestOrg = new ChestModel(context.bakeLayer(ModelLayers.CHEST));
         this.doubleChestLeftOrg = new ChestModel(context.bakeLayer(ModelLayers.DOUBLE_CHEST_LEFT));
         this.doubleChestRightOrg = new ChestModel(context.bakeLayer(ModelLayers.DOUBLE_CHEST_RIGHT));
 
-        this.BBEsingleChest = new BBEChestBlockModel(context.bakeLayer(ModelLayers.CHEST));
-        this.BBEdoubleChestLeft = new BBEChestBlockModel(context.bakeLayer(ModelLayers.DOUBLE_CHEST_LEFT));
-        this.BBEdoubleChestRight = new BBEChestBlockModel(context.bakeLayer(ModelLayers.DOUBLE_CHEST_RIGHT));
+        this.BBEsingleChest = new ChestModelOverride(context.bakeLayer(ModelLayers.CHEST));
+        this.BBEdoubleChestLeft = new ChestModelOverride(context.bakeLayer(ModelLayers.DOUBLE_CHEST_LEFT));
+        this.BBEdoubleChestRight = new ChestModelOverride(context.bakeLayer(ModelLayers.DOUBLE_CHEST_RIGHT));
     }
 
+    /* replace the original built models with our own that removes the trunk */
     @Inject(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/ChestRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At("HEAD"))
     public void submit(ChestRenderState chestRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
-        if (!ConfigManager.CONFIG.optimize_chests || !ConfigManager.CONFIG.master_optimize) {
+        if (!ConfigCache.optimizeChests || !ConfigCache.masterOptimize) {
             this.singleModel = singleChestOrg;
             this.doubleLeftModel = doubleChestLeftOrg;
             this.doubleRightModel = this.doubleChestRightOrg;
@@ -64,7 +65,7 @@ public abstract class ChestRendererMixin {
     }
     @Inject(method = "xmasTextures", at = @At("HEAD"), cancellable = true)
     private static void xmasTextures(CallbackInfoReturnable<Boolean> cir) {
-        if (ConfigManager.CONFIG.chest_christmas && ConfigManager.CONFIG.optimize_chests && ConfigManager.CONFIG.master_optimize)
+        if (ConfigCache.christmasChests && ConfigCache.optimizeChests && ConfigCache.masterOptimize)
             cir.setReturnValue(true);
     }
 }

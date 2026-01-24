@@ -1,0 +1,64 @@
+{
+  "bbe.config.sodium.pagetext": "Configuração BBE",
+
+  "bbe.config.storage.main.optimize.master": "Habilitar BBE",
+  "bbe.config.storage.main.optimize.master.tooltip": "Usado para Ativar ou Desativar BBE e todas as suas otimizações",
+
+  "bbe.config.storage.main.optimize.chest": "Otimizar Baú",
+  "bbe.config.storage.main.optimize.chest.tooltip": "Usado para Ativar ou Desativar as otimizações de baú",
+
+  "bbe.config.storage.main.optimize.shulker": "Otimizar caixa de Shulker",
+  "bbe.config.storage.main.optimize.shulker.tooltip": "Usado para Ativar ou Desativar as otimizações da caixa de Shulker",
+
+  "bbe.config.storage.main.optimize.sign": "Otimizar Placa",
+  "bbe.config.storage.main.optimize.sign.tooltip": "Usado para Ativar ou Desativar as otimizações de placa",
+
+  "bbe.config.storage.main.optimize.decoratedpot": "Optimizar Vaso Decorado",
+  "bbe.config.storage.main.optimize.decoratedpot.tooltip": "Usado para Ativar ou Desativar as otimizações de Vaso Decorado",
+
+  "bbe.config.storage.main.optimize.banner": "Otimizar Estandarte",
+  "bbe.config.storage.main.optimize.banner.tooltip": "Usado para Ativar ou Desativar as otimizações de Estandarte",
+
+  "bbe.config.storage.main.optimize.bell": "Otimizar Sino",
+  "bbe.config.storage.main.optimize.bell.tooltip": "Usado para Ativar ou Desativar as otimizações de Sino",
+
+  "bbe.config.storage.main.optimize.bed": "Otimizar Cama",
+  "bbe.config.storage.main.optimize.bed.tooltip": "Usado para Ativar ou Desativar as otimizações de Cama",
+
+  "bbe.config.storage.main.animation.chest": "Animar Baú",
+  "bbe.config.storage.main.animation.chest.tooltip": "Usado para Ativar ou Desativar as animações de Baú",
+
+  "bbe.config.storage.main.animation.shulker": "Animar Caixa de Shulker",
+  "bbe.config.storage.main.animation.shulker.tooltip": "Usado para Ativar ou Desativar as animações de Caixa de Shulker",
+
+  "bbe.config.storage.main.animation.bell": "Animar Sino",
+  "bbe.config.storage.main.animation.bell.tooltip": "Usado para Ativar ou Desativar as animações de Sino",
+
+  "bbe.config.storage.main.animation.decoratedpot": "Animar Vaso Decorado",
+  "bbe.config.storage.main.animation.decoratedpot.tooltip": "Usado para Ativar ou Desativar as animações de Vaso Decorado",
+
+  "bbe.config.storage.main.misc.banner_graphics": "Gráficos do Estandarte",
+  "bbe.config.storage.main.misc.banner_graphics.tooltip": "Define qual o tipo de passe de renderização os estandartes serão renderizados (Rápido = recorte, Elegante = translúcido)",
+
+  "bbe.config.storage.main.misc.banner_graphics.type.fast": "Rápido",
+  "bbe.config.storage.main.misc.banner_graphics.type.fancy": "Elegante",
+
+  "bbe.config.storage.main.misc.christmas_chest": "Baú de Natal",
+  "bbe.config.storage.main.misc.christmas_chest.tooltip": "Usado para Ativar ou Desativar as texturas de Natal para baús",
+
+  "bbe.config.storage.main.misc.render_passes": "Passes de Renderização Extras",
+  "bbe.config.storage.main.misc.render_passes.tooltip": "Decide quantos passes de renderização extras as entidades de bloco manterão em seu estado de animação após o término da animação",
+
+  "bbe.config.storage.main.misc.sign_text": "Texto da Placa",
+  "bbe.config.storage.main.misc.sign_text.tooltip": "Usado para Ativar ou Desativar a renderização do texto da placa",
+
+  "bbe.config.storage.main.misc.sign_text_distance": "Distância de renderização do texto da Placa",
+  "bbe.config.storage.main.misc.sign_text_distance.tooltip": "Decide a que distância (em blocos) começar a renderizar o texto da placa",
+
+  "bbe.config.storage.main.misc.update_scheduler": "Agendador de Atualizações",
+  "bbe.config.storage.main.misc.update_scheduler.tooltip": "Determina qual agendador de atualização usar, Inteligente atualiza entidades de blocos com base em vários fatores como visibilidade (sem atualizações instantâneas) enquanto Rápido atualiza imediatamente",
+  "bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable" : "Esta opção não está disponível porque o mod EMF está carregado!",
+
+  "bbe.config.storage.main.misc.update_scheduler.type.fast": "Rápido",
+  "bbe.config.storage.main.misc.update_scheduler.type.smart": "Inteligente"
+}

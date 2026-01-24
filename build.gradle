@@ -18,6 +18,10 @@ repositories {
     mavenCentral()
 }
 
+loom {
+    accessWidenerPath = file("src/main/resources/bbe.accesswidener")
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
