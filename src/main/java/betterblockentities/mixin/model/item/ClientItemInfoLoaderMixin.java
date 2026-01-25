@@ -51,7 +51,7 @@ public class ClientItemInfoLoaderMixin {
     private static boolean ShouldOverrideVanilla() {
         return ConfigCache.masterOptimize
                 && ConfigCache.optimizeChests
-                && ConfigCache.christmasChests
+                && !ConfigCache.christmasChests
                 && SpecialDates.isExtendedChristmas();
     }
 
