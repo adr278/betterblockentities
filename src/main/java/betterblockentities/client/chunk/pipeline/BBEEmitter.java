@@ -12,6 +12,10 @@ import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityManager;
 import betterblockentities.client.tasks.TaskScheduler;
 import betterblockentities.client.tasks.Tasks;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ShelfBlock;
+import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 
 /* minecraft */
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -56,12 +60,6 @@ import org.jetbrains.annotations.Nullable;
 public class BBEEmitter {
     public static void emit(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer, BlockRenderer blockRenderer) {
         Block block = state.getBlock();
-
-        /* not a valid block (regular terrain or not supported) emit like normal */
-        if (!BlockEntityManager.isSupportedBlock(block) || !ConfigCache.masterOptimize) {
-            instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
-            return;
-        }
 
         /* invalid block entity, abort */
         BlockEntity blockEntity = tryGetBlockEntity(pos, level, slice);
