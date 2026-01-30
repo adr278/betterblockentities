@@ -12,12 +12,11 @@ import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityManager;
 import betterblockentities.client.tasks.TaskScheduler;
 import betterblockentities.client.tasks.Tasks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.ShelfBlock;
-import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 
 /* minecraft */
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.Sheets;
@@ -134,6 +133,15 @@ public class BBEEmitter {
         else if (block instanceof CopperGolemStatueBlock) {
             if (ConfigCache.optimizeCopperGolemStatue)
                 emitCopperGolemStatue(isFaceCulled, emitter, random, pos, state, helper);
+        }
+
+        else if (blockEntity instanceof ShelfBlockEntity shelf) {
+            if (ConfigCache.masterOptimize) {
+                Level clientLevel = Minecraft.getInstance().level;
+                if (clientLevel != null) {
+                    ShelfItemEmitter.emit(emitter, pos, clientLevel, shelf);
+                }
+            }
         }
 
         /* emit any accessory parts if there are any */
