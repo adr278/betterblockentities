@@ -61,6 +61,14 @@ public class BBEEmitter {
     public static void emit(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer, BlockRenderer blockRenderer) {
         Block block = state.getBlock();
 
+        boolean allow = BlockEntityManager.isSupportedBlock(block)
+                || (block instanceof ChiseledBookShelfBlock);
+
+        if (!allow || !ConfigCache.masterOptimize) {
+            instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+            return;
+        }
+
         /* invalid block entity, abort */
         BlockEntity blockEntity = tryGetBlockEntity(pos, level, slice);
         if (blockEntity == null) {
