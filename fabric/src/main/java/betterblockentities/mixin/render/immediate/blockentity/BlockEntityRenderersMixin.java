@@ -115,6 +115,14 @@ public class BlockEntityRenderersMixin {
                     ConfigCache.optimizeCopperGolemStatue ? BBECopperGolemStatueBlockRenderer::new : CopperGolemStatueBlockRenderer::new;
             BlockEntityRenderersAccessor.invokeRegister(BlockEntityType.COPPER_GOLEM_STATUE, r10);
         }
+
+        if (AltRenderers.hasRendererOverride(BlockEntityType.SHELF)) {
+            removeRegistration(BlockEntityType.SHELF);
+        } else {
+            BlockEntityRendererProvider r11 =
+                    ConfigCache.optimizeShelves ? BBEImmediateShelfItemRenderer::new : ShelfRenderer::new;
+            BlockEntityRenderersAccessor.invokeRegister(BlockEntityType.SHELF, r11);
+        }
     }
 
     /*

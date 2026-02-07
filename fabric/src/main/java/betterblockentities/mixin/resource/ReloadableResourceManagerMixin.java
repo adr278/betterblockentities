@@ -1,6 +1,9 @@
 package betterblockentities.mixin.resource;
 
 /* local */
+import betterblockentities.client.chunk.pipeline.shelf.ShelfItemModelBuilder;
+import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
+import betterblockentities.client.render.immediate.blockentity.manager.SpecialBlockEntityManager;
 import betterblockentities.client.tasks.TaskScheduler;
 import betterblockentities.client.tasks.ResourceTasks;
 
@@ -29,6 +32,8 @@ public abstract class ReloadableResourceManagerMixin {
             if (ResourceTasks.populateGeometryRegistry() == ResourceTasks.FAILED) {
                 throw new IllegalStateException("Geometry registry failed to populate");
             }
+            ShelfItemModelBuilder.invalidateAllCachesOnReload();
+            SpecialBlockEntityManager.syncLoadedShelfSpecialManagers();
         });
     }
 }

@@ -1,0 +1,185 @@
+package betterblockentities.client.chunk.pipeline.shelf;
+
+/* mojang */
+import com.mojang.blaze3d.vertex.PoseStack;
+
+/* minecraft */
+import net.minecraft.client.model.geom.builders.UVPair;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
+
+/* joml */
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+
+public final class PackedQuadUtil {
+    private final SpriteRemapper sprites;
+
+    private static final ThreadLocal<V4> TL_V4 = ThreadLocal.withInitial(V4::new);
+
+    private static final class V4 {
+        final Vector3f a = new Vector3f();
+        final Vector3f b = new Vector3f();
+        final Vector3f c = new Vector3f();
+        final Vector3f d = new Vector3f();
+    }
+
+    public PackedQuadUtil(SpriteRemapper sprites) {
+        this.sprites = sprites;
+    }
+
+    public GeometryBaker.PackedQuad normalizeForCaching(GeometryBaker.PackedQuad quad) {
+        TextureAtlasSprite src = quad.sprite();
+        if (!sprites.isNotBlockAtlas(src)) return quad;
+
+        TextureAtlasSprite dst = sprites.tryGetBlockItemSprite(src);
+
+        if (dst == null) dst = sprites.missingNoOrNull();
+
+        if (dst == src) return quad;
+
+        return remapPackedQuadToSprite(quad, src, dst);
+    }
+
+    public static void resetPoseToIdentity(PoseStack ps) {
+        ps.last().pose().identity();
+        ps.last().normal().identity();
+    }
+
+    public static GeometryBaker.PackedQuad transformQuadToPacked(BakedQuad q, Matrix4f m) {
+        V4 v = TL_V4.get();
+
+        Vector3f p0 = v.a.set(q.position0().x(), q.position0().y(), q.position0().z());
+        Vector3f p1 = v.b.set(q.position1().x(), q.position1().y(), q.position1().z());
+        Vector3f p2 = v.c.set(q.position2().x(), q.position2().y(), q.position2().z());
+        Vector3f p3 = v.d.set(q.position3().x(), q.position3().y(), q.position3().z());
+
+        m.transformPosition(p0);
+        m.transformPosition(p1);
+        m.transformPosition(p2);
+        m.transformPosition(p3);
+
+        Direction dir = directionFromTransformedQuad(q, p0, p1, p2);
+
+        return new GeometryBaker.PackedQuad(
+                p0.x, p0.y, p0.z,
+                p1.x, p1.y, p1.z,
+                p2.x, p2.y, p2.z,
+                p3.x, p3.y, p3.z,
+                q.packedUV0(),
+                q.packedUV1(),
+                q.packedUV2(),
+                q.packedUV3(),
+                dir,
+                q.materialInfo().shade(),
+                q.materialInfo().lightEmission(),
+                q.materialInfo().tintIndex(),
+                q.materialInfo().sprite(),
+                null
+        );
+    }
+
+    public static GeometryBaker.PackedQuad transformQuadToPacked(BakedQuad q) {
+        return new GeometryBaker.PackedQuad(
+                q.position0().x(), q.position0().y(), q.position0().z(),
+                q.position1().x(), q.position1().y(), q.position1().z(),
+                q.position2().x(), q.position2().y(), q.position2().z(),
+                q.position3().x(), q.position3().y(), q.position3().z(),
+                q.packedUV0(),
+                q.packedUV1(),
+                q.packedUV2(),
+                q.packedUV3(),
+                q.direction(),
+                q.materialInfo().shade(),
+                q.materialInfo().lightEmission(),
+                0,
+                q.materialInfo().sprite(),
+                null
+        );
+    }
+
+    private static Direction directionFromTransformedQuad(
+            BakedQuad quad,
+            Vector3f p0,
+            Vector3f p1,
+            Vector3f p2
+    ) {
+        Vector3f edgeA = new Vector3f(p1).sub(p0);
+        Vector3f edgeB = new Vector3f(p2).sub(p0);
+        Vector3f normal = edgeA.cross(edgeB);
+
+        if (normal.lengthSquared() < 1.0E-8F) {
+            return quad.direction();
+        }
+
+        normal.normalize();
+
+        Direction original = quad.direction();
+        float dot = normal.x * original.getStepX()
+                + normal.y * original.getStepY()
+                + normal.z * original.getStepZ();
+        if (dot < 0.0F) {
+            normal.negate();
+        }
+
+        return Direction.getApproximateNearest(normal.x, normal.y, normal.z);
+    }
+
+    public TextureAtlasSprite missingNoOrNull() {
+        return sprites.missingNoOrNull();
+    }
+
+    public TextureAtlasSprite tryResolveEntitySprite(Object textureId) {
+        return sprites.tryResolveEntitySprite((Identifier) textureId);
+    }
+
+    static GeometryBaker.PackedQuad remapPackedQuadToSprite(
+            GeometryBaker.PackedQuad q,
+            TextureAtlasSprite src,
+            TextureAtlasSprite dst
+    ) {
+        long uv0 = remapPackedUv(q.uv0(), src, dst);
+        long uv1 = remapPackedUv(q.uv1(), src, dst);
+        long uv2 = remapPackedUv(q.uv2(), src, dst);
+        long uv3 = remapPackedUv(q.uv3(), src, dst);
+
+        return new GeometryBaker.PackedQuad(
+                q.x0(), q.y0(), q.z0(),
+                q.x1(), q.y1(), q.z1(),
+                q.x2(), q.y2(), q.z2(),
+                q.x3(), q.y3(), q.z3(),
+                uv0, uv1, uv2, uv3,
+                q.dir(),
+                q.shade(),
+                q.lightEmission(),
+                q.tintIndex(),
+                dst,
+                dst
+        );
+    }
+
+    private static long remapPackedUv(long packed, TextureAtlasSprite src, TextureAtlasSprite dst) {
+        float u = UVPair.unpackU(packed);
+        float v = UVPair.unpackV(packed);
+
+        float su0 = src.getU0();
+        float su1 = src.getU1();
+        float sv0 = src.getV0();
+        float sv1 = src.getV1();
+
+        float du0 = dst.getU0();
+        float du1 = dst.getU1();
+        float dv0 = dst.getV0();
+        float dv1 = dst.getV1();
+
+        float ru = (su1 != su0) ? (u - su0) / (su1 - su0) : 0.0f;
+        float rv = (sv1 != sv0) ? (v - sv0) / (sv1 - sv0) : 0.0f;
+
+        float nu = du0 + ru * (du1 - du0);
+        float nv = dv0 + rv * (dv1 - dv0);
+
+        return UVPair.pack(nu, nv);
+    }
+}
