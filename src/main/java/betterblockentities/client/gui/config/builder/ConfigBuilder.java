@@ -30,6 +30,7 @@ public class ConfigBuilder {
                 new BooleanOption("optimize.bell", true),
                 new BooleanOption("optimize.bed", true),
                 new BooleanOption("optimize.copper_golem_statue", true),
+                new BooleanOption("optimize.shelf", true),
 
                 new BooleanOption("animation.chest", true),
                 new BooleanOption("animation.shulker", true),

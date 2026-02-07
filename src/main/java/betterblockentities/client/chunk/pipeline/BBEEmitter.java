@@ -2,6 +2,8 @@ package betterblockentities.client.chunk.pipeline;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.chunk.pipeline.shelf.CacheKeys;
+import betterblockentities.client.chunk.pipeline.shelf.ShelfItemModelBuilder;
 import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
 import betterblockentities.client.chunk.util.QuadTransform;
 import betterblockentities.client.gui.config.ConfigCache;
@@ -57,6 +59,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class BBEEmitter {
     private static final ThreadLocal<ArrayList<BlockModelPart>> ALLOCATED_PARTS_LIST = ThreadLocal.withInitial(() -> new ArrayList<>(64));
+    private static final float[] ZERO_ROTATION = {0.0F, 0.0F};
 
     public static void emit(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer, BlockRenderer blockRenderer) {
         final Block block = state.getBlock();
@@ -167,6 +170,17 @@ public final class BBEEmitter {
 
             if (ConfigCache.optimizeCopperGolemStatue)
                 emitCopperGolemStatue(isFaceCulled, emitter, random, state, helper);
+        }
+
+        else if (ConfigCache.optimizeShelf) {
+            BlockEntity be = tryGetBlockEntity(pos, level, slice);
+            if (be instanceof ShelfBlockEntity shelf) {
+                helper = new BlockRenderHelper(blockRenderer);
+
+                instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+                emitShelfItems(isFaceCulled, emitter, state, helper, shelf, level);
+                return;
+            }
         }
 
         /* emit any accessory parts if there are any, catch unsupported blocks or regular terrain  */
@@ -458,6 +472,48 @@ public final class BBEEmitter {
         helper.setRendertype(ChunkSectionLayer.SOLID);
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
         helper.setSprite(null);
+    }
+
+    private static void emitShelfItems(
+            Predicate<Direction> isFaceCulled,
+            MutableQuadViewImpl emitter,
+            BlockState state,
+            BlockRenderHelper helper,
+            ShelfBlockEntity shelf,
+            BlockAndTintGetter level
+    ) {
+        final Direction facing = state.hasProperty(HorizontalDirectionalBlock.FACING)
+                ? state.getValue(HorizontalDirectionalBlock.FACING)
+                : Direction.NORTH;
+        final boolean alignBottom = shelf.getAlignItemsToBottom();
+
+        ArrayList<BlockModelPart> scratch = partsBuf();
+
+        ShelfItemModelBuilder.forEachPlacedPart(
+                level,
+                shelf,
+                facing,
+                alignBottom,
+                (transformedPart, layeredPart) -> {
+                    int color = layeredPart.color();
+
+                    helper.setRendertype(layeredPart.layer());
+                    helper.setRotation(ZERO_ROTATION);
+                    helper.setColor(color == CacheKeys.NO_TINT ? -1 : color);
+                    helper.setSprite(null);
+
+                    scratch.clear();
+                    scratch.add(transformedPart);
+
+                    BlockRenderHelper.emitModelPart(
+                            scratch,
+                            emitter,
+                            state,
+                            isFaceCulled,
+                            helper::emitGE
+                    );
+                }
+        );
     }
 
     private static @Nullable BlockEntity tryGetBlockEntity(BlockPos pos, BlockAndTintGetter level, LevelSlice slice) {

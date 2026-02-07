@@ -386,6 +386,25 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("bbe:optimize.shelf"))
+                                .setName(Component.translatable("bbe.config.storage.main.optimize.shelf"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.shelf.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.HIGH)
+                                .setBinding(
+                                        value -> BBE.CONFIG.MAIN.setOption("optimize.shelf", value),
+                                        () -> (boolean) BBE.CONFIG.MAIN.getOption("optimize.shelf").getValue()
+                                )
+                                .setEnabledProvider(c ->
+                                        c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+        );
+
+        BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
                     builder.createEnumOption(Identifier.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
                             .setName(Component.translatable("bbe.config.storage.main.misc.update_scheduler"))
