@@ -1,13 +1,18 @@
 package betterblockentities.client.render.immediate.blockentity.manager;
 
+import betterblockentities.client.chunk.pipeline.shelf.ShelfItemImmediateFallback;
+import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.gui.config.ConfigCache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 
 /**
  * Special cases where we might need special behavior : push the render-state at all times etc...
@@ -35,12 +40,7 @@ public final class SpecialBlockEntityManager {
 
         /* don't continue to extract this render state if we have no items to render */
         else if (blockEntity instanceof ShelfBlockEntity shelf) {
-            for (ItemStack stack : shelf.getItems()) {
-                if (stack != ItemStack.EMPTY) {
-                    return true;
-                }
-            }
-            return false;
+            return ShelfItemImmediateFallback.hasShelfRendererItem(shelf);
         }
         else if (blockEntity instanceof CampfireBlockEntity campfire) {
             for (ItemStack stack : campfire.getItems()) {
@@ -51,5 +51,33 @@ public final class SpecialBlockEntityManager {
             return false;
         }
         return true;
+    }
+
+    public static boolean shelfUsesSpecialManager() {
+        return ShelfItemImmediateFallback.usesShelfRenderer();
+    }
+
+    public static void syncLoadedShelfSpecialManagers() {
+        var minecraft = Minecraft.getInstance();
+        var level = minecraft.level;
+        Entity entity = minecraft.getCameraEntity();
+        if (level == null || entity == null) return;
+
+        ChunkPos center = entity.chunkPosition();
+        int radius = minecraft.options.renderDistance().get() + 3;
+        boolean useSpecialManager = shelfUsesSpecialManager();
+
+        for (int chunkZ = center.z() - radius; chunkZ <= center.z() + radius; chunkZ++) {
+            for (int chunkX = center.x() - radius; chunkX <= center.x() + radius; chunkX++) {
+                LevelChunk chunk = level.getChunkSource().getChunk(chunkX, chunkZ, ChunkStatus.FULL, false);
+                if (chunk == null) continue;
+
+                for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
+                    if (blockEntity instanceof ShelfBlockEntity shelf) {
+                        ((BlockEntityExt) shelf).hasSpecialManager(useSpecialManager);
+                    }
+                }
+            }
+        }
     }
 }

@@ -18,6 +18,7 @@ public class ConfigBuilder {
 
         int defaultBannerGraphics = EnumTypes.BannerGraphicsType.FANCY.ordinal();
         int defaultUpdateScheduler = EnumTypes.UpdateSchedulerType.SMART.ordinal();
+        int defaultShelfItemType = EnumTypes.ShelfItemTypes.FANCY.ordinal();
 
         List<OptionObject<?>> options = new ArrayList<>(List.of(
                 new BooleanOption("optimize.master", true),
@@ -41,6 +42,8 @@ public class ConfigBuilder {
                 new IntegerOption("misc.banner_pose", 1),
                 new IntegerOption("misc.banner_graphics", defaultBannerGraphics),
                 new BooleanOption("misc.christmas_chest", false),
+                new BooleanOption("misc.optimize.shelf.items", true),
+                new IntegerOption("misc.item_mesh_type", defaultShelfItemType),
                 new IntegerOption("misc.sign_text_distance", 16),
                 new BooleanOption("misc.sign_text", true),
                 new BooleanOption("misc.sign_text_culling", true),

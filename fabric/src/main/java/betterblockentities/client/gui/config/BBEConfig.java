@@ -214,6 +214,8 @@ public class BBEConfig {
             ConfigCache.updateType = BBE.ModCompact.isSchedulerOptionLimited() ? EnumTypes.UpdateSchedulerType.SMART.ordinal() : GenericConfigWrapper.MainStorage.updateScheduler();
             ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();
             ConfigCache.optimizeShelves = GenericConfigWrapper.MainStorage.optimizeShelf();
+            ConfigCache.optimizeShelfItems = GenericConfigWrapper.MainStorage.optimizeShelfItems();
+            ConfigCache.shelfItemMode = GenericConfigWrapper.MainStorage.itemMeshType();
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
         }
         else {
@@ -226,6 +228,8 @@ public class BBEConfig {
             ConfigCache.optimizeBanners = false;
             ConfigCache.optimizeCopperGolemStatue = false;
             ConfigCache.optimizeShelves = false;
+            ConfigCache.optimizeShelfItems = false;
+            ConfigCache.shelfItemMode = EnumTypes.ShelfItemTypes.FANCY.ordinal();
             ConfigCache.optimizeCampfire = false;
         }
 

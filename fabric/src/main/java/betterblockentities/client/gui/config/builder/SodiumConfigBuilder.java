@@ -402,6 +402,49 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setStorageHandler(this.saveMainConfigStorageObject)
                 )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("bbe:misc.optimize.shelf.items"))
+                                .setName(Component.translatable("bbe.config.storage.main.misc.optimize.shelf.items"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.optimize.shelf.items.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.HIGH)
+                                .setBinding(
+                                        value -> BBE.GlobalScope.CONFIG.MAIN.setOption("misc.optimize.shelf.items", value),
+                                        () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("misc.optimize.shelf.items").getValue()
+                                )
+                                .setEnabledProvider(c ->
+                                        c.readBooleanOption(Identifier.parse("bbe:master")) &&
+                                        c.readBooleanOption(Identifier.parse("bbe:optimize.shelf")),
+                                        Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.shelf")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createEnumOption(Identifier.parse("bbe:misc.item_mesh_type"), EnumTypes.ShelfItemTypes.class)
+                                .setName(Component.translatable("bbe.config.storage.main.misc.item_mesh_type"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.item_mesh_type.tooltip"))
+                                .setDefaultValue(EnumTypes.ShelfItemTypes.FANCY)
+                                .setImpact(OptionImpact.HIGH)
+                                .setBinding(
+                                        value -> BBE.GlobalScope.CONFIG.MAIN.setOption("misc.item_mesh_type", EnumTypes.ShelfItemTypes.map(value)),
+                                        () -> EnumTypes.ShelfItemTypes.map((int) BBE.GlobalScope.CONFIG.MAIN.getOption("misc.item_mesh_type").getValue())
+                                )
+                                .setElementNameProvider(e -> new Component[]{
+                                        Component.translatable("bbe.config.storage.main.misc.item_mesh_type.type.fast"),
+                                        Component.translatable("bbe.config.storage.main.misc.item_mesh_type.type.fancy"),
+                                }[e.ordinal()])
+                                .setEnabledProvider(c ->
+                                        c.readBooleanOption(Identifier.parse("bbe:master")) &&
+                                        c.readBooleanOption(Identifier.parse("bbe:optimize.shelf")) &&
+                                        c.readBooleanOption(Identifier.parse("bbe:misc.optimize.shelf.items")),
+                                        Identifier.parse("bbe:master"),
+                                        Identifier.parse("bbe:optimize.shelf"),
+                                        Identifier.parse("bbe:misc.optimize.shelf.items")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
         );
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
