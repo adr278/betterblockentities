@@ -169,6 +169,16 @@ public final class BBEEmitter {
                 emitCopperGolemStatue(isFaceCulled, emitter, random, state, helper);
         }
 
+        else if (ConfigCache.optimizeShelf) {
+            BlockEntity be = tryGetBlockEntity(pos, level, slice);
+            if (be instanceof ShelfBlockEntity shelf) {
+                instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+
+                ShelfItemEmitter.emit(emitter, pos, level, shelf);
+                return;
+            }
+        }
+
         /* emit any accessory parts if there are any, catch unsupported blocks or regular terrain  */
         instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
     }

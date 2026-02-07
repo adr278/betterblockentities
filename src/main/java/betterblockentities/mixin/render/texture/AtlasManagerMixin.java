@@ -23,6 +23,7 @@ public class AtlasManagerMixin {
         instance.forEach((material, sprite) -> {
             Identifier tex = material.texture();
             if (tex != null && tex.getPath().startsWith("entity/")) return;
+            if (tex != null && tex.getPath().startsWith("item/")) return;
             consumer.accept(material, sprite);
         });
     }

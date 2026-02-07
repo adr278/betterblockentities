@@ -22,6 +22,7 @@ public class GenericConfigWrapper {
         public static boolean optimizeBell() { return getGenericBooleanOption("optimize.bell"); }
         public static boolean optimizeBed() {return getGenericBooleanOption("optimize.bed");}
         public static boolean optimizeCopperGolemStatue() {return getGenericBooleanOption("optimize.copper_golem_statue");}
+        public static boolean optimizeShelf() {return getGenericBooleanOption("optimize.shelf");}
         public static boolean animateChest() {return getGenericBooleanOption("animation.chest");}
         public static boolean animateShulker() {return getGenericBooleanOption("animation.shulker");}
         public static boolean animateBell() {return getGenericBooleanOption("animation.bell");}

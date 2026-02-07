@@ -25,6 +25,9 @@
   "bbe.config.storage.main.optimize.bed": "Otimizar Cama",
   "bbe.config.storage.main.optimize.bed.tooltip": "Usado para Ativar ou Desativar as otimizações de Cama",
 
+  "bbe.config.storage.main.optimize.shelf" : "Otimizar Estante",
+  "bbe.config.storage.main.optimize.shelf.tooltip" : "Usado para Ativar ou Desativar as otimizações de Estante",
+
   "bbe.config.storage.main.animation.chest": "Animar Baú",
   "bbe.config.storage.main.animation.chest.tooltip": "Usado para Ativar ou Desativar as animações de Baú",
 
