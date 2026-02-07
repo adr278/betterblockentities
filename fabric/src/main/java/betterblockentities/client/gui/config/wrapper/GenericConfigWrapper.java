@@ -23,6 +23,7 @@ public class GenericConfigWrapper {
         public static boolean optimizeBed() {return getGenericBooleanOption("optimize.bed");}
         public static boolean optimizeCopperGolemStatue() {return getGenericBooleanOption("optimize.copper_golem_statue");}
         public static boolean optimizeShelf() {return getGenericBooleanOption("optimize.shelf");}
+        public static boolean optimizeShelfItems() {return getGenericBooleanOption("misc.optimize.shelf.items");}
         public static boolean optimizeCampfire() {return getGenericBooleanOption("optimize.campfire");}
         public static boolean animateChest() {return getGenericBooleanOption("animation.chest");}
         public static boolean animateShulker() {return getGenericBooleanOption("animation.shulker");}
@@ -30,6 +31,7 @@ public class GenericConfigWrapper {
         public static boolean animateDecoratedpot() {return getGenericBooleanOption("animation.decoratedpot");}
         public static int bannerPose() {return getGenericIntegerOption("misc.banner_pose");}
         public static int bannerGraphics() {return getGenericIntegerOption("misc.banner_graphics");}
+        public static int itemMeshType() {return getGenericIntegerOption("misc.item_mesh_type");}
         public static boolean useChristmasChestTextures() {return getGenericBooleanOption("misc.christmas_chest");}
         public static int signTextDistance() {return getGenericIntegerOption("misc.sign_text_distance");}
         public static boolean signText() {return getGenericBooleanOption("misc.sign_text");}

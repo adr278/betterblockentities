@@ -31,6 +31,12 @@
   "bbe.config.storage.main.optimize.shelf" : "Optimize Shelf",
   "bbe.config.storage.main.optimize.shelf.tooltip" : "Used to toggle shelf optimizations ON or OFF",
 
+  "bbe.config.storage.main.misc.optimize.shelf.items" : "Optimize Shelf Items",
+  "bbe.config.storage.main.misc.optimize.shelf.items.tooltip" : "Used to toggle shelf item optimizations ON or OFF",
+
+  "bbe.config.storage.main.misc.item_mesh_type" : "Shelf Item Mesh Type",
+  "bbe.config.storage.main.misc.item_mesh_type.tooltip" : "Fancy uses Minecraft's default renderer keeping items' glint effects, Fast optimizes all shelf items but they lose their glint effect",
+
   "bbe.config.storage.main.optimize.campfire" : "Optimize Campfire",
   "bbe.config.storage.main.optimize.campfire.tooltip" : "Used to toggle campfire optimizations ON or OFF",
 
@@ -73,6 +79,9 @@
 
   "bbe.config.storage.main.misc.banner_graphics.type.fast" : "Fast",
   "bbe.config.storage.main.misc.banner_graphics.type.fancy" : "Fancy",
+
+  "bbe.config.storage.main.misc.item_mesh_type.type.fast" : "Fast",
+  "bbe.config.storage.main.misc.item_mesh_type.type.fancy" : "Fancy",
 
   "bbe.config.storage.main.misc.banner_pose" : "Banner Pose",
   "bbe.config.storage.main.misc.banner_pose.tooltip" : "Rotates the banner canvas/flag to a preset position"

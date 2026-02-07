@@ -25,4 +25,14 @@ public class EnumTypes {
             return (type == FAST) ? 0 : 1;
         }
     }
+
+    public enum ShelfItemTypes {
+        FAST, FANCY;
+        public static ShelfItemTypes map(int value) {
+            return (value == 0) ? ShelfItemTypes.FAST : ShelfItemTypes.FANCY;
+        }
+        public static int map(ShelfItemTypes type) {
+            return (type == FAST) ? 0 : 1;
+        }
+    }
 }
