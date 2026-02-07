@@ -14,6 +14,9 @@ import betterblockentities.client.tasks.TaskScheduler;
 import betterblockentities.client.tasks.Tasks;
 
 /* minecraft */
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.Sheets;
@@ -58,14 +61,30 @@ public class BBEEmitter {
         Block block = state.getBlock();
 
         /* not a valid block (regular terrain or not supported) emit like normal */
-        if (!BlockEntityManager.isSupportedBlock(block) || !ConfigCache.masterOptimize) {
+        if (!ConfigCache.masterOptimize) {
             instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
             return;
         }
 
-        /* invalid block entity, abort */
+        boolean allow = BlockEntityManager.isSupportedBlock(block)
+                || (block instanceof ChiseledBookShelfBlock);
+
         BlockEntity blockEntity = tryGetBlockEntity(pos, level, slice);
+        if (blockEntity instanceof ShelfBlockEntity) {
+            allow = true;
+
+        } else if (blockEntity == null && !allow) {
+            instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+            return;
+        }
+
+        if (!allow) {
+            instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+            return;
+        }
+
         if (blockEntity == null) {
+            instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
             return;
         }
 
@@ -128,6 +147,13 @@ public class BBEEmitter {
         else if (block instanceof CopperGolemStatueBlock) {
             if (ConfigCache.optimizeCopperGolemStatue)
                 emitCopperGolemStatue(isFaceCulled, emitter, random, pos, state, helper);
+        }
+
+        else if (blockEntity instanceof ShelfBlockEntity shelf) {
+            if (ConfigCache.masterOptimize) {
+                ClientLevel clientLevel = Minecraft.getInstance().level;
+                ShelfItemEmitter.emit(emitter, pos, clientLevel, shelf);
+            }
         }
 
         /* emit any accessory parts if there are any */

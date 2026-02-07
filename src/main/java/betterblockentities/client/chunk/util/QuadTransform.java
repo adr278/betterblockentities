@@ -2,6 +2,7 @@ package betterblockentities.client.chunk.util;
 
 /* minecraft */
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.data.AtlasIds;
 import net.minecraft.resources.Identifier;
@@ -15,7 +16,11 @@ import org.joml.Vector3f;
 /**
  * Utility class for transforming Sodium's {@link net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl } emitter / render data
  */
-public class QuadTransform {
+public final class QuadTransform {
+    private QuadTransform() {
+        throw new IllegalStateException("Instancing of this class is not allowed!");
+    }
+
     public static void rotateY(MutableQuadViewImpl quad, float degrees) {
         float radians = (float) Math.toRadians(degrees);
         float cos = (float) Math.cos(radians);
@@ -65,25 +70,16 @@ public class QuadTransform {
         cy *= 0.25f;
         cz *= 0.25f;
 
-        /* face normal */
-        Vector3f normal = quad.faceNormal();
-        normal.normalize();
+        Vector3f normal = new Vector3f(quad.faceNormal()).normalize();
 
         /* compute tangent */
         Vector3f tangent = new Vector3f(
                 quad.getX(1) - quad.getX(0),
                 quad.getY(1) - quad.getY(0),
                 quad.getZ(1) - quad.getZ(0)
-        );
-        tangent.normalize();
+        ).normalize();
 
-        /* bitangent = normal x tangent */
-        Vector3f bitangent = new Vector3f(
-                normal.y() * tangent.z() - normal.z() * tangent.y(),
-                normal.z() * tangent.x() - normal.x() * tangent.z(),
-                normal.x() * tangent.y() - normal.y() * tangent.x()
-        );
-        bitangent.normalize();
+        Vector3f bitangent = new Vector3f(normal).cross(tangent).normalize();
 
         /* scalar for diagonal expansion */
         float expand = amount;
@@ -127,8 +123,7 @@ public class QuadTransform {
         final float vNewMin = newSprite.getV0();
         final float vNewMax = newSprite.getV1();
 
-        if (!(quad instanceof MutableQuadViewImpl mQuad)) return;
-        TextureAtlasSprite old = mQuad.cachedSprite();
+        TextureAtlasSprite old = quad.cachedSprite();
         if (old == null) return;
 
         float uOldMin = old.getU0();
@@ -143,25 +138,45 @@ public class QuadTransform {
         float vNewRange = vNewMax - vNewMin;
 
         for (int i = 0; i < 4; i++) {
-            float uNorm = (mQuad.getTexU(i) - uOldMin) / uOldRange;
-            float vNorm = (mQuad.getTexV(i) - vOldMin) / vOldRange;
+            float uNorm = (quad.getTexU(i) - uOldMin) / uOldRange;
+            float vNorm = (quad.getTexV(i) - vOldMin) / vOldRange;
 
-            mQuad.setUV(i,
+            quad.setUV(i,
                     uNewMin + uNorm * uNewRange,
                     vNewMin + vNorm * vNewRange
             );
         }
-        mQuad.cachedSprite(newSprite);
+
+        quad.cachedSprite(newSprite);
     }
 
-    public static TextureAtlasSprite getSprite(Identifier id) {
-        var atlas = Minecraft.getInstance()
+    public static TextureAtlasSprite getSprite(Identifier spriteId) {
+        return getBlockSprite(spriteId);
+    }
+
+    public static TextureAtlasSprite getSprite(Identifier atlasId, Identifier spriteId) {
+        TextureAtlas atlas = Minecraft.getInstance()
                 .getAtlasManager()
-                .getAtlasOrThrow(AtlasIds.BLOCKS);
-        return atlas.getSprite(id);
+                .getAtlasOrThrow(atlasId);
+        return atlas.getSprite(spriteId);
     }
 
-    private QuadTransform() {
-        throw new IllegalStateException("Instancing of this class is not allowed!");
+    public static TextureAtlasSprite getBlockSprite(Identifier spriteId) {
+        return getSprite(AtlasIds.BLOCKS, spriteId);
+    }
+
+    public static TextureAtlasSprite getItemSprite(Identifier spriteId) {
+        return getSprite(AtlasIds.ITEMS, spriteId);
+    }
+
+    public static Identifier stitchedId(Identifier original) {
+        Identifier id = Identifier.tryParse("minecraft:item/" + original.getNamespace() + "/" + original.getPath());
+        return (id != null) ? id : original;
+    }
+
+    public static TextureAtlasSprite getStitchedItemSprite(Identifier originalItemId) {
+        if (!originalItemId.getPath().startsWith("item/")) return null;
+        Identifier stitched = stitchedId(originalItemId);
+        return getItemSprite(stitched);
     }
 }

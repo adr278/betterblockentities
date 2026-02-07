@@ -22,6 +22,8 @@
     "render.immediate.blockentity.chest.EnderChestBlockEntityMixin",
     "render.immediate.blockentity.decordatedpot.DecoratedPotBlockEntityMixin",
     "render.immediate.blockentity.decordatedpot.DecoratedPotRendererAccessor",
+    "render.immediate.blockentity.shelf.ShelfRendererMixin",
+    "render.immediate.blockentity.shelf.ShelfBlockEntityMixin",
     "render.immediate.blockentity.shulker.ShulkerBoxBlockEntityMixin",
     "render.immediate.blockentity.sign.AbstractSignRendererMixin",
     "render.texture.AtlasManagerMixin",
