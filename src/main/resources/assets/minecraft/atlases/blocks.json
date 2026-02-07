@@ -9,6 +9,14 @@
     { "type": "directory", "source": "entity/signs/hanging", "prefix": "entity/signs/hanging/" },
     { "type": "directory", "source": "entity/banner", "prefix": "entity/banner/" },
     { "type": "directory", "source": "entity/copper_golem", "prefix": "entity/copper_golem/" },
-    { "type": "single", "resource": "minecraft:entity/banner_base" }
+    { "type": "single", "resource": "minecraft:entity/banner_base" },
+    { "type": "directory", "source": "item", "prefix": "item/"},
+    { "type": "directory", "source": "entity/player", "prefix": "entity/player/" },
+    { "type": "single", "resource": "entity/skeleton/wither_skeleton" },
+    { "type": "single", "resource": "entity/enderdragon/dragon" },
+    { "type": "single", "resource": "entity/skeleton/skeleton" },
+    { "type": "single", "resource": "entity/creeper/creeper" },
+    { "type": "single", "resource": "entity/zombie/zombie" },
+    { "type": "single", "resource": "entity/piglin/piglin" }
   ]
 }
