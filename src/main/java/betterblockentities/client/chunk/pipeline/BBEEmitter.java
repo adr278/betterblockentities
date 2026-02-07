@@ -2,6 +2,9 @@ package betterblockentities.client.chunk.pipeline;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.chunk.pipeline.shelf.CacheKeys;
+import betterblockentities.client.chunk.pipeline.shelf.GeometryBaker;
+import betterblockentities.client.chunk.pipeline.shelf.ShelfItemModelBuilder;
 import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
 import betterblockentities.client.chunk.util.QuadTransform;
 import betterblockentities.client.gui.config.ConfigCache;
@@ -167,6 +170,17 @@ public final class BBEEmitter {
 
             if (ConfigCache.optimizeCopperGolemStatue)
                 emitCopperGolemStatue(isFaceCulled, emitter, random, state, helper);
+        }
+
+        else if (ConfigCache.optimizeShelf) {
+            BlockEntity be = tryGetBlockEntity(pos, level, slice);
+            if (be instanceof ShelfBlockEntity shelf) {
+                helper = new BlockRenderHelper(blockRenderer);
+
+                instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+                emitShelfItems(isFaceCulled, emitter, state, helper, shelf, level);
+                return;
+            }
         }
 
         /* emit any accessory parts if there are any, catch unsupported blocks or regular terrain  */
@@ -458,6 +472,27 @@ public final class BBEEmitter {
         helper.setRendertype(ChunkSectionLayer.SOLID);
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
         helper.setSprite(null);
+    }
+
+    private static void emitShelfItems(
+            Predicate<Direction> isFaceCulled,
+            MutableQuadViewImpl emitter,
+            BlockState state,
+            BlockRenderHelper helper,
+            ShelfBlockEntity shelf,
+            BlockAndTintGetter level
+    ) {
+        List<GeometryBaker.LayeredPart> parts = ShelfItemModelBuilder.getParts(level, shelf);
+        if (parts.isEmpty()) return;
+
+        for (GeometryBaker.LayeredPart lp : parts) {
+            helper.setRendertype(lp.layer());
+            helper.setRotation(new float[]{0.0f, 0.0f});
+            helper.setColor(lp.color() == CacheKeys.NO_TINT ? -1 : lp.color());
+            helper.setSprite(null);
+
+            BlockRenderHelper.emitModelPart(List.of(lp.part()), emitter, state, isFaceCulled, helper::emitGE);
+        }
     }
 
     private static @Nullable BlockEntity tryGetBlockEntity(BlockPos pos, BlockAndTintGetter level, LevelSlice slice) {

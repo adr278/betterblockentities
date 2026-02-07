@@ -209,6 +209,7 @@ public class BBEConfig {
         ConfigCache.optimizeBanners = GenericConfigWrapper.MainStorage.optimizeBanner();
         ConfigCache.bannerPose = GenericConfigWrapper.MainStorage.bannerPose();
         ConfigCache.optimizeCopperGolemStatue = GenericConfigWrapper.MainStorage.optimizeCopperGolemStatue();
+        ConfigCache.optimizeShelf = GenericConfigWrapper.MainStorage.optimizeShelf();
         ConfigCache.updateType = BBE.LoadedModList.EMF ? EnumTypes.UpdateSchedulerType.SMART.ordinal() : GenericConfigWrapper.MainStorage.updateScheduler();
         ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();
         ConfigCache.debugOverlays = GenericConfigWrapper.HiddenStorage.debugOverlays();
@@ -233,6 +234,7 @@ public class BBEConfig {
             ENABLED[InstancedBlockEntityManager.OptKind.BANNER]  = ConfigCache.optimizeBanners;
             ENABLED[InstancedBlockEntityManager.OptKind.BELL]    = ConfigCache.optimizeBells;
             ENABLED[InstancedBlockEntityManager.OptKind.CGS]     = ConfigCache.optimizeCopperGolemStatue;
+            ENABLED[InstancedBlockEntityManager.OptKind.SHELF]   = ConfigCache.optimizeShelf;
 
             ENABLED[InstancedBlockEntityManager.OptKind.NONE] = false;
         }
