@@ -2,7 +2,7 @@ package betterblockentities.client.model.geometry;
 
 /* local */
 import betterblockentities.client.BBE;
-import betterblockentities.client.tasks.Tasks;
+import betterblockentities.client.tasks.ResourceTasks;
 
 /* minecraft */
 import net.minecraft.client.Minecraft;
@@ -25,7 +25,7 @@ public class ModelGenerator {
 
         EntityModelSet entityModelSet = tryGetEntityModelSet();
         if (entityModelSet == null) {
-            return Tasks.TASK_FAILED;
+            return ResourceTasks.FAILED;
         }
 
         /* iterate all supported layers, bake root, transform, build and append geometry to registry */
@@ -37,9 +37,8 @@ public class ModelGenerator {
                 BBE.getLogger().error("Geometry setup for ModelLayer {} failed!", layer.layer(), e);
             }
         }
-        return Tasks.TASK_COMPLETE;
+        return ResourceTasks.COMPLETE;
     }
-
 
     public static void bakeLayerSetupAndAppend(EntityModelSet entityModelSet, ModelLayerLocation layer, PoseStack stack) {
         ModelPart root = entityModelSet.bakeLayer(layer);
@@ -155,11 +154,13 @@ public class ModelGenerator {
 
     private static void setupCopperGolemStatue(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
         stack.pushPose();
+        stack.translate(0.5f, 0.5f, 0.5f);
+        stack.mulPose(Axis.XP.rotationDegrees(180));
+        stack.translate(-0.5f, -0.5f, -0.5f);
         stack.translate(0.5F, 1.0F, 0.5F);
         GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.COPPER_GOLEM_STATUE, stack);
         stack.popPose();
     }
-
 
     private static EntityModelSet tryGetEntityModelSet() {
         try {

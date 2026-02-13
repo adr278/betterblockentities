@@ -3,14 +3,14 @@ package betterblockentities.client.gui.config;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.builder.ConfigBuilder;
+import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
 import betterblockentities.client.gui.option.*;
 import betterblockentities.client.gui.storage.ConfigStorageCollection;
 import betterblockentities.client.gui.storage.ConfigStorageObject;
 import betterblockentities.client.gui.storage.ConfigStorageIdentifiers;
-import betterblockentities.client.render.immediate.blockentity.BlockEntityManager;
 
 /* minecraft */
-import net.minecraft.world.level.block.entity.*;
+import betterblockentities.client.render.immediate.blockentity.InstancedBlockEntityManager;
 
 /* gson */
 import com.google.gson.*;
@@ -21,7 +21,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Locale;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 public class BBEConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -192,45 +191,49 @@ public class BBEConfig {
      * cache the main config options to avoid repeated lookups in the config storage
      */
     public static void updateConfigCache() {
-        ReferenceOpenHashSet<Class<? extends BlockEntity>> supported = new ReferenceOpenHashSet<>();
+        ConfigCache.masterOptimize = GenericConfigWrapper.MainStorage.master();
+        ConfigCache.chestAnims = GenericConfigWrapper.MainStorage.animateChest();
+        ConfigCache.shulkerAnims = GenericConfigWrapper.MainStorage.animateShulker();
+        ConfigCache.bellAnims = GenericConfigWrapper.MainStorage.animateBell();
+        ConfigCache.potAnims = GenericConfigWrapper.MainStorage.animateDecoratedpot();
+        ConfigCache.signText = GenericConfigWrapper.MainStorage.signText();
+        ConfigCache.signTextRenderDistance = GenericConfigWrapper.MainStorage.signTextDistance();
+        ConfigCache.optimizeSigns = GenericConfigWrapper.MainStorage.optimizeSign();
+        ConfigCache.christmasChests = GenericConfigWrapper.MainStorage.useChristmasChestTextures();
+        ConfigCache.optimizeChests = GenericConfigWrapper.MainStorage.optimizeChests();
+        ConfigCache.optimizeDecoratedPots = GenericConfigWrapper.MainStorage.optimizeDecoratedPot();
+        ConfigCache.optimizeBeds = GenericConfigWrapper.MainStorage.optimizeBed();
+        ConfigCache.optimizeShulker = GenericConfigWrapper.MainStorage.optimizeShulker();
+        ConfigCache.bannerGraphics = GenericConfigWrapper.MainStorage.bannerGraphics();
+        ConfigCache.optimizeBells = GenericConfigWrapper.MainStorage.optimizeBell();
+        ConfigCache.optimizeBanners = GenericConfigWrapper.MainStorage.optimizeBanner();
+        ConfigCache.optimizeCopperGolemStatue = GenericConfigWrapper.MainStorage.optimizeCopperGolemStatue();
+        ConfigCache.updateType = BBE.LoadedModList.EMF ? EnumTypes.UpdateSchedulerType.SMART.ordinal() : GenericConfigWrapper.MainStorage.updateScheduler();
+        ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();
+        ConfigCache.debugOverlays = GenericConfigWrapper.HiddenStorage.debugOverlays();
 
-        ConfigCache.masterOptimize = BBE.OPTIONS.master();
-        ConfigCache.chestAnims = BBE.OPTIONS.animateChest();
-        ConfigCache.shulkerAnims = BBE.OPTIONS.animateShulker();
-        ConfigCache.bellAnims = BBE.OPTIONS.animateBell();
-        ConfigCache.potAnims = BBE.OPTIONS.animateDecoratedpot();
-        ConfigCache.renderpasses = BBE.OPTIONS.extraRenderPasses();
-        ConfigCache.signText = BBE.OPTIONS.signText();
-        ConfigCache.signTextRenderDistance = BBE.OPTIONS.signTextDistance();
-        ConfigCache.optimizeSigns = BBE.OPTIONS.optimizeSign();
-        ConfigCache.christmasChests = BBE.OPTIONS.useChristmasChestTextures();
-        ConfigCache.optimizeChests = BBE.OPTIONS.optimizeChests();
-        ConfigCache.optimizeDecoratedPots = BBE.OPTIONS.optimizeDecoratedPot();
-        ConfigCache.optimizeBeds = BBE.OPTIONS.optimizeBed();
-        ConfigCache.optimizeShulker = BBE.OPTIONS.optimizeShulker();
-        ConfigCache.bannerGraphics = BBE.OPTIONS.bannerGraphics();
-        ConfigCache.optimizeBells = BBE.OPTIONS.optimizeBell();
-        ConfigCache.optimizeBanners = BBE.OPTIONS.optimizeBanner();
-        ConfigCache.optimizeCopperGolemStatue = BBE.OPTIONS.optimizeCopperGolemStatue();
-        ConfigCache.updateType = BBE.LoadedModList.EMF ? EnumTypes.UpdateSchedulerType.SMART.ordinal() : BBE.OPTIONS.updateScheduler();
-        ConfigCache.signTextCulling = BBE.OPTIONS.signTextCulling();
+        OptEnabledTable.rebuildFromConfig();
+    }
 
-        if (ConfigCache.optimizeChests) {
-            supported.add(ChestBlockEntity.class);
-            supported.add(TrappedChestBlockEntity.class);
-            supported.add(EnderChestBlockEntity.class);
+    /**
+     * fast lookup table for main opts
+     */
+    public static class OptEnabledTable {
+        private OptEnabledTable() {}
+
+        public static final boolean[] ENABLED = new boolean[256];
+
+        public static void rebuildFromConfig() {
+            ENABLED[InstancedBlockEntityManager.OptKind.CHEST]   = ConfigCache.optimizeChests;
+            ENABLED[InstancedBlockEntityManager.OptKind.SIGN]    = ConfigCache.optimizeSigns;
+            ENABLED[InstancedBlockEntityManager.OptKind.BED]     = ConfigCache.optimizeBeds;
+            ENABLED[InstancedBlockEntityManager.OptKind.SHULKER] = ConfigCache.optimizeShulker;
+            ENABLED[InstancedBlockEntityManager.OptKind.POT]     = ConfigCache.optimizeDecoratedPots;
+            ENABLED[InstancedBlockEntityManager.OptKind.BANNER]  = ConfigCache.optimizeBanners;
+            ENABLED[InstancedBlockEntityManager.OptKind.BELL]    = ConfigCache.optimizeBells;
+            ENABLED[InstancedBlockEntityManager.OptKind.CGS]     = ConfigCache.optimizeCopperGolemStatue;
+
+            ENABLED[InstancedBlockEntityManager.OptKind.NONE] = false;
         }
-        if (ConfigCache.optimizeShulker) supported.add(ShulkerBoxBlockEntity.class);
-        if (ConfigCache.optimizeSigns) {
-            supported.add(SignBlockEntity.class);
-            supported.add(HangingSignBlockEntity.class);
-        }
-        if (ConfigCache.optimizeDecoratedPots) supported.add(DecoratedPotBlockEntity.class);
-        if (ConfigCache.optimizeBanners) supported.add(BannerBlockEntity.class);
-        if (ConfigCache.optimizeBells) supported.add(BellBlockEntity.class);
-        if (ConfigCache.optimizeBeds) supported.add(BedBlockEntity.class);
-        if (ConfigCache.optimizeCopperGolemStatue) supported.add(CopperGolemStatueBlockEntity.class);
-
-        BlockEntityManager.SUPPORTED_TYPES = supported;
     }
 }

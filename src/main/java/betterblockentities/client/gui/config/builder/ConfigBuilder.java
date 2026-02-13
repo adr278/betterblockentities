@@ -38,7 +38,6 @@ public class ConfigBuilder {
 
                 new IntegerOption("misc.banner_graphics", defaultBannerGraphics),
                 new BooleanOption("misc.christmas_chest", false),
-                new IntegerOption("misc.render_passes", 25),
                 new IntegerOption("misc.sign_text_distance", 16),
                 new BooleanOption("misc.sign_text", true),
                 new BooleanOption("misc.sign_text_culling", true),
@@ -60,7 +59,8 @@ public class ConfigBuilder {
         ConfigStorageObject hiddenStorage = new ConfigStorageObject(ConfigStorageIdentifiers.HIDDEN);
 
         List<OptionObject<?>> options = new ArrayList<>(List.of(
-                new BooleanOption("override.forced_updatescheduler", false)
+                new BooleanOption("override.forced_updatescheduler", false),
+                new BooleanOption("debug.overlays", false)
         ));
 
         for (OptionObject<?> option : options) {

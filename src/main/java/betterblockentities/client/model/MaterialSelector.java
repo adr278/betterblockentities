@@ -1,24 +1,41 @@
 package betterblockentities.client.model;
 
 /* minecraft */
+import com.google.common.collect.ImmutableList;
+import net.minecraft.client.renderer.MaterialMapper;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.state.ChestRenderState;
 import net.minecraft.client.resources.model.Material;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.CopperChestBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
-import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
-import net.minecraft.world.level.block.entity.TrappedChestBlockEntity;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.properties.WoodType;
+import org.jspecify.annotations.Nullable;
 
 /* java/misc */
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * rebuild these functions so we can safely use them asynchronously when meshing
- * to avoid invoking these from each renderer (not thread-safe)
+ * rebuild these so we can safely use them asynchronously when meshing
+ * to avoid invoking these from each renderer or risking concurrency (not thread-safe)
  */
 public class MaterialSelector {
+    private static final ConcurrentHashMap<Identifier, Material> BANNER_MATERIALS = new ConcurrentHashMap<>();
+
+    public static Material getBannerMaterial(Holder<BannerPattern> holder) {
+        Identifier id = holder.value().assetId();
+        MaterialMapper mapper = Sheets.BANNER_MAPPER;
+        return BANNER_MATERIALS.computeIfAbsent(id, mapper::apply);
+    }
+
     public static Material getDPSideMaterial(Optional<Item> optional) {
         if (optional.isPresent()) {
             Material material = Sheets.getDecoratedPotMaterial(DecoratedPotPatterns.getPatternFromItem((Item)optional.get()));

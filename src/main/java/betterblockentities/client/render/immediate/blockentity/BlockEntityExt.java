@@ -1,9 +1,18 @@
 package betterblockentities.client.render.immediate.blockentity;
 
 public interface BlockEntityExt {
-    boolean getJustReceivedUpdate();
-    void setJustReceivedUpdate(boolean value);
+    boolean supportedBlockEntity();
+    void supportedBlockEntity(boolean bl);
 
-    void setRemoveChunkVariant(boolean value);
-    boolean getRemoveChunkVariant();
+    RenderingMode renderingMode();
+    void renderingMode(RenderingMode mode);
+
+    boolean terrainMeshReady();
+    void terrainMeshReady(boolean b);
+
+    boolean hasSpecialManager();
+    void hasSpecialManager(boolean bl);
+
+    byte optKind();
+    void optKind(byte k);
 }
