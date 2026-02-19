@@ -2,7 +2,7 @@ package betterblockentities.mixin.resource;
 
 /* local */
 import betterblockentities.client.tasks.TaskScheduler;
-import betterblockentities.client.tasks.Tasks;
+import betterblockentities.client.tasks.ResourceTasks;
 
 /* minecraft */
 import net.minecraft.server.packs.resources.ReloadInstance;
@@ -26,7 +26,7 @@ public abstract class ReloadableResourceManagerMixin {
     private void schedulePostReloadTasks(CallbackInfoReturnable<ReloadInstance> cir) {
         ReloadInstance reload = cir.getReturnValue();
         TaskScheduler.scheduleOnReload(reload, () -> {
-            if (Tasks.populateGeometryRegistry() == Tasks.TASK_FAILED) {
+            if (ResourceTasks.populateGeometryRegistry() == ResourceTasks.FAILED) {
                 throw new IllegalStateException("Geometry registry failed to populate");
             }
         });

@@ -368,24 +368,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createIntegerOption(Identifier.parse("misc.render_passes"))
-                            .setName(Component.translatable("bbe.config.storage.main.misc.render_passes"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.render_passes.tooltip"))
-                            .setDefaultValue(25)
-                            .setImpact(OptionImpact.LOW)
-                            .setBinding(
-                                    value -> BBE.CONFIG.MAIN.setOption("misc.render_passes", value),
-                                    () -> (int) BBE.CONFIG.MAIN.getOption("misc.render_passes").getValue()
-                            )
-                            .setRange(new Range(0, 50, 1))
-                            .setValueFormatter(ControlValueFormatterImpls.number())
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
                     builder.createEnumOption(Identifier.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
                             .setName(Component.translatable("bbe.config.storage.main.misc.update_scheduler"))
                             .setTooltip(

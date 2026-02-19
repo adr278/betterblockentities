@@ -1,22 +1,29 @@
 package betterblockentities.client;
 
 /* local */
+import betterblockentities.client.gui.DebugScreen;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
 
 /* fabric */
+import betterblockentities.mixin.gui.DebugScreenEntriesAccessor;
 import net.fabricmc.api.ClientModInitializer;
 
 /* minecraft */
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.gui.components.debug.DebugEntryCategory;
 import net.minecraft.client.renderer.culling.Frustum;
 
 /* java/misc */
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BBE implements ClientModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("BBE-Logger");
+    public static DebugEntryCategory DEBUG_CATEGORY = new DebugEntryCategory(Component.literal("BBE"), 10F);
+    public static Identifier DEBUG_ID = Identifier.fromNamespaceAndPath("bbe", "debug");
 
     /* BBEConfig contains generic options, GenericConfigWrapper returns correctly cast data types which are easier to work with */
     public static final BBEConfig CONFIG = new BBEConfig();
@@ -29,6 +36,8 @@ public class BBE implements ClientModInitializer {
         LOGGER.info("BBE Loaded. Setting up assets!");
         LoadedModList.checkForLoadedMods();
         BBEConfig.updateConfigCache();
+
+        DebugScreenEntriesAccessor.invokeRegister(BBE.DEBUG_ID, new DebugScreen());
     }
 
     /* global logger, used for info logging, error handling, etc... */

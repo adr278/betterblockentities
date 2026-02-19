@@ -11,6 +11,10 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.blockentity.HangingSignRenderer;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.resources.Identifier;
 
@@ -20,16 +24,17 @@ import com.mojang.blaze3d.vertex.PoseStack;
 /* java/misc */
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A Registry which holds the base geometry for all our supported block entity models, which is then
- * later used when meshing happens in  {@link betterblockentities.client.chunk.pipeline.BBEEmitter}
+ * later used when meshing happens in {@link betterblockentities.client.chunk.pipeline.BBEEmitter}
  * -We append geometry to the registry cache with {@link #cacheGeometry}
  * -Clear the whole registry cache with {@link #clearCache}
  * -And get an entry from the cache with {@link #getModel}
  */
 public class GeometryRegistry {
-    private static final Map<ModelLayerLocation, BlockStateModel> cache = new HashMap<>();
+    private static final ConcurrentHashMap<ModelLayerLocation, BlockStateModel> cache = new ConcurrentHashMap<>();
 
     public static void cacheGeometry(ModelLayerLocation key, ModelPart root, Identifier texture, PoseStack stack) {
         MultiPartBlockModel model = new MultiPartBlockModel(root, QuadTransform.getSprite(texture), stack);

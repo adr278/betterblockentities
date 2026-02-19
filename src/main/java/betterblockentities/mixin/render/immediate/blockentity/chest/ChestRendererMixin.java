@@ -63,6 +63,7 @@ public abstract class ChestRendererMixin {
             this.doubleRightModel = this.BBEdoubleChestRight;
         }
     }
+
     @Inject(method = "xmasTextures", at = @At("HEAD"), cancellable = true)
     private static void xmasTextures(CallbackInfoReturnable<Boolean> cir) {
         if (ConfigCache.christmasChests && ConfigCache.optimizeChests && ConfigCache.masterOptimize)

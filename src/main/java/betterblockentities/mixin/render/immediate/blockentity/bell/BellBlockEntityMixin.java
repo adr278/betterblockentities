@@ -1,34 +1,39 @@
 package betterblockentities.mixin.render.immediate.blockentity.bell;
 
 /* local */
+import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
+import betterblockentities.client.render.immediate.blockentity.InstancedBlockEntityManager;
 
 /* minecraft */
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BellBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /* mixin */
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BellBlockEntity.class)
 public class BellBlockEntityMixin {
-    /* only run tick logic when we receive a block event */
-    @Inject(method = "clientTick", at = @At("HEAD"), cancellable = true)
-    private static void onTick(Level level, BlockPos blockPos, BlockState blockState, BellBlockEntity blockEntity, CallbackInfo ci) {
-        if (!(((BlockEntityExt)blockEntity).getJustReceivedUpdate()))
-            ci.cancel();
+    @Unique private InstancedBlockEntityManager manager = new InstancedBlockEntityManager((BlockEntity)(Object)this);
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void init(CallbackInfo ci) {
+        BlockEntityExt ext = (BlockEntityExt)(Object)this;
+        ext.supportedBlockEntity(true);
+        ext.optKind(InstancedBlockEntityManager.OptKind.BELL);
     }
 
-    /* capture block event for conditional rendering in BlockEntityManager */
-    @Inject(method = "triggerEvent", at = @At("HEAD"), cancellable = true)
-    private void onBlockEvent(int type, int data, CallbackInfoReturnable<Boolean> cir) {
-        if (type != 1) return;
-        ((BlockEntityExt)this).setJustReceivedUpdate(true);
+    @Inject(method = "clientTick", at = @At("TAIL"))
+    private static void onTick(Level level, BlockPos blockPos, BlockState blockState, BellBlockEntity bellBlockEntity, CallbackInfo ci) {
+        BellBlockEntityMixin self = (BellBlockEntityMixin)(Object)bellBlockEntity;
+
+        self.manager.tick(bellBlockEntity.shaking, ConfigCache.bellAnims);
     }
 }

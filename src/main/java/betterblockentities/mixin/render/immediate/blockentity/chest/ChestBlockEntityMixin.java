@@ -1,34 +1,39 @@
 package betterblockentities.mixin.render.immediate.blockentity.chest;
 
 /* local */
+import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
+import betterblockentities.client.render.immediate.blockentity.InstancedBlockEntityManager;
 
 /* minecraft */
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /* mixin */
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChestBlockEntity.class)
 public abstract class ChestBlockEntityMixin {
-    /* only run tick logic when we receive a block event */
-    @Inject(method = "lidAnimateTick", at = @At("HEAD"), cancellable = true)
-    private static void onTick(Level level, BlockPos blockPos, BlockState blockState, ChestBlockEntity blockEntity, CallbackInfo ci) {
-        if (!(((BlockEntityExt)blockEntity).getJustReceivedUpdate()))
-            ci.cancel();
+    @Unique private InstancedBlockEntityManager manager = new InstancedBlockEntityManager((BlockEntity)(Object)this);
+
+    @Inject(method = "<init>(Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
+    private void init(CallbackInfo ci) {
+        BlockEntityExt ext = (BlockEntityExt)(Object)this;
+        ext.supportedBlockEntity(true);
+        ext.optKind(InstancedBlockEntityManager.OptKind.CHEST);
     }
 
-    /* capture block event for conditional rendering in BlockEntityManager */
-    @Inject(method = "triggerEvent", at = @At("HEAD"), cancellable = true)
-    private void onBlockEvent(int type, int data, CallbackInfoReturnable<Boolean> cir) {
-        if (type != 1) return;
-        ((BlockEntityExt)this).setJustReceivedUpdate(true);
+    @Inject(method = "lidAnimateTick", at = @At("TAIL"))
+    private static void onTick(Level level, BlockPos pos, BlockState state, ChestBlockEntity chestBlockEntity, CallbackInfo ci) {
+        ChestBlockEntityMixin self = (ChestBlockEntityMixin) (Object)chestBlockEntity;
+
+        self.manager.tick(chestBlockEntity.getOpenNess(0.5f) > 0.01f, ConfigCache.chestAnims);
     }
 }

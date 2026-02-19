@@ -44,10 +44,6 @@ public class MultiPartBlockModel implements BlockStateModel {
         constructSingleVariants(parts);
     }
 
-    public Map<String, BlockStateModel> getPairs() {
-        return pairs;
-    }
-
     private void generateMeshModel(ModelPart root, TextureAtlasSprite sprite, PoseStack stack) {
         ModelPartAccessor modelAcc = (ModelPartAccessor)(Object)root;
         if (modelAcc == null) {
@@ -88,14 +84,18 @@ public class MultiPartBlockModel implements BlockStateModel {
         return builder.build();
     }
 
-    private void createModelPairs(String key) {
-        pairs.put(key, models.getLast());
-    }
-
     private void constructSingleVariants(List<BlockModelPart> parts) {
         for (BlockModelPart variant : parts) {
             models.add(new SingleVariant(variant));
         }
+    }
+
+    private void createModelPairs(String key) {
+        pairs.put(key, models.getLast());
+    }
+
+    public Map<String, BlockStateModel> getPairs() {
+        return pairs;
     }
 
     @Override
@@ -103,7 +103,8 @@ public class MultiPartBlockModel implements BlockStateModel {
         if (models.isEmpty()) return;
 
         long seed = randomSource.nextLong();
-        for (BlockStateModel model : models) {
+
+        for (BlockStateModel model : this.models) {
             randomSource.setSeed(seed);
             model.collectParts(randomSource, list);
         }

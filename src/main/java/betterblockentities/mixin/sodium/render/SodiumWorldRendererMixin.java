@@ -1,13 +1,18 @@
 package betterblockentities.mixin.sodium.render;
 
 /* local */
-import betterblockentities.client.render.immediate.blockentity.BlockEntityManager;
+import betterblockentities.client.BBE;
+import betterblockentities.client.gui.config.BBEConfig;
+import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
+import betterblockentities.client.render.immediate.blockentity.RenderingMode;
+import betterblockentities.client.render.immediate.blockentity.SpecialBlockEntityManager;
 
 /* minecraft */
+import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.state.LevelRenderState;
-import net.minecraft.server.level.BlockDestructionProgress;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.*;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -30,7 +35,18 @@ import java.util.SortedSet;
 @Mixin(SodiumWorldRenderer.class)
 public abstract class SodiumWorldRendererMixin {
     @Inject(method = "extractBlockEntity", at = @At("HEAD"), cancellable = true)
-    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState, CallbackInfo ci) {
-        if (!BlockEntityManager.shouldRender(blockEntity)) ci.cancel();
+    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<?>> progression, LevelRenderState levelRenderState, CallbackInfo ci) {
+        if (!ConfigCache.masterOptimize) return;
+
+        BlockEntityExt ext = (BlockEntityExt) blockEntity;
+        if (!ext.supportedBlockEntity()) return;
+        if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]) return;
+
+        // Never cancel while fence pending
+        if (ext.renderingMode() != RenderingMode.TERRAIN && !ext.terrainMeshReady()) return;
+        if (ext.renderingMode() == RenderingMode.TERRAIN && !ext.terrainMeshReady()) return;
+
+        boolean cancel = !ext.hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(blockEntity);
+        if (cancel) ci.cancel();
     }
 }

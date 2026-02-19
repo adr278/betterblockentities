@@ -2,6 +2,7 @@ package betterblockentities.client.chunk.pipeline;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.chunk.SectionUpdateDispatcher;
 import betterblockentities.client.chunk.util.QuadTransform;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.gui.option.EnumTypes;
@@ -9,9 +10,9 @@ import betterblockentities.client.model.geometry.GeometryRegistry;
 import betterblockentities.client.model.MaterialSelector;
 import betterblockentities.client.model.MultiPartBlockModel;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
-import betterblockentities.client.render.immediate.blockentity.BlockEntityManager;
+import betterblockentities.client.render.immediate.blockentity.RenderingMode;
 import betterblockentities.client.tasks.TaskScheduler;
-import betterblockentities.client.tasks.Tasks;
+import betterblockentities.client.tasks.ResourceTasks;
 
 /* minecraft */
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -46,6 +47,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 
 /* java/misc */
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,167 +55,218 @@ import org.jetbrains.annotations.Nullable;
  * A wrapper/redirect for {@link net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer#renderModel} ->
  * {@link net.caffeinemc.mods.sodium.client.services.DefaultModelEmitter#emitModel} which hands over mesh assembly to us
  */
-public class BBEEmitter {
-    public static void emit(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer, BlockRenderer blockRenderer) {
-        Block block = state.getBlock();
 
-        /* not a valid block (regular terrain or not supported) emit like normal */
-        if (!BlockEntityManager.isSupportedBlock(block) || !ConfigCache.masterOptimize) {
+public final class BBEEmitter {
+    private static final ThreadLocal<ArrayList<BlockModelPart>> ALLOCATED_PARTS_LIST = ThreadLocal.withInitial(() -> new ArrayList<>(64));
+
+    public static void emit(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer, BlockRenderer blockRenderer) {
+        final Block block = state.getBlock();
+
+        if (!ConfigCache.masterOptimize) {
             instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
             return;
         }
 
-        /* invalid block entity, abort */
-        BlockEntity blockEntity = tryGetBlockEntity(pos, level, slice);
-        if (blockEntity == null) {
-            return;
-        }
+        final BlockEntity blockEntity;
+        final BlockRenderHelper helper;
 
-        final BlockRenderHelper helper = new BlockRenderHelper(blockRenderer);
-
-        /* NON EMISSIVE CHESTS */
         if (block instanceof ChestBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeChests)
-                emitChest(isFaceCulled, emitter, random, pos, state, helper, false, blockEntity);
+                emitChest(isFaceCulled, emitter, random, state, helper, false, blockEntity);
         }
 
-        /* EMISSIVE CHESTS (Ender) */
         else if (block instanceof EnderChestBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeChests)
-                emitChest(isFaceCulled, emitter, random, pos, state, helper, true, blockEntity);
+                emitChest(isFaceCulled, emitter, random, state, helper, true, blockEntity);
         }
 
-        /* SHULKER BOX */
         else if (block instanceof ShulkerBoxBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeShulker)
-                emitShulker(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
+                emitShulker(isFaceCulled, emitter, random, state, helper, blockEntity);
         }
 
-        /* 16 STEP ROTATION SIGNS */
         else if (block instanceof CeilingHangingSignBlock || block instanceof WallHangingSignBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeSigns)
-                emitHangingSign(isFaceCulled, emitter, random, pos, state, helper);
+                emitHangingSign(isFaceCulled, emitter, random, state, helper);
         }
 
-        /* CARDINAL SIGNS */
         else if (block instanceof WallSignBlock || block instanceof StandingSignBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeSigns)
-                emitSign(isFaceCulled, emitter, random, pos, state, helper);
+                emitSign(isFaceCulled, emitter, random, state, helper);
         }
 
-        /* BELL */
         else if (block instanceof BellBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeBells)
-                emitBell(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
+                emitBell(isFaceCulled, emitter, random, state, helper, blockEntity);
         }
 
-        /* DECORATED POT */
         else if (block instanceof DecoratedPotBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeDecoratedPots)
-                emitDecoratedPot(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
+                emitDecoratedPot(isFaceCulled, emitter, random, state, helper, blockEntity);
         }
 
-        /* BED */
         else if (block instanceof BedBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeBeds)
                 emitBed(isFaceCulled, emitter, random, state, helper);
         }
 
-        /* BANNERS */
         else if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeBanners)
-                emitBanner(isFaceCulled, emitter, random, pos, state, helper, blockEntity);
+                emitBanner(isFaceCulled, emitter, random, state, helper, blockEntity);
         }
 
         else if (block instanceof CopperGolemStatueBlock) {
+            blockEntity = tryGetBlockEntity(pos, level, slice);
+            if (blockEntity == null) return;
+
+            helper = new BlockRenderHelper(blockRenderer);
+
             if (ConfigCache.optimizeCopperGolemStatue)
-                emitCopperGolemStatue(isFaceCulled, emitter, random, pos, state, helper);
+                emitCopperGolemStatue(isFaceCulled, emitter, random, state, helper);
         }
 
-        /* emit any accessory parts if there are any */
-        if (!model.collectParts(random).isEmpty())
-            instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+        /* emit any accessory parts if there are any, catch unsupported blocks or regular terrain  */
+        instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
     }
 
-    private static void emitChest(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, boolean emissive, BlockEntity blockEntity) {
-        ModelLayerLocation layer = ModelLayers.CHEST;
-
-        if (!emissive) {
-            layer = switch (state.getValue(ChestBlock.TYPE)) {
-                case LEFT  -> ModelLayers.DOUBLE_CHEST_LEFT;
-                case RIGHT -> ModelLayers.DOUBLE_CHEST_RIGHT;
-                default    -> ModelLayers.CHEST;
-            };
+    private static void emitChest(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper, boolean emissive, BlockEntity blockEntity) {
+        ModelLayerLocation layer;
+        if (emissive) {
+            layer = ModelLayers.CHEST;
+        } else if (state.hasProperty(ChestBlock.TYPE)) {
+            ChestType t = state.getValue(ChestBlock.TYPE);
+            layer = (t == ChestType.LEFT) ? ModelLayers.DOUBLE_CHEST_LEFT
+                    : (t == ChestType.RIGHT) ? ModelLayers.DOUBLE_CHEST_RIGHT
+                    : ModelLayers.CHEST;
+        } else {
+            layer = ModelLayers.CHEST;
         }
 
-        Map<String, BlockStateModel> pairs = tryGetPairs(layer);
+        Map<String, BlockStateModel> pairs = getPairs(layer);
         if (pairs.isEmpty()) return;
 
-        int updateType = ConfigCache.updateType;
-        boolean drawLid = shouldRender((BlockEntityExt)blockEntity);
-        boolean addBase = updateType == EnumTypes.UpdateSchedulerType.FAST.ordinal() ||
-                (drawLid && updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal());
+        final boolean drawLid = shouldRender((BlockEntityExt) blockEntity);
+        final boolean addBase = (ConfigCache.updateType == EnumTypes.UpdateSchedulerType.FAST.ordinal())
+                || (drawLid && ConfigCache.updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal());
 
-        List<BlockModelPart> merged = new ArrayList<>();
-        if (addBase) merged.addAll(pairs.get("bottom").collectParts(random));
+        ArrayList<BlockModelPart> merged = partsBuf();
+        if (addBase) addParts(merged, pairs.get("bottom"), random);
         if (drawLid) {
-            merged.addAll(pairs.get("lid").collectParts(random));
-            merged.addAll(pairs.get("lock").collectParts(random));
+            addParts(merged, pairs.get("lid"), random);
+            addParts(merged, pairs.get("lock"), random);
         }
+        if (merged.isEmpty()) return;
 
-        boolean christmas = ConfigCache.christmasChests;
-        ChestRenderState.ChestMaterialType ChestMaterial = MaterialSelector.getChestMaterial(blockEntity, christmas);
-        ChestType type = state.hasProperty(ChestBlock.TYPE) ? state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
-        Material material = Sheets.chooseMaterial(ChestMaterial, type);
+        final boolean christmas = ConfigCache.christmasChests;
+        ChestRenderState.ChestMaterialType chestMat = MaterialSelector.getChestMaterial(blockEntity, christmas);
+        final ChestType type = state.hasProperty(ChestBlock.TYPE) ? state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
+        final Material material = Sheets.chooseMaterial(chestMat, type);
 
         helper.setMaterial(material);
         helper.setRendertype(ChunkSectionLayer.SOLID);
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
     }
 
-    private static void emitShulker(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
-        Map<String, BlockStateModel> pairs = tryGetPairs(ModelLayers.SHULKER_BOX);
+    /* avoid new allocations : these never change */
+    private static final float[] ROT_UP    = {180f, 180f};
+    private static final float[] ROT_DOWN  = {  0f, 180f};
+    private static final float[] ROT_NORTH = { 90f,   0f};
+    private static final float[] ROT_SOUTH = { 90f, 180f};
+    private static final float[] ROT_WEST  = { 90f, 270f};
+    private static final float[] ROT_EAST  = { 90f,  90f};
+
+    private static void emitShulker(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
+        Map<String, BlockStateModel> pairs = getPairs(ModelLayers.SHULKER_BOX);
         if (pairs.isEmpty()) return;
 
-        int updateType = ConfigCache.updateType;
-        boolean drawLid = shouldRender((BlockEntityExt)blockEntity);
-        boolean addBase = updateType == EnumTypes.UpdateSchedulerType.FAST.ordinal() ||
-                (drawLid && updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal());
+        final boolean drawLid = shouldRender((BlockEntityExt) blockEntity);
+        final boolean addBase = (ConfigCache.updateType == EnumTypes.UpdateSchedulerType.FAST.ordinal())
+                || (drawLid && ConfigCache.updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal());
 
-        List<BlockModelPart> merged = new ArrayList<>();
-        if (addBase) merged.addAll(pairs.get("base").collectParts(random));
-        if (drawLid) merged.addAll(pairs.get("lid").collectParts(random));
+        ArrayList<BlockModelPart> merged = partsBuf();
+        if (addBase) addParts(merged, pairs.get("base"), random);
+        if (drawLid) addParts(merged, pairs.get("lid"), random);
+        if (merged.isEmpty()) return;
 
-        Direction facing = state.hasProperty(ShulkerBoxBlock.FACING) ? state.getValue(ShulkerBoxBlock.FACING) : Direction.UP;
-        float[] rotation = switch (facing) {
-            case UP    -> new float[]{180, 180};
-            case DOWN  -> new float[]{0, 180};
-            case NORTH -> new float[]{90, 0};
-            case SOUTH -> new float[]{90, 180};
-            case WEST  -> new float[]{90, 270};
-            case EAST  -> new float[]{90, 90};
+        final Direction facing = state.hasProperty(ShulkerBoxBlock.FACING) ? state.getValue(ShulkerBoxBlock.FACING) : Direction.UP;
+        final float[] rotation = switch (facing) {
+            case UP    -> ROT_UP;
+            case DOWN  -> ROT_DOWN;
+            case NORTH -> ROT_NORTH;
+            case SOUTH -> ROT_SOUTH;
+            case WEST  -> ROT_WEST;
+            case EAST  -> ROT_EAST;
         };
 
-        DyeColor color = ((ShulkerBoxBlock)state.getBlock()).getColor();
-        Material shulkerMaterial = color == null ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION : Sheets.getShulkerBoxMaterial(color);
+        DyeColor color = ((ShulkerBoxBlock) state.getBlock()).getColor();
+        Material shulkerMaterial = (color == null) ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION : Sheets.getShulkerBoxMaterial(color);
 
         helper.setMaterial(shulkerMaterial);
         helper.setRendertype(ChunkSectionLayer.CUTOUT);
         helper.setRotation(rotation);
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
+        helper.setRotation(null);
     }
 
-    private static void emitSign(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper) {
-        boolean isWallSign = !state.hasProperty(BlockStateProperties.ROTATION_16);
+    private static void emitSign(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper) {
+        final boolean isWallSign = !state.hasProperty(BlockStateProperties.ROTATION_16);
+        final ModelLayerLocation layerLocation = isWallSign
+                ? GeometryRegistry.SupportedVanillaModelLayers.SIGN_WALL
+                : GeometryRegistry.SupportedVanillaModelLayers.SIGN_STANDING;
 
-        ModelLayerLocation layerLocation = isWallSign ? GeometryRegistry.SupportedVanillaModelLayers.SIGN_WALL : GeometryRegistry.SupportedVanillaModelLayers.SIGN_STANDING;
-
-        Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation);
+        Map<String, BlockStateModel> pairs = getPairs(layerLocation);
         if (pairs.isEmpty()) return;
 
-        List<BlockModelPart> merged = pairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
+        ArrayList<BlockModelPart> merged = partsBuf();
+        addAllParts(merged, pairs.values(), random);
+        if (merged.isEmpty()) return;
 
-        WoodType woodType = ((SignBlock)state.getBlock()).type();
+        WoodType woodType = ((SignBlock) state.getBlock()).type();
         Material signMaterial = Sheets.getSignMaterial(woodType);
 
         helper.setMaterial(signMaterial);
@@ -221,47 +274,54 @@ public class BBEEmitter {
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
     }
 
-    private static void emitHangingSign(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper) {
-        boolean isWall = !state.hasProperty(CeilingHangingSignBlock.ATTACHED);
-        boolean attached = !isWall && state.getValue(CeilingHangingSignBlock.ATTACHED);
+    private static void emitHangingSign(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper) {
+        final boolean isWall = !state.hasProperty(CeilingHangingSignBlock.ATTACHED);
+        final boolean attached = !isWall && state.getValue(CeilingHangingSignBlock.ATTACHED);
 
-        ModelLayerLocation layerLocation1 = isWall ? GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_WALL
-                : attached ? GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_CEILING_MIDDLE : GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_CEILING;
+        final ModelLayerLocation layerLocation = isWall ? GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_WALL
+                        : attached ? GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_CEILING_MIDDLE
+                        : GeometryRegistry.SupportedVanillaModelLayers.HANGING_SIGN_CEILING;
 
-        Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation1);
+        Map<String, BlockStateModel> pairs = getPairs(layerLocation);
         if (pairs.isEmpty()) return;
 
-        List<BlockModelPart> merged = new java.util.ArrayList<>(
-                pairs.values().stream().flatMap(m -> m.collectParts(random).stream()).toList()
-        );
-
-        WoodType woodType = ((SignBlock)state.getBlock()).type();
+        WoodType woodType = ((SignBlock) state.getBlock()).type();
         Material signMaterial = Sheets.getHangingSignMaterial(woodType);
 
-        /* backface culling fix for chains... vanilla chains "parts" are only one quad thick, so we need to double render them but inverted */
+        ArrayList<BlockModelPart> merged = partsBuf();
+        addAllParts(merged, pairs.values(), random);
+
         BlockStateModel chains = pairs.get(attached ? "vChains" : "normalChains");
         if (chains != null) {
             List<BlockModelPart> chainParts = chains.collectParts(random);
-            float[] rotation = { 0, (BlockRenderHelper.getRotationFromBlockState(state) + 180) % 360 };
-
-            helper.setRotation(rotation);
-            helper.setMaterial(signMaterial);
-            helper.setRendertype(ChunkSectionLayer.CUTOUT);
-            BlockRenderHelper.emitModelPart(chainParts, emitter, state, isFaceCulled, helper::emitGE);
+            if (!chainParts.isEmpty()) {
+                float[] rotation = {0f, (BlockRenderHelper.getRotationFromBlockState(state) + 180f) % 360f};
+                helper.setRotation(rotation);
+                helper.setMaterial(signMaterial);
+                helper.setRendertype(ChunkSectionLayer.CUTOUT);
+                BlockRenderHelper.emitModelPart(chainParts, emitter, state, isFaceCulled, helper::emitGE);
+                helper.setRotation(null);
+            }
         }
-        helper.setRotation(null);
+
+        if (merged.isEmpty()) return;
+
         helper.setMaterial(signMaterial);
         helper.setRendertype(ChunkSectionLayer.CUTOUT);
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
     }
 
-    private static void emitBell(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
-        if (!shouldRender((BlockEntityExt)blockEntity)) return;
+    private static void emitBell(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
+        if (!shouldRender((BlockEntityExt) blockEntity)) return;
 
-        Map<String, BlockStateModel> pairs = tryGetPairs(ModelLayers.BELL);
+        Map<String, BlockStateModel> pairs = getPairs(ModelLayers.BELL);
         if (pairs.isEmpty()) return;
 
-        List<BlockModelPart> bellBodyParts = pairs.get("bell_body").collectParts(random);
+        BlockStateModel bellBody = pairs.get("bell_body");
+        if (bellBody == null) return;
+
+        List<BlockModelPart> bellBodyParts = bellBody.collectParts(random);
+        if (bellBodyParts.isEmpty()) return;
 
         Material bellBodyMaterial = Sheets.BLOCK_ENTITIES_MAPPER.defaultNamespaceApply("bell/bell_body");
 
@@ -271,14 +331,16 @@ public class BBEEmitter {
     }
 
     private static void emitBed(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper) {
-        ModelLayerLocation layer = state.getValue(BedBlock.PART) == BedPart.HEAD ? ModelLayers.BED_HEAD : ModelLayers.BED_FOOT;
+        ModelLayerLocation layer = (state.getValue(BedBlock.PART) == BedPart.HEAD) ? ModelLayers.BED_HEAD : ModelLayers.BED_FOOT;
 
-        Map<String, BlockStateModel> pairs = tryGetPairs(layer);
+        Map<String, BlockStateModel> pairs = getPairs(layer);
         if (pairs.isEmpty()) return;
 
-        List<BlockModelPart> merged = pairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
+        ArrayList<BlockModelPart> merged = partsBuf();
+        addAllParts(merged, pairs.values(), random);
+        if (merged.isEmpty()) return;
 
-        DyeColor color = ((BedBlock)state.getBlock()).getColor();
+        DyeColor color = ((BedBlock) state.getBlock()).getColor();
         Material bedMaterial = Sheets.getBedMaterial(color);
 
         helper.setMaterial(bedMaterial);
@@ -286,25 +348,31 @@ public class BBEEmitter {
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
     }
 
-    private static void emitDecoratedPot(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
-        if (!shouldRender((BlockEntityExt)blockEntity)) return;
+    private static void emitDecoratedPot(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
+        if (!shouldRender((BlockEntityExt) blockEntity)) return;
+        if (!(blockEntity instanceof DecoratedPotBlockEntity potBE)) return;
 
-        ModelLayerLocation[] layers = { ModelLayers.DECORATED_POT_BASE, ModelLayers.DECORATED_POT_SIDES };
-
-        Map<String, BlockStateModel> basePairs = tryGetPairs(layers[0]);
-        Map<String, BlockStateModel> sidePairs = tryGetPairs(layers[1]);
-
+        Map<String, BlockStateModel> basePairs = getPairs(ModelLayers.DECORATED_POT_BASE);
+        Map<String, BlockStateModel> sidePairs = getPairs(ModelLayers.DECORATED_POT_SIDES);
         if (basePairs.isEmpty() || sidePairs.isEmpty()) return;
 
-        List<BlockModelPart> baseParts = new java.util.ArrayList<>(basePairs.values().stream().flatMap(m -> m.collectParts(random).stream()).toList());
+        ArrayList<BlockModelPart> baseParts = partsBuf();
+        addAllParts(baseParts, basePairs.values(), random);
+        if (!baseParts.isEmpty()) {
+            helper.setMaterial(Sheets.DECORATED_POT_BASE);
+            helper.setRendertype(ChunkSectionLayer.SOLID);
+            BlockRenderHelper.emitModelPart(baseParts, emitter, state, isFaceCulled, helper::emitGE);
+        }
 
-        helper.setMaterial(Sheets.DECORATED_POT_BASE);
-        helper.setRendertype(ChunkSectionLayer.SOLID);
-        BlockRenderHelper.emitModelPart(baseParts, emitter, state, isFaceCulled, helper::emitGE);
+        PotDecorations decorations = potBE.getDecorations();
+        for (Map.Entry<String, BlockStateModel> e : sidePairs.entrySet()) {
+            String key = e.getKey();
+            BlockStateModel m = e.getValue();
+            if (m == null) continue;
 
-        PotDecorations decorations = ((DecoratedPotBlockEntity)blockEntity).getDecorations();
-        sidePairs.forEach((key, model) -> {
-            List<BlockModelPart> sideParts = model.collectParts(random);
+            List<BlockModelPart> sideParts = m.collectParts(random);
+            if (sideParts.isEmpty()) continue;
+
             Material sideMaterial = switch (key) {
                 case "back"  -> MaterialSelector.getDPSideMaterial(decorations.back());
                 case "front" -> MaterialSelector.getDPSideMaterial(decorations.front());
@@ -312,88 +380,87 @@ public class BBEEmitter {
                 case "right" -> MaterialSelector.getDPSideMaterial(decorations.right());
                 default      -> MaterialSelector.getDPSideMaterial(Optional.empty());
             };
+
             helper.setMaterial(sideMaterial);
             helper.setRendertype(ChunkSectionLayer.SOLID);
             BlockRenderHelper.emitModelPart(sideParts, emitter, state, isFaceCulled, helper::emitGE);
-        });
+        }
     }
 
-    private static void emitBanner(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
-        BannerBlockEntity bannerBlockEntity = (BannerBlockEntity)blockEntity;
+    private static void emitBanner(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper, BlockEntity blockEntity) {
+        if (!(blockEntity instanceof BannerBlockEntity bannerBE)) return;
 
-        boolean isWallBanner = !state.hasProperty(BlockStateProperties.ROTATION_16);
-        ModelLayerLocation layerLocation = isWallBanner ? ModelLayers.WALL_BANNER : ModelLayers.STANDING_BANNER;
-        ModelLayerLocation layerLocation2 = isWallBanner ? ModelLayers.WALL_BANNER_FLAG : ModelLayers.STANDING_BANNER_FLAG;
+        final boolean isWallBanner = !state.hasProperty(BlockStateProperties.ROTATION_16);
+        final ModelLayerLocation baseLayer = isWallBanner ? ModelLayers.WALL_BANNER : ModelLayers.STANDING_BANNER;
+        final ModelLayerLocation flagLayer = isWallBanner ? ModelLayers.WALL_BANNER_FLAG : ModelLayers.STANDING_BANNER_FLAG;
 
-        Map<String, BlockStateModel> basePairs = tryGetPairs(layerLocation);
-        Map<String, BlockStateModel> canvasPairs = tryGetPairs(layerLocation2);
-
+        Map<String, BlockStateModel> basePairs = getPairs(baseLayer);
+        Map<String, BlockStateModel> canvasPairs = getPairs(flagLayer);
         if (basePairs.isEmpty() || canvasPairs.isEmpty()) return;
 
-        List<BlockModelPart> baseParts = basePairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
-        List<BlockModelPart> canvasParts = canvasPairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
+        ArrayList<BlockModelPart> baseParts = partsBuf();
+        addAllParts(baseParts, basePairs.values(), random);
 
-        helper.setMaterial(ModelBakery.BANNER_BASE);
-        helper.setRendertype(ChunkSectionLayer.SOLID);
-        BlockRenderHelper.emitModelPart(baseParts, emitter, state, isFaceCulled, helper::emitGE);
+        ArrayList<BlockModelPart> canvasParts = new ArrayList<>(32);
+        for (BlockStateModel m : canvasPairs.values()) {
+            List<BlockModelPart> parts = m.collectParts(random);
+            if (!parts.isEmpty()) canvasParts.addAll(parts);
+        }
 
-        helper.setColor(bannerBlockEntity.getBaseColor().getTextureDiffuseColor());
+        if (!baseParts.isEmpty()) {
+            helper.setMaterial(ModelBakery.BANNER_BASE);
+            helper.setRendertype(ChunkSectionLayer.SOLID);
+            BlockRenderHelper.emitModelPart(baseParts, emitter, state, isFaceCulled, helper::emitGE);
+        }
+
+        if (canvasParts.isEmpty()) return;
+
+        helper.setColor(bannerBE.getBaseColor().getTextureDiffuseColor());
         BlockRenderHelper.emitModelPart(canvasParts, emitter, state, isFaceCulled, helper::emitGE);
 
-        for (BannerPatternLayers.Layer layer : bannerBlockEntity.getPatterns().layers()) {
-            Material layerMaterial = Sheets.getBannerMaterial(layer.pattern());
+        final int fancy = EnumTypes.BannerGraphicsType.FANCY.ordinal();
+        final ChunkSectionLayer rt = (ConfigCache.bannerGraphics == fancy) ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT;
+
+        for (BannerPatternLayers.Layer layer : bannerBE.getPatterns().layers()) {
+            Material layerMaterial = MaterialSelector.getBannerMaterial(layer.pattern());
             DyeColor layerColor = layer.color();
 
             helper.setMaterial(layerMaterial);
-            helper.setRendertype(ConfigCache.bannerGraphics == EnumTypes.BannerGraphicsType.FANCY.ordinal() ?
-                    ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT);
+            helper.setRendertype(rt);
             helper.setColor(layerColor.getTextureDiffuseColor());
             BlockRenderHelper.emitModelPart(canvasParts, emitter, state, isFaceCulled, helper::emitGE);
         }
     }
 
-    private static void emitCopperGolemStatue(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockPos pos, BlockState state, BlockRenderHelper helper) {
+    private static void emitCopperGolemStatue(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper) {
         ModelLayerLocation layerLocation = ModelLayers.COPPER_GOLEM;
-
         CopperGolemStatueBlock.Pose pose = state.getValue(BlockStateProperties.COPPER_GOLEM_POSE);
-        switch (pose) {
-            case CopperGolemStatueBlock.Pose.SITTING  -> layerLocation = ModelLayers.COPPER_GOLEM_SITTING;
-            case CopperGolemStatueBlock.Pose.RUNNING  -> layerLocation = ModelLayers.COPPER_GOLEM_RUNNING;
-            case CopperGolemStatueBlock.Pose.STAR -> layerLocation = ModelLayers.COPPER_GOLEM_STAR;
-        }
+        if (pose == CopperGolemStatueBlock.Pose.SITTING) layerLocation = ModelLayers.COPPER_GOLEM_SITTING;
+        else if (pose == CopperGolemStatueBlock.Pose.RUNNING) layerLocation = ModelLayers.COPPER_GOLEM_RUNNING;
+        else if (pose == CopperGolemStatueBlock.Pose.STAR) layerLocation = ModelLayers.COPPER_GOLEM_STAR;
 
-        Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation);
+        Map<String, BlockStateModel> pairs = getPairs(layerLocation);
         if (pairs.isEmpty()) return;
 
-        List<BlockModelPart> merged = pairs.values().stream().flatMap(model -> model.collectParts(random).stream()).toList();
+        ArrayList<BlockModelPart> merged = partsBuf();
+        addAllParts(merged, pairs.values(), random);
+        if (merged.isEmpty()) return;
 
-        Direction facing = state.getValue(CopperGolemStatueBlock.FACING);
-        float[] rotation = {180, BlockRenderHelper.getRotationFromFacing(facing)};
+        Identifier texture = CopperGolemOxidationLevels.getOxidationLevel(((CopperGolemStatueBlock) state.getBlock()).getWeatheringState()).texture();
 
-        /*
-         * this is so crappy, but we have to do it :( this is the only path we can use to retrieve the correct
-         * texture, but it exposes ".png" and has the "textures/" path in the beginning so we have to manual strip.
-         * vanilla does some gymnastics with the passed (render-layer and CopperGolemOxidationLevels) to submitModel
-         * inorder to "choose the correct texture" (this happens internally in the immediate pipeline somewhere)
-        */
-        Identifier texture = CopperGolemOxidationLevels.getOxidationLevel(((CopperGolemStatueBlock)state.getBlock()).getWeatheringState()).texture();
-        String strippedFirst = texture.getPath().replace(".png", "");
-        String strippedFinal = strippedFirst.replace("textures/", "");
-        Identifier strippedTexture = Identifier.withDefaultNamespace(strippedFinal);
+        String path = texture.getPath();
+        if (path.endsWith(".png")) path = path.substring(0, path.length() - 4);
+        if (path.startsWith("textures/")) path = path.substring("textures/".length());
 
+        Identifier strippedTexture = Identifier.withDefaultNamespace(path);
         TextureAtlasSprite sprite = QuadTransform.getSprite(strippedTexture);
 
-        helper.setRotation(rotation);
         helper.setSprite(sprite);
         helper.setRendertype(ChunkSectionLayer.SOLID);
         BlockRenderHelper.emitModelPart(merged, emitter, state, isFaceCulled, helper::emitGE);
+        helper.setSprite(null);
     }
 
-    /**
-     * Safely retrieve this block entity, if we fail, try getting it from the slice data, if fallback fails,
-     * abort and skip meshing this block entity. The only reason this should fail is if another mod mutilates
-     * the block entity-list. See {@link "net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection#tryCopyBlockEntities"}
-     */
     private static @Nullable BlockEntity tryGetBlockEntity(BlockPos pos, BlockAndTintGetter level, LevelSlice slice) {
         try {
             return level.getBlockEntity(pos);
@@ -408,32 +475,44 @@ public class BBEEmitter {
         }
     }
 
-    /**
-     * if we fail to get this ModelLayerLocation from the registry, schedule a task for registry "rebake",
-     * skip meshing, and reload all render sections. this is the best we can do while still being "thread-safe"
-     */
     private static Map<String, BlockStateModel> tryGetPairs(ModelLayerLocation location) {
         try {
-            MultiPartBlockModel model = (MultiPartBlockModel)GeometryRegistry.getModel(location);
+            MultiPartBlockModel model = (MultiPartBlockModel) GeometryRegistry.getModel(location);
             return model.getPairs();
         } catch (Exception e) {
             TaskScheduler.schedule(() -> {
-                if (Tasks.populateGeometryRegistry() == Tasks.TASK_FAILED) {
+                if (ResourceTasks.populateGeometryRegistry() == ResourceTasks.FAILED) {
                     throw new RuntimeException("Failed to repopulate geometry registry after failed location lookup!");
                 }
-                Tasks.reloadRenderSections();
+                SectionUpdateDispatcher.queueUpdateAllSections();
             });
             return Map.of();
         }
     }
 
-    /**
-     * Checks if a BlockEntity should be meshed or not by checking a flag in the vanilla BlockEntity class
-     * added by BBE through mixin, this flag is mostly controlled by {@link betterblockentities.client.render.immediate.blockentity.BlockEntityManager}
-     * @param ext Extension interface of the vanilla BlockEntity class
-     * @return true if the cast from BlockEntity failed or if the extension flag getRemoveChunkVariant is NOT high (true)
-     */
+    private static Map<String, BlockStateModel> getPairs(ModelLayerLocation location) {
+        return tryGetPairs(location);
+    }
+
+    private static ArrayList<BlockModelPart> partsBuf() {
+        ArrayList<BlockModelPart> buf = ALLOCATED_PARTS_LIST.get();
+        buf.clear();
+        return buf;
+    }
+
+    private static void addParts(ArrayList<BlockModelPart> out, BlockStateModel model, RandomSource random) {
+        if (model == null) return;
+        List<BlockModelPart> parts = model.collectParts(random);
+        if (!parts.isEmpty()) out.addAll(parts);
+    }
+
+    private static void addAllParts(ArrayList<BlockModelPart> out, Iterable<BlockStateModel> models, RandomSource random) {
+        for (BlockStateModel m : models) {
+            addParts(out, m, random);
+        }
+    }
+
     private static boolean shouldRender(BlockEntityExt ext) {
-        return ext == null || !ext.getRemoveChunkVariant();
+        return ext == null || ext.renderingMode() == RenderingMode.TERRAIN;
     }
 }

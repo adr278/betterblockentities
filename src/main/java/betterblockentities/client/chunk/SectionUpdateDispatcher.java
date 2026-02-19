@@ -2,31 +2,46 @@ package betterblockentities.client.chunk;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.tasks.TaskScheduler;
 
 /* minecraft */
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Used to update the render section (16^3 blocks) in which this block lies, this can fail if called async
+ * Utility class for executing render section rebuild tasks
  */
 public class SectionUpdateDispatcher {
-    public static void queueRebuildAtBlockPos(Level world, long pos) {
+    public static void queueRebuildAtBlockPos(BlockPos pos) {
         try {
-            BlockPos posObj = BlockPos.of(pos);
-            var state = world.getBlockState(posObj);
-            Minecraft.getInstance().levelRenderer.blockChanged(world, posObj, state, state, 8);
+            TaskScheduler.schedule(() -> {
+                Level level = Minecraft.getInstance().level;
+                if (level == null) return;
+
+                BlockState state = level.getBlockState(pos);
+                Minecraft.getInstance().levelRenderer.blockChanged(level, pos, state, state, 8);
+            });
         } catch (Exception e) {
-            BBE.getLogger().error("Failed to update render section at {}", pos, e);
+            BBE.getLogger().error("Failed to rebuild terrain section!", e);
+            SectionRebuildCallbacks.remove(pos);
         }
+    }
+
+    /**
+     * rebuild section with a fence callback (runnable runs after section rebuild is complete)
+     */
+    public static void queueRebuildAtBlockPos(BlockPos pos, Runnable onUploadedFence) {
+        SectionRebuildCallbacks.await(pos, onUploadedFence);
+        queueRebuildAtBlockPos(pos);
     }
 
     public static void queueUpdateAllSections() {
         try {
             Minecraft.getInstance().levelRenderer.allChanged();
         } catch (Exception e) {
-            BBE.getLogger().error("Reloading all render sections failed!", e);
+            BBE.getLogger().error("Reloading terrain sections failed!", e);
         }
     }
 }

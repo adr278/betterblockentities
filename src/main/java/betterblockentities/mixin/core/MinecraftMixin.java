@@ -1,13 +1,13 @@
 package betterblockentities.mixin.core;
 
 /* local */
-import betterblockentities.client.render.immediate.blockentity.BlockEntityTracker;
 
 /* minecraft */
+import betterblockentities.client.tasks.ManagerTasks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 
-/* mixin */
+        /* mixin */
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,13 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
     @Inject(method = "tick", at = @At("TAIL"))
-    private void onClientTick(CallbackInfo ci) {
-        Minecraft client = (Minecraft)(Object)this;
-        if (client.level == null) return;
+    private void pollManagerQueue(CallbackInfo ci) {
+        Minecraft mc = (Minecraft) (Object) this;
+        Level level = mc.level;
+        if (level == null || !level.isClientSide()) return;
 
-        /* validate animation map */
-        BlockEntityTracker.animMap.removeIf(
-                pos -> client.level.getBlockEntity(BlockPos.of(pos)) == null
-        );
+        ManagerTasks.process();
     }
 }
