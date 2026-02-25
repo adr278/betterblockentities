@@ -37,7 +37,11 @@ public final class ManagerTasks {
 
             int state = mgr.run();
             if (state == PROCESSING) {
-                schedule(mgr);
+                if (mgr.isValid()) {
+                    schedule(mgr);
+                } else {
+                    mgr.forceKill();
+                }
             }
         }
     }

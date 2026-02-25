@@ -83,6 +83,23 @@ public final class InstancedBlockEntityManager {
         }
     }
 
+    /**
+     * validate this manager, in-case said block entity got removed or is invalid
+     */
+    public boolean isValid() {
+        return !(blockEntity == null || blockEntity.isRemoved());
+    }
+
+    /**
+     * force kill this manager, reset state
+     */
+    public void forceKill() {
+        this.animating = false;
+        this.durationTaskStart = 0;
+        this.duration = 0;
+        this.phase = Phase.IDLE;
+        this.queued = false;
+    }
 
     /**
      * Main scheduler entry point. This is what runs for each scheduled manager
