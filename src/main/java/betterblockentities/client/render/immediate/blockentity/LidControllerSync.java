@@ -11,6 +11,8 @@ import betterblockentities.mixin.render.immediate.blockentity.chest.ChestLidCont
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.ChestLidController;
@@ -19,6 +21,10 @@ import net.minecraft.world.level.block.state.BlockState;
 public class LidControllerSync {
     public static void sync(ClientLevel clientLevel, BlockPos blockPos, BlockState blockState) {
         if (!ConfigCache.masterOptimize || !clientLevel.isClientSide())
+            return;
+
+        final Block block = blockState.getBlock();
+        if (!(block instanceof ChestBlock))
             return;
 
         BlockEntity blockEntity = tryGetBlockEntity(clientLevel, blockPos);
