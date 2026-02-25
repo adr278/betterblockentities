@@ -2,17 +2,22 @@ package betterblockentities.mixin.render.immediate.blockentity.sign;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.render.immediate.OverlayRenderer;
 
 /* minecraft */
+import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.AbstractSignRenderer;
 import net.minecraft.client.renderer.blockentity.state.SignRenderState;
 import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Unit;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.phys.Vec3;
 
 /* mojang */
@@ -30,21 +35,50 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class AbstractSignRendererMixin {
     @Shadow protected abstract void translateSign(PoseStack matrices, float blockRotationDegrees, BlockState state);
     @Shadow protected abstract void submitSignText(SignRenderState renderState, PoseStack matrices, SubmitNodeCollector queue, boolean front);
+    @Shadow protected abstract Model.Simple getSignModel(BlockState blockState, WoodType woodType);
+    @Shadow protected abstract float getSignModelRenderScale();
 
-    /* hacky culling implementation for sign text */
     @Inject(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At("HEAD"), cancellable = true)
-    public void render(SignRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
+    public void manageSubmit(SignRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
         if (!ConfigCache.masterOptimize || !ConfigCache.optimizeSigns) return;
 
         ci.cancel();
 
         final BlockState bs = state.blockState;
+        final SignBlock signBlock = (SignBlock)bs.getBlock();
+
+        manageCrumblingOverlay(state, bs, signBlock, poseStack);
+        renderCulledText(state, cameraRenderState, bs, signBlock, poseStack, submitNodeCollector);
+    }
+
+    @Unique
+    private void manageCrumblingOverlay(SignRenderState state, BlockState bs, SignBlock signBlock, PoseStack poseStack) {
+        if (state.breakProgress == null) return;
+
+        final Model.Simple model = this.getSignModel(bs, signBlock.type());
+        final float s = this.getSignModelRenderScale();
+
+        poseStack.pushPose();
+        this.translateSign(poseStack, -signBlock.getYRotationDegrees(bs), bs);
+        poseStack.scale(s, -s, -s);
+
+        OverlayRenderer.submitCrumblingOverlay(
+                poseStack, model, Unit.INSTANCE,
+                state.lightCoords, OverlayTexture.NO_OVERLAY, -1,
+                state.breakProgress
+        );
+
+        poseStack.popPose();
+    }
+
+    @Unique
+    private void renderCulledText(SignRenderState state, CameraRenderState cameraRenderState, BlockState bs, SignBlock signBlock, PoseStack poseStack, SubmitNodeCollector collector) {
         if (!ConfigCache.signTextCulling) {
             poseStack.pushPose();
             this.translateSign(poseStack, -((SignBlock)bs.getBlock()).getYRotationDegrees(bs), bs);
 
-            this.submitSignText(state, poseStack, submitNodeCollector, true);
-            this.submitSignText(state, poseStack, submitNodeCollector, false);
+            this.submitSignText(state, poseStack, collector, true);
+            this.submitSignText(state, poseStack, collector, false);
 
             poseStack.popPose();
             return;
@@ -58,7 +92,6 @@ public abstract class AbstractSignRendererMixin {
         final BlockPos bp = state.blockPos;
         final Vec3 camPos = cameraRenderState.pos;
 
-        SignBlock signBlock = (SignBlock)bs.getBlock();
         final Vec3 off = signBlock.getSignHitboxCenterPosition(bs);
         final double sx = bp.getX() + off.x;
         final double sz = bp.getZ() + off.z;
@@ -82,10 +115,10 @@ public abstract class AbstractSignRendererMixin {
         if (!drawFront && !drawBack) return;
 
         poseStack.pushPose();
-        this.translateSign(poseStack, -((SignBlock)bs.getBlock()).getYRotationDegrees(bs), bs);
+        this.translateSign(poseStack, -signBlock.getYRotationDegrees(bs), bs);
 
-        if (drawFront) this.submitSignText(state, poseStack, submitNodeCollector, true);
-        if (drawBack)  this.submitSignText(state, poseStack, submitNodeCollector, false);
+        if (drawFront) this.submitSignText(state, poseStack, collector, true);
+        if (drawBack)  this.submitSignText(state, poseStack, collector, false);
 
         poseStack.popPose();
     }

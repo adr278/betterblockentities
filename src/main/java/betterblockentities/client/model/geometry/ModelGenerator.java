@@ -2,9 +2,11 @@ package betterblockentities.client.model.geometry;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.tasks.ResourceTasks;
 
 /* minecraft */
+import betterblockentities.mixin.model.modelpart.ModelPartAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -14,6 +16,7 @@ import net.minecraft.client.model.geom.ModelPart;
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.minecraft.util.Mth;
 
 /**
  * runs our model baking / geometry setup code and appends each model to our registry
@@ -55,7 +58,7 @@ public class ModelGenerator {
         } else if (layer == ModelLayers.DOUBLE_CHEST_RIGHT || layer == ModelLayers.DOUBLE_CHEST_LEFT || layer == ModelLayers.CHEST) {
             setupChest(layer, root, stack);
         } else if (layer == ModelLayers.BELL) {
-            GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.BELL_BODY, stack);
+            setupBell(layer, root, stack);
         } else if (layer == ModelLayers.BED_HEAD || layer == ModelLayers.BED_FOOT) {
             setupBed(layer, root, stack);
         } else if (layer == ModelLayers.DECORATED_POT_BASE || layer == ModelLayers.DECORATED_POT_SIDES) {
@@ -94,6 +97,15 @@ public class ModelGenerator {
         stack.popPose();
     }
 
+    private static void setupBell(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
+        stack.pushPose();
+        stack.translate(0.5F, 0.0F, 0.5F);
+        stack.mulPose(Axis.YP.rotationDegrees(90.0F));
+        stack.translate(-0.5F, 0.0F, -0.5F);
+        GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.BELL_BODY, stack);
+        stack.popPose();
+    }
+
     private static void setupBed(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
         stack.pushPose();
         stack.translate(0.0F, 0.5625F, 0.0F);
@@ -120,8 +132,19 @@ public class ModelGenerator {
 
     private static void setupBanners(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
         stack.pushPose();
+
         stack.translate(0.5F, 0.0F, 0.5F);
         stack.scale(0.6666667F, -0.6666667F, -0.6666667F);
+
+        if (layer == ModelLayers.WALL_BANNER_FLAG || layer == ModelLayers.STANDING_BANNER_FLAG) {
+            ModelPart flag = root.getChild("flag");
+
+            float step = -0.45f;
+            float rot = step * ConfigCache.bannerPose;
+            float rotClamped = Math.clamp(rot, -4.05f, -0.45f);
+            flag.xRot = (float)Math.toRadians(rotClamped);
+        }
+
         GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.BANNER, stack);
         stack.popPose();
     }

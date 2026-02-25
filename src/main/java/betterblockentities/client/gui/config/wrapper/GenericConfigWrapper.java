@@ -26,6 +26,7 @@ public class GenericConfigWrapper {
         public static boolean animateShulker() {return getGenericBooleanOption("animation.shulker");}
         public static boolean animateBell() {return getGenericBooleanOption("animation.bell");}
         public static boolean animateDecoratedpot() {return getGenericBooleanOption("animation.decoratedpot");}
+        public static int bannerPose() {return getGenericIntegerOption("misc.banner_pose");}
         public static int bannerGraphics() {return getGenericIntegerOption("misc.banner_graphics");}
         public static boolean useChristmasChestTextures() {return getGenericBooleanOption("misc.christmas_chest");}
         public static int signTextDistance() {return getGenericIntegerOption("misc.sign_text_distance");}

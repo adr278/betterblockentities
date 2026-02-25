@@ -8,6 +8,7 @@ import betterblockentities.mixin.model.modelpart.ModelPartAccessor;
 /* minecraft */
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.block.model.*;
+import net.minecraft.client.renderer.block.model.multipart.MultiPartModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.QuadCollection;
 import net.minecraft.util.RandomSource;

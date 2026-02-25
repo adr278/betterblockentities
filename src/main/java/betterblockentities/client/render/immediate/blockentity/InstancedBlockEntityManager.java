@@ -2,7 +2,7 @@ package betterblockentities.client.render.immediate.blockentity;
 
 /* local */
 import betterblockentities.client.BBE;
-import betterblockentities.client.chunk.SectionUpdateDispatcher;
+import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.gui.option.EnumTypes;

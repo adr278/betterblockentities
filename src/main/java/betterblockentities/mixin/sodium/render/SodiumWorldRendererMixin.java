@@ -1,15 +1,14 @@
 package betterblockentities.mixin.sodium.render;
 
 /* local */
-import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.render.immediate.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.RenderingMode;
 import betterblockentities.client.render.immediate.blockentity.SpecialBlockEntityManager;
 
 /* minecraft */
-import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.world.level.block.entity.*;
@@ -42,11 +41,18 @@ public abstract class SodiumWorldRendererMixin {
         if (!ext.supportedBlockEntity()) return;
         if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]) return;
 
-        // Never cancel while fence pending
+        /* never cancel while fence pending */
         if (ext.renderingMode() != RenderingMode.TERRAIN && !ext.terrainMeshReady()) return;
         if (ext.renderingMode() == RenderingMode.TERRAIN && !ext.terrainMeshReady()) return;
 
+        /* allow the renderer if there is breaking progress (we manage the breaking overlay inside the renderer) */
+        if (OverlayRenderer.isBreaking(blockEntity.getBlockPos().asLong(), progression))
+            return;
+
+        /* if a special manager is not specified go ahead and cancel this renderer */
         boolean cancel = !ext.hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(blockEntity);
-        if (cancel) ci.cancel();
+        if (cancel) {
+            ci.cancel();
+        }
     }
 }

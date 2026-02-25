@@ -41,7 +41,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             ));
-
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
                     builder.createBooleanOption(Identifier.parse("bbe:optimize.chest"))
@@ -263,6 +262,26 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                             )
                             .setEnabledProvider(c ->
                                     c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                            )
+                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                            .setStorageHandler(this.saveMainConfigStorageObject)
+            )
+            .addOption(
+                    builder.createIntegerOption(Identifier.parse("bbe:misc.banner_pose"))
+                            .setName(Component.translatable("bbe.config.storage.main.misc.banner_pose"))
+                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.banner_pose.tooltip"))
+                            .setDefaultValue(16)
+                            .setImpact(OptionImpact.MEDIUM)
+                            .setBinding(
+                                    value -> BBE.CONFIG.MAIN.setOption("misc.banner_pose", value),
+                                    () -> (int) BBE.CONFIG.MAIN.getOption("misc.banner_pose").getValue()
+                            )
+                            .setRange(new Range(1, 9, 1))
+                            .setValueFormatter(ControlValueFormatterImpls.number())
+                            .setEnabledProvider(c ->
+                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
+                                    c.readBooleanOption(Identifier.parse("bbe:optimize.banner")),
+                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.banner")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)

@@ -1,4 +1,4 @@
-package betterblockentities.client.chunk;
+package betterblockentities.client.chunk.section;
 
 /* minecraft */
 import net.minecraft.client.Minecraft;

@@ -66,5 +66,8 @@
   "bbe.config.storage.main.misc.update_scheduler.type.smart" : "Smart",
 
   "bbe.config.storage.main.misc.banner_graphics.type.fast" : "Fast",
-  "bbe.config.storage.main.misc.banner_graphics.type.fancy" : "Fancy"
+  "bbe.config.storage.main.misc.banner_graphics.type.fancy" : "Fancy",
+
+  "bbe.config.storage.main.misc.banner_pose" : "Banner Pose",
+  "bbe.config.storage.main.misc.banner_pose.tooltip" : "Rotates the banner canvas/flag to a preset position"
 }

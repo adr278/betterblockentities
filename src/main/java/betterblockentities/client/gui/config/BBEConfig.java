@@ -207,6 +207,7 @@ public class BBEConfig {
         ConfigCache.bannerGraphics = GenericConfigWrapper.MainStorage.bannerGraphics();
         ConfigCache.optimizeBells = GenericConfigWrapper.MainStorage.optimizeBell();
         ConfigCache.optimizeBanners = GenericConfigWrapper.MainStorage.optimizeBanner();
+        ConfigCache.bannerPose = GenericConfigWrapper.MainStorage.bannerPose();
         ConfigCache.optimizeCopperGolemStatue = GenericConfigWrapper.MainStorage.optimizeCopperGolemStatue();
         ConfigCache.updateType = BBE.LoadedModList.EMF ? EnumTypes.UpdateSchedulerType.SMART.ordinal() : GenericConfigWrapper.MainStorage.updateScheduler();
         ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();

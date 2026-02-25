@@ -2,7 +2,7 @@ package betterblockentities.client.chunk.pipeline;
 
 /* local */
 import betterblockentities.client.BBE;
-import betterblockentities.client.chunk.SectionUpdateDispatcher;
+import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
 import betterblockentities.client.chunk.util.QuadTransform;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.gui.option.EnumTypes;
@@ -47,7 +47,6 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 
 /* java/misc */
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,7 +1,7 @@
 package betterblockentities.mixin.sodium.render;
 
 /* local */
-import betterblockentities.client.chunk.SectionRebuildCallbacks;
+import betterblockentities.client.chunk.section.SectionRebuildCallbacks;
 
 /* sodium */
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class RenderSectionManagerMixin {
     @Redirect(method = "uploadChunks", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/BuilderTaskOutput;destroy()V"), remap = false, require = 1)
     private void callback(BuilderTaskOutput out) {
-        // Free temp buffers first (optional ordering preference)
         out.destroy();
 
         if (SectionRebuildCallbacks.isEmpty()) return;

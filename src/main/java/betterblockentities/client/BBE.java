@@ -8,15 +8,15 @@ import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
 /* fabric */
 import betterblockentities.mixin.gui.DebugScreenEntriesAccessor;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 
 /* minecraft */
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.components.debug.DebugEntryCategory;
 import net.minecraft.client.renderer.culling.Frustum;
-
-/* java/misc */
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+
+/* java/misc */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,6 @@ public class BBE implements ClientModInitializer {
     public static DebugEntryCategory DEBUG_CATEGORY = new DebugEntryCategory(Component.literal("BBE"), 10F);
     public static Identifier DEBUG_ID = Identifier.fromNamespaceAndPath("bbe", "debug");
 
-    /* BBEConfig contains generic options, GenericConfigWrapper returns correctly cast data types which are easier to work with */
     public static final BBEConfig CONFIG = new BBEConfig();
     public static final GenericConfigWrapper OPTIONS = new GenericConfigWrapper();
 
