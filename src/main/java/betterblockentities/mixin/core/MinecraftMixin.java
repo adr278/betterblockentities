@@ -1,13 +1,13 @@
 package betterblockentities.mixin.core;
 
 /* local */
+import betterblockentities.client.tasks.ManagerTasks;
 
 /* minecraft */
-import betterblockentities.client.tasks.ManagerTasks;
+import net.minecraft.world.level.Level;
 import net.minecraft.client.Minecraft;
 
-        /* mixin */
-import net.minecraft.world.level.Level;
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

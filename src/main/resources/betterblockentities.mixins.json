@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "core.MinecraftMixin",
+    "core.ClientLevelMixin",
     "gui.DebugScreenEntriesAccessor",
     "model.item.ChestSpecialRendererMixin",
     "model.item.ClientItemInfoLoaderMixin",
@@ -17,7 +18,9 @@
     "render.immediate.blockentity.bed.BedRendererMixin",
     "render.immediate.blockentity.bell.BellBlockEntityMixin",
     "render.immediate.blockentity.bell.BellRendererMixin",
+    "render.immediate.blockentity.chest.ChestBlockEntityAccessor",
     "render.immediate.blockentity.chest.ChestBlockEntityMixin",
+    "render.immediate.blockentity.chest.ChestLidControllerAccessor",
     "render.immediate.blockentity.chest.ChestRendererMixin",
     "render.immediate.blockentity.chest.EnderChestBlockEntityMixin",
     "render.immediate.blockentity.coppergolem.CopperGolemStatueBlockEntityMixin",
@@ -27,6 +30,8 @@
     "render.immediate.blockentity.shulker.ShulkerBoxRendererMixin",
     "render.immediate.blockentity.sign.AbstractSignRendererMixin",
     "render.immediate.blockentity.sign.SignBlockEntityMixin",
+    "render.immediate.BlockEntityRenderStateMixin",
+    "render.immediate.blockentity.banner.BannerRendererAccessor",
     "render.texture.AtlasManagerMixin",
     "render.texture.MipMapGeneratorAccessor",
     "render.texture.MipMapGeneratorMixin",
@@ -43,7 +48,5 @@
     "defaultRequire": 1
   },
   "client": [
-    "render.immediate.BlockEntityRenderStateMixin",
-    "render.immediate.blockentity.banner.BannerRendererAccessor"
   ]
 }

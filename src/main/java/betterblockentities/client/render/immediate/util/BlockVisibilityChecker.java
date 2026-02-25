@@ -62,7 +62,7 @@ public final class BlockVisibilityChecker {
         return (other == null) ? new AABB(pos) : new AABB(pos).minmax(new AABB(other));
     }
 
-    private static BlockPos getOppositeChestHalf(Level world, BlockPos pos) {
+    public static BlockPos getOppositeChestHalf(Level world, BlockPos pos) {
         if (world == null) return null;
 
         BlockState state = world.getBlockState(pos);
@@ -78,6 +78,29 @@ public final class BlockVisibilityChecker {
 
         if (world.getBlockState(otherPos).getBlock() instanceof ChestBlock) return otherPos;
         return null;
+    }
+
+    public static ChestBlockEntity getOtherChestHalf(Level level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+
+        if (!(state.getBlock() instanceof ChestBlock)) return null;
+
+        ChestType type = state.getValue(ChestBlock.TYPE);
+        Direction facing = state.getValue(ChestBlock.FACING);
+
+        Direction side;
+        if (type == ChestType.LEFT) {
+            side = facing.getClockWise();
+        } else if (type == ChestType.RIGHT) {
+            side = facing.getCounterClockWise();
+        } else {
+            return null;
+        }
+
+        BlockPos otherPos = pos.offset(side.getUnitVec3i());
+        BlockEntity be = level.getBlockEntity(otherPos);
+
+        return be instanceof ChestBlockEntity ? (ChestBlockEntity) be : null;
     }
 
     public enum Visibility {
