@@ -44,7 +44,7 @@ jobs:
 
       # Create/update a GitHub Release for the tag and attach jars
       - name: Publish GitHub Release assets
-        uses: softprops/action-gh-release@v2.3.0
+        uses: softprops/action-gh-release@v2.3.2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
