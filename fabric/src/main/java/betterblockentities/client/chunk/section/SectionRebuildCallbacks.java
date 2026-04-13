@@ -41,6 +41,8 @@ public final class SectionRebuildCallbacks {
         return waiting.isEmpty();
     }
 
+    public static void clearAll() { waiting.clear(); }
+
     /** Runs all fence callbacks waiting on this section key */
     public static void fireIfWaiting(long key) {
         ConcurrentLinkedQueue<Runnable> queue = waiting.remove(key);

@@ -61,7 +61,7 @@ public final class ShelfPartTransformer {
                     buildQuadCache(source, slotX, localY, cos, sin),
                     source.particleMaterial(),
                     source.materialFlags(),
-                    source.useAmbientOcclusion()
+                    true
             );
         }
         return out;
@@ -168,16 +168,8 @@ public final class ShelfPartTransformer {
             return quadsByFace.get(direction == null ? 0 : direction.ordinal() + 1);
         }
 
-        @Override public Material.@NonNull Baked particleMaterial() {
-            return particleMaterial;
-        }
+        @Override public Material.@NonNull Baked particleMaterial() { return particleMaterial; }
 
-        @Override public int materialFlags() {
-            return materialFlags;
-        }
-
-        @Override public boolean useAmbientOcclusion() {
-            return useAmbientOcclusion;
-        }
+        @Override public int materialFlags() { return materialFlags; }
     }
 }

@@ -17,6 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DirectoryLister.class)
 public abstract class DirectoryListerMixin {
+    private static final String RANDOM_ENTITY_SOURCE = "optifine/random/entity";
+
     @Shadow public abstract String sourcePath();
     @Shadow public abstract String idPrefix();
 
@@ -27,7 +29,7 @@ public abstract class DirectoryListerMixin {
             CallbackInfo ci
     ) {
         String sourcePath = sourcePath();
-        if (!sourcePath.startsWith("optifine/random/entity")) return;
+        if (!sourcePath.startsWith(RANDOM_ENTITY_SOURCE)) return;
 
         RawSpriteSourceBridge.addDirectory(resourceManager, output, sourcePath, idPrefix());
         ci.cancel();

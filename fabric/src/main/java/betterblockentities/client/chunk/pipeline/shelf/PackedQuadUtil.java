@@ -82,16 +82,25 @@ public final class PackedQuadUtil {
     }
 
     public static GeometryBaker.PackedQuad transformQuadToPacked(BakedQuad q) {
+        V4 v = TL_V4.get();
+
+        Vector3f p0 = v.a.set(q.position0().x(), q.position0().y(), q.position0().z());
+        Vector3f p1 = v.b.set(q.position1().x(), q.position1().y(), q.position1().z());
+        Vector3f p2 = v.c.set(q.position2().x(), q.position2().y(), q.position2().z());
+        Vector3f p3 = v.d.set(q.position3().x(), q.position3().y(), q.position3().z());
+
+        Direction dir = directionFromTransformedQuad(q, p0, p1, p2);
+
         return new GeometryBaker.PackedQuad(
-                q.position0().x(), q.position0().y(), q.position0().z(),
-                q.position1().x(), q.position1().y(), q.position1().z(),
-                q.position2().x(), q.position2().y(), q.position2().z(),
-                q.position3().x(), q.position3().y(), q.position3().z(),
+                p0.x, p0.y, p0.z,
+                p1.x, p1.y, p1.z,
+                p2.x, p2.y, p2.z,
+                p3.x, p3.y, p3.z,
                 q.packedUV0(),
                 q.packedUV1(),
                 q.packedUV2(),
                 q.packedUV3(),
-                q.direction(),
+                dir,
                 q.materialInfo().shade(),
                 q.materialInfo().lightEmission(),
                 0,
@@ -115,14 +124,6 @@ public final class PackedQuadUtil {
         }
 
         normal.normalize();
-
-        Direction original = quad.direction();
-        float dot = normal.x * original.getStepX()
-                + normal.y * original.getStepY()
-                + normal.z * original.getStepZ();
-        if (dot < 0.0F) {
-            normal.negate();
-        }
 
         return Direction.getApproximateNearest(normal.x, normal.y, normal.z);
     }

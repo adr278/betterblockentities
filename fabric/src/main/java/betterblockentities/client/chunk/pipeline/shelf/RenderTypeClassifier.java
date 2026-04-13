@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 /* java */
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class RenderTypeClassifier {
     public record Info(ChunkSectionLayer layer, boolean glint) {}
@@ -33,37 +32,29 @@ public final class RenderTypeClassifier {
             {new Info(ChunkSectionLayer.TRANSLUCENT, false), new Info(ChunkSectionLayer.TRANSLUCENT, true)}
     };
 
-    private final ConcurrentHashMap<Object, Info> infoCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<RenderType, Identifier> texCache = new ConcurrentHashMap<>();
-
-    public void clear() {
-        infoCache.clear();
-        texCache.clear();
-    }
+    public void clear() {}
 
     public Info info(Object renderTypeObj) {
         if (renderTypeObj == null) return INFO_NULL;
-
-        return infoCache.computeIfAbsent(renderTypeObj, this::classify);
+        return classify(renderTypeObj);
     }
 
     public @Nullable Identifier tryExtractTextureId(RenderType rt) {
         if (rt == null) return null;
 
-        Identifier id = texCache.computeIfAbsent(rt, key -> {
-            try {
-                Object setup = ((RenderTypeAccessor) key).GetState();
-                Map<String, Object> textures = ((RenderSetupAccessor) setup).GetTexture();
+        Identifier id;
+        try {
+            Object setup = ((RenderTypeAccessor) rt).GetState();
+            Map<String, Object> textures = ((RenderSetupAccessor) setup).GetTexture();
 
-                if (textures == null || textures.isEmpty()) return TEX_MISS;
+            if (textures == null || textures.isEmpty()) return null;
 
-                Object binding = textures.values().iterator().next();
-                Identifier location = ((TextureBindingAccessor) binding).GetLocation();
-                return location != null ? location : TEX_MISS;
-            } catch (Throwable ignored) {
-                return TEX_MISS;
-            }
-        });
+            Object binding = textures.values().iterator().next();
+            Identifier location = ((TextureBindingAccessor) binding).GetLocation();
+            id = location != null ? location : TEX_MISS;
+        } catch (Throwable ignored) {
+            id = TEX_MISS;
+        }
 
         return id == TEX_MISS ? null : id;
     }

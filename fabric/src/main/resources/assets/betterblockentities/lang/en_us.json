@@ -40,6 +40,9 @@
   "bbe.config.storage.main.optimize.campfire" : "Optimize Campfire",
   "bbe.config.storage.main.optimize.campfire.tooltip" : "Used to toggle campfire optimizations ON or OFF",
 
+  "bbe.config.storage.main.optimize.item_frame" : "Optimize Item Frame",
+  "bbe.config.storage.main.optimize.item_frame.tooltip" : "Used to toggle item frame optimizations ON or OFF",
+
   "bbe.config.storage.main.animation.chest" : "Animate Chest",
   "bbe.config.storage.main.animation.chest.tooltip" : "Used to toggle chest animations ON or OFF",
 

@@ -11,18 +11,10 @@ import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
-/* java */
-import java.util.concurrent.ConcurrentHashMap;
-
 public final class SpriteRemapper {
     private static final Identifier MISSINGNO = Identifier.withDefaultNamespace("missingno");
 
-    // Source sprite -> block atlas sprite (or missing sentinel).
-    private final ConcurrentHashMap<TextureAtlasSprite, TextureAtlasSprite> itemToBlock = new ConcurrentHashMap<>();
-
-    public void clear() {
-        itemToBlock.clear();
-    }
+    public void clear() {}
 
     public @NonNull TextureAtlasSprite missingNoOrNull() {
         return getMissingSprite();
@@ -34,15 +26,8 @@ public final class SpriteRemapper {
 
     public @Nullable TextureAtlasSprite tryGetBlockItemSprite(@Nullable TextureAtlasSprite srcSprite) {
         if (srcSprite == null) return null;
-
-        TextureAtlasSprite cached = itemToBlock.get(srcSprite);
-        if (cached != null) return isMissingSprite(cached) ? null : cached;
-
         Identifier srcId = srcSprite.contents().name();
-        TextureAtlasSprite result = findBlockItemSprite(srcId);
-
-        itemToBlock.put(srcSprite, result != null ? result : getMissingSprite());
-        return result;
+        return findBlockItemSprite(srcId);
     }
 
     public @Nullable TextureAtlasSprite tryResolveEntitySprite(@Nullable Identifier textureId) {

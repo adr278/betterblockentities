@@ -1,6 +1,7 @@
 package betterblockentities.client.render.immediate.blockentity.manager;
 
 import betterblockentities.client.chunk.pipeline.shelf.ShelfItemImmediateFallback;
+import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import net.minecraft.client.Minecraft;
@@ -84,7 +85,11 @@ public final class SpecialBlockEntityManager {
 
                 for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
                     if (blockEntity instanceof ShelfBlockEntity shelf) {
-                        ((BlockEntityExt) shelf).hasSpecialManager(useSpecialManager);
+                        BlockEntityExt ext = (BlockEntityExt) shelf;
+                        if (ext.hasSpecialManager() == useSpecialManager) continue;
+
+                        ext.hasSpecialManager(useSpecialManager);
+                        SectionUpdateDispatcher.queueRebuildAtBlockPos(shelf.getBlockPos());
                     }
                 }
             }
