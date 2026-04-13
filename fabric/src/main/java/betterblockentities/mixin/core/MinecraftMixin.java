@@ -3,14 +3,22 @@ package betterblockentities.mixin.core;
 /* local */
 import betterblockentities.render.AltRenderDispatcher;
 import betterblockentities.client.BBE;
+import betterblockentities.client.chunk.pipeline.itemframe.MapAtlasManager;
+import betterblockentities.client.render.immediate.entity.ItemFrameRuntimeHelper;
+import betterblockentities.client.resource.ClientReloaderRegister;
 import betterblockentities.client.tasks.ManagerTasks;
+
+/* fabric */
+import net.fabricmc.fabric.api.resource.v1.reloader.ResourceReloaderKeys;
 
 /* minecraft */
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.PlayerSkinRenderCache;
 import net.minecraft.client.renderer.block.BlockModelResolver;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.item.ItemModelResolver;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
@@ -36,7 +44,7 @@ public abstract class MinecraftMixin {
     @Shadow @Final private EntityRenderDispatcher entityRenderDispatcher;
     @Shadow @Final private AtlasManager atlasManager;
     @Shadow @Final private PlayerSkinRenderCache playerSkinRenderCache;
-    @Shadow @Final private ReloadableResourceManager resourceManager;
+    @Shadow @Final private TextureManager textureManager;
 
     @WrapOperation(
             method = "<init>(Lnet/minecraft/client/main/GameConfig;)V",
@@ -46,6 +54,8 @@ public abstract class MinecraftMixin {
             )
     )
     void registerDispatchListener(Operation<Void> original) {
+        MapAtlasManager.initialize(this.textureManager);
+
         BBE.GlobalScope.altRenderDispatcher = new AltRenderDispatcher(
                 this.font,
                 this.modelManager.entityModels(),
@@ -56,7 +66,13 @@ public abstract class MinecraftMixin {
                 this.playerSkinRenderCache
         );
 
-        this.resourceManager.registerReloadListener(BBE.GlobalScope.altRenderDispatcher);
+        ClientReloaderRegister.register(
+                AltRenderDispatcher.RELOAD_LISTENER_ID,
+                BBE.GlobalScope.altRenderDispatcher,
+                ResourceReloaderKeys.Client.FONTS,
+                ResourceReloaderKeys.Client.MODELS,
+                ResourceReloaderKeys.Client.TEXTURES
+        );
 
         original.call();
     }
@@ -67,6 +83,12 @@ public abstract class MinecraftMixin {
         Level level = mc.level;
         if (level == null || !level.isClientSide()) return;
 
+        ItemFrameRuntimeHelper.tickBootstrapPasses();
         ManagerTasks.process();
+    }
+
+    @Inject(method = "setLevel", at = @At("TAIL"))
+    private void bootstrapItemFramesOnLevelSet(ClientLevel level, CallbackInfo ci) {
+        ItemFrameRuntimeHelper.onLevelSet(level);
     }
 }

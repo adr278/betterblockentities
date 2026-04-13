@@ -1,7 +1,7 @@
 package betterblockentities.client.chunk.pipeline.shelf;
 
 /* local */
-import betterblockentities.client.render.immediate.blockentity.renderers.BBEShelfItemRenderer;
+import betterblockentities.client.chunk.pipeline.capture.SubmitNodeGeometryCaptureCollector;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -63,7 +63,7 @@ public final class GeometryBaker {
     private final ThreadLocal<ItemStackRenderState> renderStates;
     private final ThreadLocal<PoseStack> capturePoses;
     private final ThreadLocal<LayeredGeometryAssembler.Run> assemblerRuns;
-    private final ThreadLocal<BBEShelfItemRenderer> collectors;
+    private final ThreadLocal<SubmitNodeGeometryCaptureCollector> collectors;
 
     public GeometryBaker(RenderTypeClassifier rt, SpriteRemapper sprites) {
         this.rt = rt;
@@ -73,8 +73,10 @@ public final class GeometryBaker {
         this.renderStates = ThreadLocal.withInitial(ItemStackRenderState::new);
         this.capturePoses = ThreadLocal.withInitial(PoseStack::new);
         this.assemblerRuns = ThreadLocal.withInitial(this.assembler::newRun);
-        this.collectors = ThreadLocal.withInitial(() -> new BBEShelfItemRenderer(this.rt, this.quadUtil));
+        this.collectors = ThreadLocal.withInitial(() -> new SubmitNodeGeometryCaptureCollector(this.rt, this.quadUtil));
     }
+
+    public PackedQuad normalizeForCaching(PackedQuad quad) { return this.quadUtil.normalizeForCaching(quad); }
 
     public CanonicalMesh bakeCanonicalMesh(
             Level level,
@@ -88,6 +90,7 @@ public final class GeometryBaker {
 
         int seedBase = CacheKeys.stableSeed(sk);
 
+        state.clear();
         resolver.updateForTopItem(
                 state,
                 stack,
@@ -147,13 +150,36 @@ public final class GeometryBaker {
         pose.pushPose();
         pose.scale(0.25F, 0.25F, 0.25F);
 
-        BBEShelfItemRenderer collector = collectors.get();
-        collector.reset(sink);
+        try {
+            captureItemGeometryFromResolvedState(state, pose, sink, false);
+        } finally {
+            pose.popPose();
+        }
+    }
+
+    public boolean captureItemGeometryFromResolvedState(
+            ItemStackRenderState state,
+            Sink sink,
+            boolean rejectGlintGeometry
+    ) {
+        PoseStack pose = capturePoses.get();
+        PackedQuadUtil.resetPoseToIdentity(pose);
+        return captureItemGeometryFromResolvedState(state, pose, sink, rejectGlintGeometry);
+    }
+
+    public boolean captureItemGeometryFromResolvedState(
+            ItemStackRenderState state,
+            PoseStack pose,
+            Sink sink,
+            boolean rejectGlintGeometry
+    ) {
+        SubmitNodeGeometryCaptureCollector collector = collectors.get();
+        collector.reset(sink, rejectGlintGeometry);
 
         try {
             state.submit(pose, collector, 0, OverlayTexture.NO_OVERLAY, 0);
+            return collector.supported();
         } finally {
-            pose.popPose();
             collector.reset(null);
         }
     }

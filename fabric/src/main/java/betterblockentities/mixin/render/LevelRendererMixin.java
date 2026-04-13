@@ -2,6 +2,8 @@ package betterblockentities.mixin.render;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.chunk.pipeline.itemframe.MapPageCache;
+import betterblockentities.client.chunk.pipeline.itemframe.ItemFrameSectionMapSurfaceRenderer;
 
 /* minecraft */
 import net.minecraft.client.Camera;
@@ -28,6 +30,7 @@ public class LevelRendererMixin {
     @Inject(at = @At("HEAD"), method = "cullTerrain")
     private void captureFrustum(Camera camera, Frustum frustum, boolean bl, CallbackInfo ci) {
         BBE.GlobalScope.frustum = frustum;
+        MapPageCache.refreshVisibleAssignments(camera.position());
     }
 
     @Inject(at = @At("HEAD"), method = "extractLevel")
@@ -35,9 +38,23 @@ public class LevelRendererMixin {
         BBE.GlobalScope.altRenderDispatcher.prepare(camera.position());
     }
 
+    /*
+     * Submit item-frame maps before vanilla block entities populate SubmitNodeStorage.
+     */
     @Inject(at = @At("HEAD"), method = "submitBlockEntities")
-    private void updateSignRenderState(CallbackInfo ci) {
+    private void updateSignRenderState(
+            PoseStack poseStack,
+            LevelRenderState levelRenderState,
+            SubmitNodeStorage submitNodeStorage,
+            CallbackInfo ci
+    ) {
         BBE.GlobalScope.limitVanillaSignRendering = true;
+
+        ItemFrameSectionMapSurfaceRenderer.submitUploadedMapSurfaces(
+                poseStack,
+                submitNodeStorage,
+                levelRenderState.cameraRenderState
+        );
     }
 
     /*
@@ -62,7 +79,6 @@ public class LevelRendererMixin {
             poseStack.popPose();
         }
     }
-
 
     @Inject(at = @At("TAIL"), method = "renderLevel")
     private void clearRenderStates(CallbackInfo ci) {

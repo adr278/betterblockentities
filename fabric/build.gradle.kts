@@ -51,6 +51,7 @@ dependencies {
 
     fabricModule("fabric-block-getter-api-v2")
     fabricModule("fabric-renderer-api-v1")
+    fabricModule("fabric-resource-loader-v1")
 }
 
 //per artifact actions

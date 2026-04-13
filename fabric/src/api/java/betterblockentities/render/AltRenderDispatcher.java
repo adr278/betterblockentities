@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -35,6 +36,11 @@ import org.jspecify.annotations.NonNull;
 import com.google.common.collect.ImmutableMap;
 
 public class AltRenderDispatcher implements ResourceManagerReloadListener {
+    public static final Identifier RELOAD_LISTENER_ID = Identifier.fromNamespaceAndPath(
+            "betterblockentities",
+            "alt_render_dispatcher"
+    );
+
     private Map<BlockEntityType<?>, List<AltRenderer<?, ?>>> renderers = ImmutableMap.of();
     private final Map<BlockEntityRenderState, AltRenderer<?, ?>> stateRendererPairs = new HashMap<>();
 

@@ -25,6 +25,7 @@ public class GenericConfigWrapper {
         public static boolean optimizeShelf() {return getGenericBooleanOption("optimize.shelf");}
         public static boolean optimizeShelfItems() {return getGenericBooleanOption("misc.optimize.shelf.items");}
         public static boolean optimizeCampfire() {return getGenericBooleanOption("optimize.campfire");}
+        public static boolean optimizeItemFrame() {return getGenericBooleanOption("optimize.item_frame");}
         public static boolean animateChest() {return getGenericBooleanOption("animation.chest");}
         public static boolean animateShulker() {return getGenericBooleanOption("animation.shulker");}
         public static boolean animateBell() {return getGenericBooleanOption("animation.bell");}

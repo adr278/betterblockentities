@@ -3,6 +3,8 @@ package betterblockentities.client.chunk.pipeline;
 /* local */
 import betterblockentities.render.AltRenderers;
 import betterblockentities.client.BBE;
+import betterblockentities.client.chunk.pipeline.itemframe.ItemFrameSectionAppender;
+import betterblockentities.client.chunk.pipeline.itemframe.ItemFrameSectionBuildBridge;
 import betterblockentities.client.chunk.pipeline.shelf.CacheKeys;
 import betterblockentities.client.chunk.pipeline.shelf.ShelfItemModelBuilder;
 import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
@@ -188,12 +190,14 @@ public final class BBEEmitter {
                 instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
                 if (ConfigCache.optimizeShelves && ConfigCache.optimizeShelfItems)
                     emitShelfItems(isFaceCulled, emitter, state, helper, shelf, level);
+                emitItemFrame(pos, emitter);
                 return;
             }
         }
 
         /* emit any accessory parts if there are any, catch unsupported blocks or regular terrain  */
         instance.emitModel(model, isFaceCulled, emitter, random, level, pos, state, bufferer);
+        emitItemFrame(pos, emitter);
     }
 
     private static void emitChest(Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockState state, BlockRenderHelper helper, boolean emissive, BlockEntity blockEntity) {
@@ -530,6 +534,15 @@ public final class BBEEmitter {
                     );
                 }
         );
+    }
+
+    private static void emitItemFrame(BlockPos pos, MutableQuadViewImpl emitter) {
+        if (!ConfigCache.optimizeItemFrames) return;
+
+        ItemFrameSectionAppender appender = ItemFrameSectionBuildBridge.current();
+        if (appender == null) return;
+
+        appender.emitForSupportPos(pos, emitter);
     }
 
     private static @Nullable BlockEntity tryGetBlockEntity(BlockPos pos, BlockAndTintGetter level, LevelSlice slice) {

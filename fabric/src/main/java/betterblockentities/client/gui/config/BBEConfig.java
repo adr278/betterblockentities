@@ -217,6 +217,7 @@ public class BBEConfig {
             ConfigCache.optimizeShelfItems = GenericConfigWrapper.MainStorage.optimizeShelfItems();
             ConfigCache.shelfItemMode = GenericConfigWrapper.MainStorage.itemMeshType();
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
+            ConfigCache.optimizeItemFrames = GenericConfigWrapper.MainStorage.optimizeItemFrame();
         }
         else {
             ConfigCache.optimizeSigns = false;
@@ -231,6 +232,7 @@ public class BBEConfig {
             ConfigCache.optimizeShelfItems = false;
             ConfigCache.shelfItemMode = EnumTypes.ShelfItemTypes.FANCY.ordinal();
             ConfigCache.optimizeCampfire = false;
+            ConfigCache.optimizeItemFrames = false;
         }
 
         OptEnabledTable.rebuildFromConfig();

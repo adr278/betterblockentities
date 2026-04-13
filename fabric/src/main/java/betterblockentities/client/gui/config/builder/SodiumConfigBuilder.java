@@ -449,6 +449,25 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
+                        builder.createBooleanOption(Identifier.parse("bbe:optimize.item_frame"))
+                                .setName(Component.translatable("bbe.config.storage.main.optimize.item_frame"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.item_frame.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.HIGH)
+                                .setBinding(
+                                        value -> BBE.GlobalScope.CONFIG.MAIN.setOption("optimize.item_frame", value),
+                                        () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.item_frame").getValue()
+                                )
+                                .setEnabledProvider(c ->
+                                        c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+        );
+
+        BBEPage.addOptionGroup(builder.createOptionGroup()
+                .addOption(
                         builder.createBooleanOption(Identifier.parse("bbe:optimize.campfire"))
                                 .setName(Component.translatable("bbe.config.storage.main.optimize.campfire"))
                                 .setTooltip(Component.translatable("bbe.config.storage.main.optimize.campfire.tooltip"))
