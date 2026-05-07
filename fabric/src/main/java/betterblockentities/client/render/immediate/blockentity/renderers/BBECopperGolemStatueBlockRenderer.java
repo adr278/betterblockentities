@@ -53,13 +53,7 @@ public class BBECopperGolemStatueBlockRenderer implements BlockEntityRenderer<Co
         return new CopperGolemStatueRenderState();
     }
 
-    public void extractRenderState(
-            final CopperGolemStatueBlockEntity blockEntity,
-            final CopperGolemStatueRenderState state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
-    ) {
+    public void extractRenderState(CopperGolemStatueBlockEntity blockEntity, CopperGolemStatueRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         BlockState blockState = blockEntity.getBlockState();
         state.direction = blockState.getValue(CopperGolemStatueBlock.FACING);
@@ -71,12 +65,10 @@ public class BBECopperGolemStatueBlockRenderer implements BlockEntityRenderer<Co
         ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
-    public void submit(
-            final CopperGolemStatueRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera
-    ) {
+    public void submit(CopperGolemStatueRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         poseStack.pushPose();
         poseStack.mulPose(modelTransformation(state.direction));
-        CopperGolemStatueModel model = (CopperGolemStatueModel)this.models.get(state.pose);
+        CopperGolemStatueModel model = this.models.get(state.pose);
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
@@ -98,7 +90,7 @@ public class BBECopperGolemStatueBlockRenderer implements BlockEntityRenderer<Co
     }
 
     public static Transformation modelTransformation(final Direction facing) {
-        return (Transformation)TRANSFORMATIONS.get(facing);
+        return TRANSFORMATIONS.get(facing);
     }
 
     private static Transformation createModelTransformation(final Direction entityDirection) {

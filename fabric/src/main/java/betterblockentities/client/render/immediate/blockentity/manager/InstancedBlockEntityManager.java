@@ -111,9 +111,9 @@ public final class InstancedBlockEntityManager {
      *   FINISHED   -> safe to remove from queue
      */
     public int run() {
-        if (!ext.supportedBlockEntity()
-                || !BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]
-                || AltRenderers.hasRendererOverride(blockEntity.getType())) {
+        if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF] ||
+            AltRenderers.hasRendererOverride(blockEntity.getType()))
+        {
             phase = Phase.IDLE;
             return ManagerTasks.FINISHED;
         }

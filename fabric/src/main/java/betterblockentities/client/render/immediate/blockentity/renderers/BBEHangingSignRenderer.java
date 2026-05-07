@@ -57,7 +57,7 @@ public class BBEHangingSignRenderer extends BBEAbstractSignRenderer<HangingSignR
     );
     private final Map<WoodType, BBEHangingSignRenderer.Models> signModels;
 
-    public BBEHangingSignRenderer(final BlockEntityRendererProvider.Context context) {
+    public BBEHangingSignRenderer(BlockEntityRendererProvider.Context context) {
         super(context);
 
         /* filter out invalid sign types to prevent crashes, types in general are irrelevant in our render context */
@@ -76,18 +76,18 @@ public class BBEHangingSignRenderer extends BBEAbstractSignRenderer<HangingSignR
         return new HangingSignRenderState();
     }
 
-    public void extractRenderState(final SignBlockEntity blockEntity, final HangingSignRenderState state, final float partialTicks, final Vec3 cameraPosition, final ModelFeatureRenderer.CrumblingOverlay breakProgress) {
+    public void extractRenderState(SignBlockEntity blockEntity, HangingSignRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         BlockState blockState = blockEntity.getBlockState();
         state.attachmentType = HangingSignBlock.getAttachmentPoint(blockState);
         if (blockState.getBlock() instanceof WallHangingSignBlock) {
             state.transformations = TRANSFORMATIONS.wallTransformation(blockState.getValue(WallHangingSignBlock.FACING));
         } else {
-            state.transformations = TRANSFORMATIONS.freeTransformations((Integer)blockState.getValue(CeilingHangingSignBlock.ROTATION));
+            state.transformations = TRANSFORMATIONS.freeTransformations(blockState.getValue(CeilingHangingSignBlock.ROTATION));
         }
     }
 
-    public static Model.Simple createSignModel(final EntityModelSet entityModelSet, final WoodType woodType, final HangingSignBlock.Attachment attachmentType) {
+    public static Model.Simple createSignModel(EntityModelSet entityModelSet, WoodType woodType, HangingSignBlock.Attachment attachmentType) {
         ModelLayerLocation layer = createHangingSignModelName(woodType, attachmentType);
 
         if (layer != null) {
@@ -96,7 +96,7 @@ public class BBEHangingSignRenderer extends BBEAbstractSignRenderer<HangingSignR
         return null;
     }
 
-    private static ModelLayerLocation createLocation(final String model, final String layerId) {
+    private static ModelLayerLocation createLocation(String model, String layerId) {
         ModelLayerLocation layer;
         try {
             layer = new ModelLayerLocation(Identifier.withDefaultNamespace(model), layerId);
@@ -107,19 +107,19 @@ public class BBEHangingSignRenderer extends BBEAbstractSignRenderer<HangingSignR
         }
     }
 
-    public static ModelLayerLocation createHangingSignModelName(final WoodType type, final HangingSignBlock.Attachment attachmentType) {
+    public static ModelLayerLocation createHangingSignModelName(WoodType type, HangingSignBlock.Attachment attachmentType) {
         return createLocation("hanging_sign/" + type.name() + "/" + attachmentType.getSerializedName(), "main");
     }
 
-    private static Matrix4f baseTransformation(final float angle) {
+    private static Matrix4f baseTransformation(float angle) {
         return new Matrix4f().translation(0.5F, 0.9375F, 0.5F).rotate(Axis.YP.rotationDegrees(-angle)).translate(0.0F, -0.3125F, 0.0F);
     }
 
-    private static Transformation bodyTransformation(final float angle) {
+    private static Transformation bodyTransformation(float angle) {
         return new Transformation(baseTransformation(angle).scale(1.0F, -1.0F, -1.0F));
     }
 
-    private static Transformation textTransformation(final float angle, final boolean isFrontText) {
+    private static Transformation textTransformation(float angle, boolean isFrontText) {
         Matrix4f result = baseTransformation(angle);
         if (!isFrontText) {
             result.rotate(Axis.YP.rotationDegrees(180.0F));
@@ -131,29 +131,29 @@ public class BBEHangingSignRenderer extends BBEAbstractSignRenderer<HangingSignR
         return new Transformation(result);
     }
 
-    private static SignRenderState.SignTransformations createTransformations(final float angle) {
+    private static SignRenderState.SignTransformations createTransformations(float angle) {
         return new SignRenderState.SignTransformations(bodyTransformation(angle), textTransformation(angle, true), textTransformation(angle, false));
     }
 
-    private static SignRenderState.SignTransformations createGroundTransformation(final int segment) {
+    private static SignRenderState.SignTransformations createGroundTransformation(int segment) {
         return createTransformations(RotationSegment.convertToDegrees(segment));
     }
 
-    private static SignRenderState.SignTransformations createWallTransformation(final Direction direction) {
+    private static SignRenderState.SignTransformations createWallTransformation(Direction direction) {
         return createTransformations(direction.toYRot());
     }
 
-    protected Model.Simple getSignModel(final HangingSignRenderState state) {
-        return ((BBEHangingSignRenderer.Models)this.signModels.get(state.woodType)).get(state.attachmentType);
+    protected Model.Simple getSignModel(HangingSignRenderState state) {
+        return (this.signModels.get(state.woodType)).get(state.attachmentType);
     }
 
     @Override
-    protected SpriteId getSignSprite(final WoodType type) {
+    protected SpriteId getSignSprite(WoodType type) {
         return Sheets.getHangingSignSprite(type);
     }
 
     private record Models(Model.Simple ceiling, Model.Simple ceilingMiddle, Model.Simple wall) {
-        public static BBEHangingSignRenderer.Models create(final BlockEntityRendererProvider.Context context, final WoodType type) {
+        public static BBEHangingSignRenderer.Models create(BlockEntityRendererProvider.Context context, WoodType type) {
             return new BBEHangingSignRenderer.Models(
                     BBEHangingSignRenderer.createSignModel(context.entityModelSet(), type, HangingSignBlock.Attachment.CEILING),
                     BBEHangingSignRenderer.createSignModel(context.entityModelSet(), type, HangingSignBlock.Attachment.CEILING_MIDDLE),
@@ -161,7 +161,7 @@ public class BBEHangingSignRenderer extends BBEAbstractSignRenderer<HangingSignR
             );
         }
 
-        public Model.Simple get(final HangingSignBlock.Attachment attachmentType) {
+        public Model.Simple get(HangingSignBlock.Attachment attachmentType) {
             return switch (attachmentType) {
                 case CEILING -> this.ceiling;
                 case CEILING_MIDDLE -> this.ceilingMiddle;

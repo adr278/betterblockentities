@@ -22,7 +22,6 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
 import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -40,6 +39,7 @@ import net.minecraft.world.phys.Vec3;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /* mixin */
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -47,7 +47,6 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.List;
 
 public abstract class BBEAbstractSignRenderer<S extends SignRenderState> implements BlockEntityRenderer<SignBlockEntity, S> {
-    private static final int BLACK_TEXT_OUTLINE_COLOR = -988212;
     private static final int OUTLINE_RENDER_DISTANCE = Mth.square(16);
     private final Font font;
     private final SpriteGetter sprites;
@@ -61,7 +60,7 @@ public abstract class BBEAbstractSignRenderer<S extends SignRenderState> impleme
 
     protected abstract SpriteId getSignSprite(WoodType type);
 
-    public void submit(final S state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState cameraRenderState) {
+    public void submit(S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
         final BlockState bs = ((BlockEntityRenderStateAccessor)state).getBlockState();
         final SignBlock signBlock = (SignBlock)bs.getBlock();
 
@@ -78,7 +77,7 @@ public abstract class BBEAbstractSignRenderer<S extends SignRenderState> impleme
     }
 
     @Unique
-    protected void submitSign(final PoseStack poseStack, final int lightCoords, final WoodType type, final Model.Simple signModel, final ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress, final SubmitNodeCollector submitNodeCollector) {
+    protected void submitSign(PoseStack poseStack, int lightCoords, WoodType type, Model.Simple signModel, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress, SubmitNodeCollector submitNodeCollector) {
         SpriteId sprite = this.getSignSprite(type);
         submitNodeCollector.submitModel(signModel, Unit.INSTANCE, poseStack, lightCoords, OverlayTexture.NO_OVERLAY, -1, sprite, this.sprites, 0, breakProgress);
     }
@@ -159,7 +158,7 @@ public abstract class BBEAbstractSignRenderer<S extends SignRenderState> impleme
         }
     }
 
-    private void submitSignText(final S state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final SignText signText) {
+    private void submitSignText(S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, SignText signText) {
         int darkColor = getDarkColor(signText);
         int signMidpoint = 4 * state.textLineHeight / 2;
         FormattedCharSequence[] formattedLines = signText.getRenderMessages(state.isTextFilteringEnabled, input -> {
@@ -197,7 +196,7 @@ public abstract class BBEAbstractSignRenderer<S extends SignRenderState> impleme
         }
     }
 
-    private static boolean isOutlineVisible(final BlockPos pos) {
+    private static boolean isOutlineVisible(BlockPos pos) {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player != null && minecraft.options.getCameraType().isFirstPerson() && player.isScoping()) {
@@ -208,18 +207,12 @@ public abstract class BBEAbstractSignRenderer<S extends SignRenderState> impleme
         }
     }
 
-    public static int getDarkColor(final SignText signText) {
+    public static int getDarkColor(SignText signText) {
         int color = signText.getColor().getTextColor();
         return color == DyeColor.BLACK.getTextColor() && signText.hasGlowingText() ? -988212 : ARGB.scaleRGB(color, 0.4F);
     }
 
-    public void extractRenderState(
-            final SignBlockEntity blockEntity,
-            final S state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
-    ) {
+    public void extractRenderState(SignBlockEntity blockEntity, S state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         state.maxTextLineWidth = blockEntity.getMaxTextLineWidth();
         state.textLineHeight = blockEntity.getTextLineHeight();

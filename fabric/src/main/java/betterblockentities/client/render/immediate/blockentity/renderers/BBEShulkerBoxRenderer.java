@@ -1,6 +1,8 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
+import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.gui.option.EnumTypes;
 import betterblockentities.client.render.immediate.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
@@ -46,10 +48,6 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
         this(context.entityModelSet(), context.sprites());
     }
 
-    public BBEShulkerBoxRenderer(final SpecialModelRenderer.BakingContext context) {
-        this(context.entityModelSet(), context.sprites());
-    }
-
     public BBEShulkerBoxRenderer(final EntityModelSet context, final SpriteGetter sprites) {
         this.sprites = sprites;
         this.model = new BBEShulkerBoxModel(context.bakeLayer(ModelLayers.SHULKER_BOX));
@@ -59,22 +57,17 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
         return new ShulkerBoxRenderState();
     }
 
-    public void extractRenderState(
-            final ShulkerBoxBlockEntity blockEntity,
-            final ShulkerBoxRenderState state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
-    ) {
+    public void extractRenderState(ShulkerBoxBlockEntity blockEntity, ShulkerBoxRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         state.direction = blockEntity.getBlockState().getValueOrElse(ShulkerBoxBlock.FACING, Direction.UP);
         state.color = blockEntity.getColor();
-        state.progress = blockEntity.getProgress(partialTicks);
+
+        state.progress = ConfigCache.shulkerAnims ? blockEntity.getProgress(partialTicks) : 0;
 
         ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
-    public void submit(final ShulkerBoxRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera) {
+    public void submit(ShulkerBoxRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         DyeColor color = state.color;
         SpriteId sprite;
         if (color == null) {
@@ -87,16 +80,16 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
     }
 
     private void submit(
-            final ShulkerBoxRenderState state,
-            final PoseStack poseStack,
-            final SubmitNodeCollector submitNodeCollector,
-            final int lightCoords,
-            final int overlayCoords,
-            final Direction direction,
-            final float progress,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress,
-            final SpriteId sprite,
-            final int outlineColor
+            ShulkerBoxRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            int lightCoords,
+            int overlayCoords,
+            Direction direction,
+            float progress,
+            ModelFeatureRenderer.CrumblingOverlay breakProgress,
+            SpriteId sprite,
+            int outlineColor
     ) {
         poseStack.pushPose();
         poseStack.mulPose(modelTransform(direction));
@@ -105,18 +98,17 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
     }
 
     public void submit(
-            final ShulkerBoxRenderState state,
-            final PoseStack poseStack,
-            final SubmitNodeCollector submitNodeCollector,
-            final int lightCoords,
-            final int overlayCoords,
-            final float progress,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress,
-            final SpriteId sprite,
-            final int outlineColor
+            ShulkerBoxRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            int lightCoords,
+            int overlayCoords,
+            float progress,
+            ModelFeatureRenderer.CrumblingOverlay breakProgress,
+            SpriteId sprite,
+            int outlineColor
     ) {
         this.model.setupAnim(progress);
-
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
@@ -126,8 +118,7 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
         }
     }
 
-    private static Transformation createModelTransform(final Direction direction) {
-        float scale = 0.9995F;
+    private static Transformation createModelTransform(Direction direction) {
         return new Transformation(
                 new Matrix4f()
                         .translation(0.5F, 0.5F, 0.5F)
@@ -138,19 +129,19 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
         );
     }
 
-    public static Transformation modelTransform(final Direction direction) {
-        return (Transformation)TRANSFORMATIONS.get(direction);
+    public static Transformation modelTransform(Direction direction) {
+        return TRANSFORMATIONS.get(direction);
     }
 
     private static class BBEShulkerBoxModel extends Model<Float> {
         private final ModelPart lid;
 
-        public BBEShulkerBoxModel(final ModelPart root) {
+        public BBEShulkerBoxModel(ModelPart root) {
             super(root, RenderTypes::entityCutout);
             this.lid = root.getChild("lid");
         }
 
-        public void setupAnim(final Float progress) {
+        public void setupAnim(Float progress) {
             super.setupAnim(progress);
             this.lid.setPos(0.0F, 24.0F - progress * 0.5F * 16.0F, 0.0F);
             this.lid.yRot = 270.0F * progress * (float) (Math.PI / 180.0);

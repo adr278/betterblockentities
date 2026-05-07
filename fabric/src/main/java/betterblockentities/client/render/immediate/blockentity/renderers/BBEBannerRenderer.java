@@ -47,8 +47,6 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity, BannerRenderState> {
-    private static final int MAX_PATTERNS = 16;
-    private static final float SIZE = 0.6666667F;
     private static final Vector3fc MODEL_SCALE = new Vector3f(0.6666667F, -0.6666667F, -0.6666667F);
     private static final Vector3fc MODEL_TRANSLATION = new Vector3f(0.5F, 0.0F, 0.5F);
     public static final WallAndGroundTransformations<Transformation> TRANSFORMATIONS = new WallAndGroundTransformations<>(
@@ -64,10 +62,6 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
         this(context.entityModelSet(), context.sprites());
     }
 
-    public BBEBannerRenderer(final SpecialModelRenderer.BakingContext context) {
-        this(context.entityModelSet(), context.sprites());
-    }
-
     public BBEBannerRenderer(final EntityModelSet modelSet, final SpriteGetter sprites) {
         this.sprites = sprites;
         this.standingModel = new BannerModel(modelSet.bakeLayer(ModelLayers.STANDING_BANNER));
@@ -80,13 +74,7 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
         return new BannerRenderState();
     }
 
-    public void extractRenderState(
-            final BannerBlockEntity blockEntity,
-            final BannerRenderState state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
-    ) {
+    public void extractRenderState(BannerBlockEntity blockEntity, BannerRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         state.baseColor = blockEntity.getBaseColor();
         state.patterns = blockEntity.getPatterns();
@@ -101,8 +89,8 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
 
         long gameTime = blockEntity.getLevel() != null ? blockEntity.getLevel().getGameTime() : 0L;
         BlockPos blockPos = blockEntity.getBlockPos();
+        
         state.phase = ((float)Math.floorMod(blockPos.getX() * 7 + blockPos.getY() * 9 + blockPos.getZ() * 13 + gameTime, 100L) + partialTicks) / 100.0F;
-
 
         ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
@@ -121,7 +109,7 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
         };
     }
 
-    public void submit(final BannerRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera) {
+    public void submit(BannerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         poseStack.pushPose();
         poseStack.mulPose(state.transformation);
 
@@ -144,19 +132,19 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
     }
 
     private static void submitBanner(
-            final BannerRenderState state,
-            final SpriteGetter sprites,
-            final PoseStack poseStack,
-            final SubmitNodeCollector collector,
-            final int lightCoords,
-            final int overlayCoords,
-            final BannerModel model,
-            final BannerFlagModel flagModel,
-            final float phase,
-            final DyeColor baseColor,
-            final BannerPatternLayers patterns,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress,
-            final int outlineColor
+            BannerRenderState state,
+            SpriteGetter sprites,
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            int lightCoords,
+            int overlayCoords,
+            BannerModel model,
+            BannerFlagModel flagModel,
+            float phase,
+            DyeColor baseColor,
+            BannerPatternLayers patterns,
+            ModelFeatureRenderer.CrumblingOverlay breakProgress,
+            int outlineColor
     ) {
         SpriteId sprite = Sheets.BANNER_BASE;
 
@@ -183,17 +171,17 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
     }
 
     public static <S> void submitPatterns(
-            final SpriteGetter sprites,
-            final PoseStack poseStack,
-            final SubmitNodeCollector submitNodeCollector,
-            final int lightCoords,
-            final int overlayCoords,
-            final Model<S> model,
-            final S state,
-            final boolean banner,
-            final DyeColor baseColor,
-            final BannerPatternLayers patterns,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
+            SpriteGetter sprites,
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            int lightCoords,
+            int overlayCoords,
+            Model<S> model,
+            S state,
+            boolean banner,
+            DyeColor baseColor,
+            BannerPatternLayers patterns,
+            ModelFeatureRenderer.CrumblingOverlay breakProgress
     ) {
         submitPatternLayer(
                 sprites,
@@ -216,16 +204,16 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
     }
 
     private static <S> void submitPatternLayer(
-            final SpriteGetter sprites,
-            final PoseStack poseStack,
-            final SubmitNodeCollector submitNodeCollector,
-            final int lightCoords,
-            final int overlayCoords,
-            final Model<S> model,
-            final S state,
-            final SpriteId sprite,
-            final DyeColor color,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
+            SpriteGetter sprites,
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            int lightCoords,
+            int overlayCoords,
+            Model<S> model,
+            S state,
+            SpriteId sprite,
+            DyeColor color,
+            ModelFeatureRenderer.CrumblingOverlay breakProgress
     ) {
         int diffuseColor = color.getTextureDiffuseColor();
         submitNodeCollector.submitModel(
@@ -233,22 +221,15 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
         );
     }
 
-    public void getExtents(final Consumer<Vector3fc> output) {
-        PoseStack poseStack = new PoseStack();
-        this.standingModel.root().getExtentsForGui(poseStack, output);
-        this.standingFlagModel.setupAnim(0.0F);
-        this.standingFlagModel.root().getExtentsForGui(poseStack, output);
-    }
-
-    private static Transformation modelTransformation(final float angle) {
+    private static Transformation modelTransformation(float angle) {
         return new Transformation(MODEL_TRANSLATION, Axis.YP.rotationDegrees(-angle), MODEL_SCALE, null);
     }
 
-    private static Transformation createGroundTransformation(final int segment) {
+    private static Transformation createGroundTransformation(int segment) {
         return modelTransformation(RotationSegment.convertToDegrees(segment));
     }
 
-    private static Transformation createWallTransformation(final Direction direction) {
+    private static Transformation createWallTransformation(Direction direction) {
         return modelTransformation(direction.toYRot());
     }
 }

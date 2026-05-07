@@ -38,10 +38,6 @@ public final class OverlayRenderer {
         OverlayNodeCollection.submitCrumblingOverlay(poseStack, model, state, light, overlayCoords, tint, crumblingOverlay);
     }
 
-    public static boolean isBreaking(long posLong, Long2ObjectMap<?> progression) {
-        return !progression.isEmpty() && progression.get(posLong) != null;
-    }
-
     public static void renderCrumblingOverlays(MultiBufferSource.BufferSource crumblingBufferSource, PoseStack poseStack) {
         for (OverlayNodeCollection.OverlaySubmit<?> submit : OverlayNodeCollection.getSubmits()) {
             renderSubmit(crumblingBufferSource, poseStack, submit);

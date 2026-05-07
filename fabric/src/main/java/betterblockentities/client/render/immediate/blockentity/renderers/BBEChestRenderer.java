@@ -1,6 +1,7 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
+import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.model.overrides.ChestModelOverride;
 import betterblockentities.client.render.immediate.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
@@ -37,10 +38,12 @@ import com.mojang.math.Transformation;
 
 /* java/misc */
 import org.joml.Matrix4f;
+import org.jspecify.annotations.NonNull;
+
 import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements BlockEntityRenderer<T, ChestRenderState> {
+public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements BlockEntityRenderer<@NonNull T, ChestRenderState> {
     public static final MultiblockChestResources<ModelLayerLocation> LAYERS;
     private static final Map<Direction, Transformation> TRANSFORMATIONS;
     private final SpriteGetter sprites;
@@ -64,13 +67,7 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         return new ChestRenderState();
     }
 
-    public void extractRenderState(
-            final T blockEntity,
-            final ChestRenderState state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
-    ) {
+    public void extractRenderState(T blockEntity, ChestRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         boolean hasLevel = blockEntity.getLevel() != null;
         BlockState blockState = hasLevel ? blockEntity.getBlockState() : Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.SOUTH);
@@ -84,7 +81,8 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
             combineResult = DoubleBlockCombiner.Combiner::acceptNone;
         }
 
-        state.open = combineResult.apply(ChestBlock.opennessCombiner(blockEntity)).get(partialTicks);
+        state.open = ConfigCache.chestAnims ? combineResult.apply(ChestBlock.opennessCombiner(blockEntity)).get(partialTicks) : 0;
+
         if (state.type != ChestType.SINGLE) {
             state.lightCoords = combineResult.apply(new BrightnessCombiner<>()).applyAsInt(state.lightCoords);
         }
@@ -92,7 +90,7 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
-    public void submit(final ChestRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera) {
+    public void submit(ChestRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         poseStack.pushPose();
         poseStack.mulPose(modelTransformation(state.facing));
         float open = state.open;
@@ -102,30 +100,30 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
-        ChestModel model = (ChestModel)this.models.select(state.type);
+        ChestModel model = this.models.select(state.type);
         boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, open, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
         if (!managed) {
-            model = (ChestModel)this.bbeModels.select(state.type);
+            model = this.bbeModels.select(state.type);
             submitNodeCollector.submitModel(model, open, poseStack, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, spriteId, this.sprites, 0, state.breakProgress);
         }
 
         poseStack.popPose();
     }
 
-    private static ChestRenderState.ChestMaterialType getChestMaterial(final BlockEntity entity, final boolean xmasTextures) {
+    private static ChestRenderState.ChestMaterialType getChestMaterial(BlockEntity entity, boolean xmasTextures) {
         Block blockState = entity.getBlockState().getBlock();
         if (blockState instanceof CopperChestBlock) {
             CopperChestBlock copperChestBlock = (CopperChestBlock)blockState;
-            ChestRenderState.ChestMaterialType var10000;
+            ChestRenderState.ChestMaterialType type;
             switch (copperChestBlock.getState()) {
-                case UNAFFECTED -> var10000 = ChestRenderState.ChestMaterialType.COPPER_UNAFFECTED;
-                case EXPOSED -> var10000 = ChestRenderState.ChestMaterialType.COPPER_EXPOSED;
-                case WEATHERED -> var10000 = ChestRenderState.ChestMaterialType.COPPER_WEATHERED;
-                case OXIDIZED -> var10000 = ChestRenderState.ChestMaterialType.COPPER_OXIDIZED;
-                default -> throw new MatchException((String)null, (Throwable)null);
+                case UNAFFECTED -> type = ChestRenderState.ChestMaterialType.COPPER_UNAFFECTED;
+                case EXPOSED -> type = ChestRenderState.ChestMaterialType.COPPER_EXPOSED;
+                case WEATHERED -> type = ChestRenderState.ChestMaterialType.COPPER_WEATHERED;
+                case OXIDIZED -> type = ChestRenderState.ChestMaterialType.COPPER_OXIDIZED;
+                default -> throw new MatchException(null, null);
             }
 
-            return var10000;
+            return type;
         } else if (entity instanceof EnderChestBlockEntity) {
             return ChestRenderState.ChestMaterialType.ENDER_CHEST;
         } else if (xmasTextures) {
@@ -135,11 +133,11 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         }
     }
 
-    public static Transformation modelTransformation(final Direction facing) {
-        return (Transformation)TRANSFORMATIONS.get(facing);
+    public static Transformation modelTransformation(Direction facing) {
+        return TRANSFORMATIONS.get(facing);
     }
 
-    private static Transformation createModelTransformation(final Direction facing) {
+    private static Transformation createModelTransformation(Direction facing) {
         return new Transformation((new Matrix4f()).rotationAround(Axis.YP.rotationDegrees(-facing.toYRot()), 0.5F, 0.0F, 0.5F));
     }
 

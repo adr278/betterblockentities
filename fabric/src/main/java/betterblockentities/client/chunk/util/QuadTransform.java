@@ -10,50 +10,78 @@ import net.minecraft.resources.Identifier;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 
 /* java/misc */
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 /**
  * Utility class for transforming Sodium's {@link net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl } emitter / render data
  */
 public class QuadTransform {
-    public static void rotateY(MutableQuadViewImpl quad, float degrees) {
-        float radians = (float) Math.toRadians(degrees);
-        float cos = (float) Math.cos(radians);
-        float sin = (float) Math.sin(radians);
+    public static void rotateXYZ(MutableQuadViewImpl quad, float degreesX, float degreesY, float degreesZ) {
         float centerX = 0.5f;
+        float centerY = 0.5f;
         float centerZ = 0.5f;
+
+        float radX = (float) Math.toRadians(degreesX);
+        float radY = (float) Math.toRadians(degreesY);
+        float radZ = (float) Math.toRadians(degreesZ);
+
+        float cosX = (float) Math.cos(radX);
+        float sinX = (float) Math.sin(radX);
+
+        float cosY = (float) Math.cos(radY);
+        float sinY = (float) Math.sin(radY);
+
+        float cosZ = (float) Math.cos(radZ);
+        float sinZ = (float) Math.sin(radZ);
 
         for (int i = 0; i < 4; i++) {
             float x = quad.getX(i) - centerX;
-            float y = quad.getY(i);
+            float y = quad.getY(i) - centerY;
             float z = quad.getZ(i) - centerZ;
-            float newX = x * cos - z * sin;
-            float newZ = x * sin + z * cos;
-            quad.setPos(i, newX + centerX, y, newZ + centerZ);
+
+            if (degreesX != 0f) {
+                float newY = y * cosX - z * sinX;
+                float newZ = y * sinX + z * cosX;
+                y = newY;
+                z = newZ;
+            }
+
+            if (degreesY != 0f) {
+                float newX = x * cosY - z * sinY;
+                float newZ = x * sinY + z * cosY;
+                x = newX;
+                z = newZ;
+            }
+
+            if (degreesZ != 0f) {
+                float newX = x * cosZ - y * sinZ;
+                float newY = x * sinZ + y * cosZ;
+                x = newX;
+                y = newY;
+            }
+
+            quad.setPos(i, x + centerX, y + centerY, z + centerZ);
         }
     }
 
-    public static void rotateX(MutableQuadViewImpl quad, float degrees) {
-        float radians = (float) Math.toRadians(degrees);
-        float cos = (float) Math.cos(radians);
-        float sin = (float) Math.sin(radians);
+    public static void rotate(MutableQuadViewImpl quad, Quaternionf rotation, Vector3f scratchVector) {
+        if (rotation == null) {
+            return;
+        }
 
+        float centerX = 0.5f;
         float centerY = 0.5f;
         float centerZ = 0.5f;
 
         for (int i = 0; i < 4; i++) {
-            float x = quad.getX(i);
-            float y = quad.getY(i) - centerY;
-            float z = quad.getZ(i) - centerZ;
-
-            float newY = y * cos - z * sin;
-            float newZ = y * sin + z * cos;
-
-            quad.setPos(i, x, newY + centerY, newZ + centerZ);
+            scratchVector.set(quad.getX(i) - centerX, quad.getY(i) - centerY, quad.getZ(i) - centerZ);
+            scratchVector.rotate(rotation);
+            quad.setPos(i, scratchVector.x + centerX, scratchVector.y + centerY, scratchVector.z + centerZ);
         }
     }
 
-    public static void pushAndExpand(float amount, MutableQuadViewImpl quad) {
+    public static void expand(float amount, MutableQuadViewImpl quad) {
         /* compute quad center */
         float cx = 0, cy = 0, cz = 0;
         for (int i = 0; i < 4; i++) {
@@ -121,7 +149,7 @@ public class QuadTransform {
         }
     }
 
-    public static void swapSprite(TextureAtlasSprite newSprite, MutableQuadViewImpl quad) {
+    public static void remapSprite(TextureAtlasSprite newSprite, MutableQuadViewImpl quad) {
         final float uNewMin = newSprite.getU0();
         final float uNewMax = newSprite.getU1();
         final float vNewMin = newSprite.getV0();
@@ -154,7 +182,8 @@ public class QuadTransform {
         mQuad.cachedSprite(newSprite);
     }
 
-    public static TextureAtlasSprite getSprite(Identifier id) {
+    /* TODO: Refactor this */
+    public static TextureAtlasSprite getBlockSprite(Identifier id) {
         var atlas = Minecraft.getInstance()
                 .getAtlasManager()
                 .getAtlasOrThrow(AtlasIds.BLOCKS);

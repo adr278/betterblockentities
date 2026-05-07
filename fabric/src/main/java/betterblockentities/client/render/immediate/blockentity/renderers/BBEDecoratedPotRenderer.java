@@ -51,15 +51,11 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
     private final ModelPart top;
     private final ModelPart bottom;
 
-    public BBEDecoratedPotRenderer(final BlockEntityRendererProvider.Context context) {
+    public BBEDecoratedPotRenderer(BlockEntityRendererProvider.Context context) {
         this(context.entityModelSet(), context.sprites());
     }
 
-    public BBEDecoratedPotRenderer(final SpecialModelRenderer.BakingContext context) {
-        this(context.entityModelSet(), context.sprites());
-    }
-
-    public BBEDecoratedPotRenderer(final EntityModelSet entityModelSet, final SpriteGetter sprites) {
+    public BBEDecoratedPotRenderer(EntityModelSet entityModelSet, SpriteGetter sprites) {
         this.sprites = sprites;
         ModelPart baseRoot = entityModelSet.bakeLayer(ModelLayers.DECORATED_POT_BASE);
         this.neck = baseRoot.getChild("neck");
@@ -72,14 +68,13 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
         this.rightSide = sidesRoot.getChild("right");
     }
 
-    private static SpriteId getSideSprite(final Optional<Item> item) {
+    private static SpriteId getSideSprite(Optional<Item> item) {
         if (item.isPresent()) {
             SpriteId result = Sheets.getDecoratedPotSprite(DecoratedPotPatterns.getPatternFromItem((Item)item.get()));
             if (result != null) {
                 return result;
             }
         }
-
         return Sheets.DECORATED_POT_SIDE;
     }
 
@@ -87,13 +82,7 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
         return new DecoratedPotRenderState();
     }
 
-    public void extractRenderState(
-            final DecoratedPotBlockEntity blockEntity,
-            final DecoratedPotRenderState state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
-    ) {
+    public void extractRenderState(DecoratedPotBlockEntity blockEntity, DecoratedPotRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         state.decorations = blockEntity.getDecorations();
         state.direction = blockEntity.getDirection();
@@ -105,9 +94,7 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
         }
     }
 
-    public void submit(
-            final DecoratedPotRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera
-    ) {
+    public void submit(DecoratedPotRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         poseStack.pushPose();
         poseStack.mulPose(modelTransformation(state.direction));
         if (state.wobbleProgress >= 0.0F && state.wobbleProgress <= 1.0F) {
@@ -129,22 +116,15 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
         poseStack.popPose();
     }
 
-    public static Transformation modelTransformation(final Direction facing) {
-        return (Transformation)TRANSFORMATIONS.get(facing);
+    public static Transformation modelTransformation(Direction facing) {
+        return TRANSFORMATIONS.get(facing);
     }
 
-    private static Transformation createModelTransformation(final Direction entityDirection) {
+    private static Transformation createModelTransformation(Direction entityDirection) {
         return new Transformation(new Matrix4f().rotateAround(Axis.YP.rotationDegrees(180.0F - entityDirection.toYRot()), 0.5F, 0.5F, 0.5F));
     }
 
-    public void submit(
-            final PoseStack poseStack,
-            final SubmitNodeCollector submitNodeCollector,
-            final int lightCoords,
-            final int overlayCoords,
-            final PotDecorations decorations,
-            final int outlineColor
-    ) {
+    public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, int overlayCoords, PotDecorations decorations, int outlineColor) {
         RenderType renderType = Sheets.DECORATED_POT_BASE.renderType(RenderTypes::entitySolid);
         TextureAtlasSprite sprite = this.sprites.get(Sheets.DECORATED_POT_BASE);
         submitNodeCollector.submitModelPart(this.neck, poseStack, renderType, lightCoords, overlayCoords, sprite, false, false, -1, null, outlineColor);
@@ -206,12 +186,5 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
                 null,
                 outlineColor
         );
-    }
-
-    public void getExtents(final Consumer<Vector3fc> output) {
-        PoseStack poseStack = new PoseStack();
-        this.neck.getExtentsForGui(poseStack, output);
-        this.top.getExtentsForGui(poseStack, output);
-        this.bottom.getExtentsForGui(poseStack, output);
     }
 }

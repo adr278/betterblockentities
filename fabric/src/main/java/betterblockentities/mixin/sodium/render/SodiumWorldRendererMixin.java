@@ -3,8 +3,7 @@ package betterblockentities.mixin.sodium.render;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.BBEConfig;
-import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.render.AltRenderers;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.SpecialBlockEntityManager;
 
@@ -31,6 +30,7 @@ import org.spongepowered.asm.mixin.Pseudo;
 
 /* java/misc */
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import org.spongepowered.asm.mixin.Unique;
 import java.util.List;
 import java.util.SortedSet;
 
@@ -45,8 +45,9 @@ public abstract class SodiumWorldRendererMixin {
      */
     @Overwrite
     private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState) {
-        BlockPos blockPos = blockEntity.getBlockPos();
-        SortedSet<BlockDestructionProgress> sortedSet = progression.get(blockPos.asLong());
+        final BlockPos blockPos = blockEntity.getBlockPos();
+        final SortedSet<BlockDestructionProgress> sortedSet = progression.get(blockPos.asLong());
+
         ModelFeatureRenderer.CrumblingOverlay crumblingOverlay;
         if (sortedSet != null && !sortedSet.isEmpty()) {
             poseStack.pushPose();
@@ -62,20 +63,19 @@ public abstract class SodiumWorldRendererMixin {
         }
 
         /* extract our registered alt renderers for this block entity */
-        List<BlockEntityRenderState> altBlockEntityRenderStates =
-                BBE.GlobalScope.altRenderDispatcher.tryExtractRenderStates(blockEntity, tickDelta, crumblingOverlay);
-        for (BlockEntityRenderState altState : altBlockEntityRenderStates) {
-            if (altState != null) {
-                BBE.GlobalScope.altBlockEntityRenderStates.add(altState);
+        if (AltRenderers.renderersLoaded()) {
+            List<BlockEntityRenderState> altBlockEntityRenderStates =
+                    BBE.GlobalScope.altRenderDispatcher.tryExtractRenderStates(blockEntity, tickDelta, crumblingOverlay);
+            for (BlockEntityRenderState altState : altBlockEntityRenderStates) {
+                if (altState != null) {
+                    BBE.GlobalScope.altBlockEntityRenderStates.add(altState);
+                }
             }
         }
 
         /* manage this block entity if optimizations for it is turned on */
-        BlockEntityExt ext = (BlockEntityExt) blockEntity;
-
-        if (ext.supportedBlockEntity() && BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]
-                && ext.terrainMeshReady() && !OverlayRenderer.isBreaking(blockEntity.getBlockPos().asLong(), progression)) {
-
+        BlockEntityExt ext = (BlockEntityExt)blockEntity;
+        if (shouldManage(ext, crumblingOverlay))  {
             boolean cancel = !ext.hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(blockEntity);
             if (cancel) {
                 return;
@@ -88,5 +88,13 @@ public abstract class SodiumWorldRendererMixin {
         if (blockEntityRenderState != null) {
             levelRenderState.blockEntityRenderStates.add(blockEntityRenderState);
         }
+    }
+
+    @Unique
+    private static boolean shouldManage(BlockEntityExt ext, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+        return ext.supportedBlockEntity()                               &&
+                BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF] &&
+                ext.terrainMeshReady()                                  &&
+                crumblingOverlay == null;
     }
 }

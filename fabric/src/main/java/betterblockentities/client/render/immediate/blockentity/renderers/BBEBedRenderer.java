@@ -49,15 +49,11 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
     private final Model.Simple headModel;
     private final Model.Simple footModel;
 
-    public BBEBedRenderer(final BlockEntityRendererProvider.Context context) {
+    public BBEBedRenderer(BlockEntityRendererProvider.Context context) {
         this(context.sprites(), context.entityModelSet());
     }
 
-    public BBEBedRenderer(final SpecialModelRenderer.BakingContext context) {
-        this(context.sprites(), context.entityModelSet());
-    }
-
-    public BBEBedRenderer(final SpriteGetter sprites, final EntityModelSet entityModelSet) {
+    public BBEBedRenderer(SpriteGetter sprites, EntityModelSet entityModelSet) {
         this.sprites = sprites;
         this.headModel = new Model.Simple(entityModelSet.bakeLayer(ModelLayers.BED_HEAD), RenderTypes::entitySolid);
         this.footModel = new Model.Simple(entityModelSet.bakeLayer(ModelLayers.BED_FOOT), RenderTypes::entitySolid);
@@ -67,13 +63,7 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
         return new BedRenderState();
     }
 
-    public void extractRenderState(
-            final BedBlockEntity blockEntity,
-            final BedRenderState state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
-    ) {
+    public void extractRenderState(BedBlockEntity blockEntity, BedRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         state.color = blockEntity.getColor();
         state.facing = blockEntity.getBlockState().getValue(BedBlock.FACING);
@@ -95,7 +85,7 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
         ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
-    public void submit(final BedRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera) {
+    public void submit(BedRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         SpriteId sprite = Sheets.getBedSprite(state.color);
         poseStack.pushPose();
         poseStack.mulPose(modelTransform(state.facing));
@@ -106,15 +96,15 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
     }
 
     public void submitPiece(
-            final BedRenderState state,
-            final BedPart part,
-            final SpriteId sprite,
-            final PoseStack poseStack,
-            final SubmitNodeCollector submitNodeCollector,
-            final int lightCoords,
-            final int overlayCoords,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress,
-            final int outlineColor
+            BedRenderState state,
+            BedPart part,
+            SpriteId sprite,
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            int lightCoords,
+            int overlayCoords,
+            ModelFeatureRenderer.CrumblingOverlay breakProgress,
+            int outlineColor
     ) {
         Model.Simple model = this.getPieceModel(part);
 
@@ -126,14 +116,14 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
         }
     }
 
-    private Model.Simple getPieceModel(final BedPart part) {
+    private Model.Simple getPieceModel(BedPart part) {
         return switch (part) {
             case HEAD -> this.headModel;
             case FOOT -> this.footModel;
         };
     }
 
-    private static Transformation createModelTransform(final Direction direction) {
+    private static Transformation createModelTransform(Direction direction) {
         return new Transformation(
                 new Matrix4f()
                         .translation(0.0F, 0.5625F, 0.0F)
@@ -142,12 +132,7 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
         );
     }
 
-    public static Transformation modelTransform(final Direction direction) {
+    public static Transformation modelTransform(Direction direction) {
         return (Transformation)TRANSFORMATIONS.get(direction);
-    }
-
-    public void getExtents(final BedPart part, final Consumer<Vector3fc> output) {
-        PoseStack poseStack = new PoseStack();
-        this.getPieceModel(part).root().getExtentsForGui(poseStack, output);
     }
 }

@@ -16,11 +16,11 @@ public abstract class BlockEntityMixin implements BlockEntityExt {
     @Unique private RenderingMode renderingMode = RenderingMode.TERRAIN;
     @Unique private boolean terrainMeshReady = true;
     @Unique private boolean hasSpecialManager = false;
-    @Unique private boolean supportedBlockEntity = false;
     @Unique private byte bbeKind = 0;
+    @Unique private boolean supportedBlockEntity = false;
 
     @Override public boolean supportedBlockEntity() { return supportedBlockEntity; }
-    @Override public void supportedBlockEntity(boolean bl) { supportedBlockEntity = bl; }
+    @Override public void supportedBlockEntity(boolean bl) {this.supportedBlockEntity = bl; }
 
     @Override public RenderingMode renderingMode() { return renderingMode; }
     @Override public void renderingMode(RenderingMode mode) { renderingMode = mode; }

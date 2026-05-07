@@ -32,7 +32,6 @@ public class ModelUtility {
             for (ModelPart.Polygon poly : cube.polygons) {
                 /* skip non-quad polygons */
                 if (poly.vertices().length != 4) {
-                    BBE.getLogger().error("Non quad polygon detected when assembling block geometry! Skipping");
                     continue;
                 }
 

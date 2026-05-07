@@ -52,7 +52,7 @@ public class BBEStandingSignRenderer extends BBEAbstractSignRenderer<StandingSig
     );
     private final Map<WoodType, BBEStandingSignRenderer.Models> signModels;
 
-    public BBEStandingSignRenderer(final BlockEntityRendererProvider.Context context) {
+    public BBEStandingSignRenderer(BlockEntityRendererProvider.Context context) {
         super(context);
 
         /* filter out invalid sign types to prevent crashes, types in general are irrelevant in our render context */
@@ -71,7 +71,7 @@ public class BBEStandingSignRenderer extends BBEAbstractSignRenderer<StandingSig
         return new StandingSignRenderState();
     }
 
-    public void extractRenderState(final SignBlockEntity blockEntity, final StandingSignRenderState state, final float partialTicks, final Vec3 cameraPosition, final ModelFeatureRenderer.CrumblingOverlay breakProgress) {
+    public void extractRenderState(SignBlockEntity blockEntity, StandingSignRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         BlockState blockState = blockEntity.getBlockState();
         state.attachmentType = PlainSignBlock.getAttachmentPoint(blockState);
@@ -82,16 +82,16 @@ public class BBEStandingSignRenderer extends BBEAbstractSignRenderer<StandingSig
         }
     }
 
-    protected Model.Simple getSignModel(final StandingSignRenderState state) {
-        return ((BBEStandingSignRenderer.Models)this.signModels.get(state.woodType)).get(state.attachmentType);
+    protected Model.Simple getSignModel(StandingSignRenderState state) {
+        return (this.signModels.get(state.woodType)).get(state.attachmentType);
     }
 
     @Override
-    protected SpriteId getSignSprite(final WoodType type) {
+    protected SpriteId getSignSprite(WoodType type) {
         return Sheets.getSignSprite(type);
     }
 
-    private static Matrix4f baseTransformation(final float angle, final PlainSignBlock.Attachment attachmentType) {
+    private static Matrix4f baseTransformation(float angle, PlainSignBlock.Attachment attachmentType) {
         Matrix4f result = new Matrix4f().translate(0.5F, 0.5F, 0.5F).rotate(Axis.YP.rotationDegrees(-angle));
         if (attachmentType == PlainSignBlock.Attachment.WALL) {
             result.translate(0.0F, -0.3125F, -0.4375F);
@@ -100,35 +100,34 @@ public class BBEStandingSignRenderer extends BBEAbstractSignRenderer<StandingSig
         return result;
     }
 
-    private static Transformation bodyTransformation(final PlainSignBlock.Attachment attachmentType, final float angle) {
+    private static Transformation bodyTransformation(PlainSignBlock.Attachment attachmentType, float angle) {
         return new Transformation(baseTransformation(angle, attachmentType).scale(0.6666667F, -0.6666667F, -0.6666667F));
     }
 
-    private static Transformation textTransformation(final PlainSignBlock.Attachment attachmentType, final float angle, final boolean isFrontText) {
+    private static Transformation textTransformation(PlainSignBlock.Attachment attachmentType, float angle, boolean isFrontText) {
         Matrix4f result = baseTransformation(angle, attachmentType);
         if (!isFrontText) {
             result.rotate(Axis.YP.rotationDegrees(180.0F));
         }
 
-        float s = 0.010416667F;
         return new Transformation(result.translate(TEXT_OFFSET).scale(0.010416667F, -0.010416667F, 0.010416667F));
     }
 
-    private static SignRenderState.SignTransformations createTransformations(final PlainSignBlock.Attachment attachmentType, final float angle) {
+    private static SignRenderState.SignTransformations createTransformations(PlainSignBlock.Attachment attachmentType, float angle) {
         return new SignRenderState.SignTransformations(
                 bodyTransformation(attachmentType, angle), textTransformation(attachmentType, angle, true), textTransformation(attachmentType, angle, false)
         );
     }
 
-    private static SignRenderState.SignTransformations createGroundTransformation(final int segment) {
+    private static SignRenderState.SignTransformations createGroundTransformation(int segment) {
         return createTransformations(PlainSignBlock.Attachment.GROUND, RotationSegment.convertToDegrees(segment));
     }
 
-    private static SignRenderState.SignTransformations createWallTransformation(final Direction direction) {
+    private static SignRenderState.SignTransformations createWallTransformation(Direction direction) {
         return createTransformations(PlainSignBlock.Attachment.WALL, direction.toYRot());
     }
 
-    public static Model.Simple createSignModel(final EntityModelSet entityModelSet, final WoodType woodType, final PlainSignBlock.Attachment attachment) {
+    public static Model.Simple createSignModel(EntityModelSet entityModelSet, WoodType woodType, PlainSignBlock.Attachment attachment) {
         ModelLayerLocation layer = switch (attachment) {
             case GROUND -> createStandingSignModelName(woodType);
             case WALL -> createWallSignModelName(woodType);
@@ -140,15 +139,15 @@ public class BBEStandingSignRenderer extends BBEAbstractSignRenderer<StandingSig
         return null;
     }
 
-    public static ModelLayerLocation createStandingSignModelName(final WoodType type) {
+    public static ModelLayerLocation createStandingSignModelName(WoodType type) {
         return createLocation("sign/standing/" + type.name(), "main");
     }
 
-    public static ModelLayerLocation createWallSignModelName(final WoodType type) {
+    public static ModelLayerLocation createWallSignModelName(WoodType type) {
         return createLocation("sign/wall/" + type.name(), "main");
     }
 
-    private static ModelLayerLocation createLocation(final String model, final String layerId) {
+    private static ModelLayerLocation createLocation(String model, String layerId) {
         ModelLayerLocation layer;
         try {
             layer = new ModelLayerLocation(Identifier.withDefaultNamespace(model), layerId);
@@ -160,14 +159,14 @@ public class BBEStandingSignRenderer extends BBEAbstractSignRenderer<StandingSig
     }
 
     private record Models(Model.Simple standing, Model.Simple wall) {
-        public static BBEStandingSignRenderer.Models create(final BlockEntityRendererProvider.Context context, final WoodType type) {
+        public static BBEStandingSignRenderer.Models create(BlockEntityRendererProvider.Context context, WoodType type) {
             return new BBEStandingSignRenderer.Models(
                     BBEStandingSignRenderer.createSignModel(context.entityModelSet(), type, PlainSignBlock.Attachment.GROUND),
                     BBEStandingSignRenderer.createSignModel(context.entityModelSet(), type, PlainSignBlock.Attachment.WALL)
             );
         }
 
-        public Model.Simple get(final PlainSignBlock.Attachment attachmentType) {
+        public Model.Simple get(PlainSignBlock.Attachment attachmentType) {
             return switch (attachmentType) {
                 case GROUND -> this.standing;
                 case WALL -> this.wall;
