@@ -45,16 +45,13 @@ import org.joml.Vector3fc;
 import org.jspecify.annotations.Nullable;
 
 public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRenderState> {
+    private static final Map<Direction, Transformation> TRANSFORMATIONS = Util.makeEnumMap(Direction.class, BBEBedRenderer::createModelTransform);
     private final MaterialSet materials;
     private final Model.Simple headModel;
     private final Model.Simple footModel;
 
     public BBEBedRenderer(BlockEntityRendererProvider.Context context) {
         this(context.materials(), context.entityModelSet());
-    }
-
-    public BBEBedRenderer(SpecialModelRenderer.BakingContext bakingContext) {
-        this(bakingContext.materials(), bakingContext.entityModelSet());
     }
 
     public BBEBedRenderer(MaterialSet materialSet, EntityModelSet entityModelSet) {
@@ -137,8 +134,16 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
         };
     }
 
-    public void getExtents(final BedPart part, final Consumer<Vector3fc> output) {
-        PoseStack poseStack = new PoseStack();
-        this.getPieceModel(part).root().getExtentsForGui(poseStack, output);
+    private static Transformation createModelTransform(Direction direction) {
+        return new Transformation(
+                new Matrix4f()
+                        .translation(0.0F, 0.5625F, 0.0F)
+                        .rotate(Axis.XP.rotationDegrees(90.0F))
+                        .rotateAround(Axis.ZP.rotationDegrees(180.0F + direction.toYRot()), 0.5F, 0.5F, 0.5F)
+        );
+    }
+
+    public static Transformation modelTransform(Direction direction) {
+        return (Transformation)TRANSFORMATIONS.get(direction);
     }
 }

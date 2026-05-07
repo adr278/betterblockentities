@@ -48,6 +48,8 @@ import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements BlockEntityRenderer<T, ChestRenderState> {
+    private static final Map<Direction, Transformation> TRANSFORMATIONS;
+
     private final MaterialSet materials;
     private final boolean xmasTextures;
 
@@ -103,7 +105,8 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
             neighborCombineResult = DoubleBlockCombiner.Combiner::acceptNone;
         }
 
-        chestRenderState.open = neighborCombineResult.apply(ChestBlock.opennessCombiner(blockEntity)).get(f);
+        chestRenderState.open = ConfigCache.chestAnims ? neighborCombineResult.apply(ChestBlock.opennessCombiner(blockEntity)).get(f) : 0;
+
         if (chestRenderState.type != ChestType.SINGLE) {
             chestRenderState.lightCoords = neighborCombineResult.apply(new BrightnessCombiner<>()).applyAsInt(chestRenderState.lightCoords);
         }
@@ -221,5 +224,17 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         } else {
             return entity instanceof TrappedChestBlockEntity ? ChestRenderState.ChestMaterialType.TRAPPED : ChestRenderState.ChestMaterialType.REGULAR;
         }
+    }
+
+    public static Transformation modelTransformation(Direction facing) {
+        return TRANSFORMATIONS.get(facing);
+    }
+
+    private static Transformation createModelTransformation(Direction facing) {
+        return new Transformation((new Matrix4f()).rotationAround(Axis.YP.rotationDegrees(-facing.toYRot()), 0.5F, 0.0F, 0.5F));
+    }
+
+    static {
+        TRANSFORMATIONS = Util.makeEnumMap(Direction.class, BBEChestRenderer::createModelTransformation);
     }
 }

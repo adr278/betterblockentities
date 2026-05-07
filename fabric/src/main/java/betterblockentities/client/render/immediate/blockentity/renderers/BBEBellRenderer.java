@@ -1,6 +1,7 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
+import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
@@ -40,12 +41,13 @@ public class BBEBellRenderer implements BlockEntityRenderer<BellBlockEntity, Bel
         return new BellRenderState();
     }
 
-    public void extractRenderState(BellBlockEntity bellBlockEntity, BellRenderState bellRenderState, float f, Vec3 vec3, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
-        BlockEntityRenderer.super.extractRenderState(bellBlockEntity, bellRenderState, f, vec3, crumblingOverlay);
-        bellRenderState.ticks = bellBlockEntity.ticks + f;
-        bellRenderState.shakeDirection = bellBlockEntity.shaking ? bellBlockEntity.clickDirection : null;
+    public void extractRenderState(BellBlockEntity blockEntity, BellRenderState state, float f, Vec3 vec3, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+        BlockEntityRenderer.super.extractRenderState(blockEntity, state, f, vec3, crumblingOverlay);
+        state.ticks = blockEntity.ticks + f;
 
-        ((BlockEntityRenderStateExt)bellRenderState).blockEntity(bellBlockEntity);
+        state.shakeDirection = ConfigCache.bellAnims ? blockEntity.shaking ? blockEntity.clickDirection : null : null;
+
+        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     public void submit(final BellRenderState bellRenderState, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera) {

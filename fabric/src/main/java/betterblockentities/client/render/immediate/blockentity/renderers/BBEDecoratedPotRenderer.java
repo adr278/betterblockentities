@@ -1,6 +1,7 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* minecraft */
+import com.mojang.math.Transformation;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
@@ -21,6 +22,7 @@ import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.MaterialSet;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
@@ -41,14 +43,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPotBlockEntity, DecoratedPotRenderState> {
+    private static final Map<Direction, Transformation> TRANSFORMATIONS = Util.makeEnumMap(Direction.class, BBEDecoratedPotRenderer::createModelTransformation);
+
     private final MaterialSet materials;
-    private static final String NECK = "neck";
-    private static final String FRONT = "front";
-    private static final String BACK = "back";
-    private static final String LEFT = "left";
-    private static final String RIGHT = "right";
-    private static final String TOP = "top";
-    private static final String BOTTOM = "bottom";
     private final ModelPart neck;
     private final ModelPart frontSide;
     private final ModelPart backSide;
@@ -56,7 +53,6 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
     private final ModelPart rightSide;
     private final ModelPart top;
     private final ModelPart bottom;
-    private static final float WOBBLE_AMPLITUDE = 0.125F;
 
     public BBEDecoratedPotRenderer(BlockEntityRendererProvider.Context context) {
         this(context.entityModelSet(), context.materials());
@@ -156,10 +152,11 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
         );
     }
 
-    public void getExtents(Consumer<Vector3fc> consumer) {
-        PoseStack poseStack = new PoseStack();
-        this.neck.getExtentsForGui(poseStack, consumer);
-        this.top.getExtentsForGui(poseStack, consumer);
-        this.bottom.getExtentsForGui(poseStack, consumer);
+    public static Transformation modelTransformation(Direction facing) {
+        return TRANSFORMATIONS.get(facing);
+    }
+
+    private static Transformation createModelTransformation(Direction entityDirection) {
+        return new Transformation(new Matrix4f().rotateAround(Axis.YP.rotationDegrees(180.0F - entityDirection.toYRot()), 0.5F, 0.5F, 0.5F));
     }
 }

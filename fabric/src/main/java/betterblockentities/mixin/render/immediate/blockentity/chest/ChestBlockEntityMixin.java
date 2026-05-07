@@ -9,6 +9,7 @@ import betterblockentities.client.render.immediate.blockentity.manager.Instanced
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -25,15 +26,25 @@ public abstract class ChestBlockEntityMixin {
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
     private void init(CallbackInfo ci) {
-        BlockEntityExt ext = (BlockEntityExt)(Object)this;
-        ext.supportedBlockEntity(true);
+        BlockEntity blockEntity = (BlockEntity)(Object)this;
+        BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
+
         ext.optKind(InstancedBlockEntityManager.OptKind.CHEST);
+
+        ext.supportedBlockEntity(
+                blockEntity.getType() == BlockEntityType.CHEST         ||
+                        blockEntity.getType() == BlockEntityType.TRAPPED_CHEST ||
+                        blockEntity.getType() == BlockEntityType.ENDER_CHEST
+        );
     }
 
     @Inject(method = "lidAnimateTick", at = @At("TAIL"))
     private static void onTick(Level level, BlockPos pos, BlockState state, ChestBlockEntity chestBlockEntity, CallbackInfo ci) {
-        ChestBlockEntityMixin self = (ChestBlockEntityMixin) (Object)chestBlockEntity;
+        ChestBlockEntityMixin self = (ChestBlockEntityMixin)(Object)chestBlockEntity;
+        BlockEntityExt ext = (BlockEntityExt)(Object)chestBlockEntity;
 
-        self.manager.tick(chestBlockEntity.getOpenNess(0.5f) > 0.01f, ConfigCache.chestAnims);
+        if (ext.supportedBlockEntity()) {
+            self.manager.tick(chestBlockEntity.getOpenNess(0.5f) > 0.01f, ConfigCache.chestAnims);
+        }
     }
 }

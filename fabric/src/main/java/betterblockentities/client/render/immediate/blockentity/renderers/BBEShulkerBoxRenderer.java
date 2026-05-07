@@ -7,6 +7,7 @@ import betterblockentities.client.render.immediate.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
+import com.mojang.math.Transformation;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -28,6 +29,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.MaterialSet;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
@@ -35,21 +37,20 @@ import net.minecraft.world.phys.Vec3;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
+import org.joml.Matrix4f;
 import org.joml.Vector3fc;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 
 public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBlockEntity, ShulkerBoxRenderState> {
+    private static final Map<Direction, Transformation> TRANSFORMATIONS = Util.makeEnumMap(Direction.class, BBEShulkerBoxRenderer::createModelTransform);
     private final MaterialSet materials;
     private final BBEShulkerBoxModel model;
 
     public BBEShulkerBoxRenderer(BlockEntityRendererProvider.Context context) {
         this(context.entityModelSet(), context.materials());
-    }
-
-    public BBEShulkerBoxRenderer(SpecialModelRenderer.BakingContext bakingContext) {
-        this(bakingContext.entityModelSet(), bakingContext.materials());
     }
 
     public BBEShulkerBoxRenderer(EntityModelSet entityModelSet, MaterialSet materialSet) {
@@ -61,13 +62,14 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
         return new ShulkerBoxRenderState();
     }
 
-    public void extractRenderState(ShulkerBoxBlockEntity shulkerBoxBlockEntity, ShulkerBoxRenderState shulkerBoxRenderState, float f, Vec3 vec3, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
-        BlockEntityRenderer.super.extractRenderState(shulkerBoxBlockEntity, shulkerBoxRenderState, f, vec3, crumblingOverlay);
-        shulkerBoxRenderState.direction = shulkerBoxBlockEntity.getBlockState().getValueOrElse(ShulkerBoxBlock.FACING, Direction.UP);
-        shulkerBoxRenderState.color = shulkerBoxBlockEntity.getColor();
-        shulkerBoxRenderState.progress = shulkerBoxBlockEntity.getProgress(f);
+    public void extractRenderState(ShulkerBoxBlockEntity blockEntity, ShulkerBoxRenderState state, float f, Vec3 vec3, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+        BlockEntityRenderer.super.extractRenderState(blockEntity, state, f, vec3, crumblingOverlay);
+        state.direction = blockEntity.getBlockState().getValueOrElse(ShulkerBoxBlock.FACING, Direction.UP);
+        state.color = blockEntity.getColor();
 
-        ((BlockEntityRenderStateExt)shulkerBoxRenderState).blockEntity(shulkerBoxBlockEntity);
+        state.progress = ConfigCache.shulkerAnims ? blockEntity.getProgress(f) : 0;
+
+        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     public void submit(ShulkerBoxRenderState shulkerBoxRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
@@ -119,13 +121,6 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
         this.model.setupAnim(f);
     }
 
-    public void getExtents(Direction direction, float f, Consumer<Vector3fc> consumer) {
-        PoseStack poseStack = new PoseStack();
-        this.prepareModel(poseStack, direction, f);
-        this.model.root().getExtentsForGui(poseStack, consumer);
-    }
-
-
     @Environment(EnvType.CLIENT)
     static class BBEShulkerBoxModel extends Model<Float> {
         private final ModelPart lid;
@@ -140,5 +135,20 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
             this.lid.setPos(0.0F, 24.0F - float_ * 0.5F * 16.0F, 0.0F);
             this.lid.yRot = 270.0F * float_ * ((float)Math.PI / 180F);
         }
+    }
+
+    private static Transformation createModelTransform(Direction direction) {
+        return new Transformation(
+                new Matrix4f()
+                        .translation(0.5F, 0.5F, 0.5F)
+                        .scale(0.9995F, 0.9995F, 0.9995F)
+                        .rotate(direction.getRotation())
+                        .scale(1.0F, -1.0F, -1.0F)
+                        .translate(0.0F, -1.0F, 0.0F)
+        );
+    }
+
+    public static Transformation modelTransform(Direction direction) {
+        return TRANSFORMATIONS.get(direction);
     }
 }

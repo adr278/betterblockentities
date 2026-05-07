@@ -5,6 +5,7 @@ import betterblockentities.data.RegistrationInfo;
 import betterblockentities.registration.RegistrationCollection;
 
 /* minecraft */
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 /* java/misc */
@@ -13,7 +14,7 @@ import java.util.*;
 
 public final class AltRenderers {
     private static final Map<AltRenderer<?, ?>, RegistrationInfo> LOADED_ALT_RENDERERS = new IdentityHashMap<>();
-    private static final Map<BlockEntityType<?>, Boolean> OVERRIDES = new HashMap<>();
+    private static final Set<BlockEntityType<?>> OVERRIDES = new ReferenceOpenHashSet<>();
 
     public static Map<BlockEntityType<?>, List<AltRenderer<?, ?>>> createAltEntityRenderers(final AltRendererProvider.Context context) {
         clear();
@@ -25,7 +26,7 @@ public final class AltRenderers {
             AltRenderer<?, ?> renderer = altRendererInfo.rendererProvider().create(context);
 
             if (renderer.dedicatedRenderer()) {
-                OVERRIDES.putIfAbsent(type, true);
+                OVERRIDES.add(type);
             }
 
             LOADED_ALT_RENDERERS.put(renderer, altRendererInfo);
@@ -42,7 +43,7 @@ public final class AltRenderers {
     }
 
     public static boolean hasRendererOverride(BlockEntityType<?> blockEntityType) {
-        return OVERRIDES.get(blockEntityType) != null;
+        return OVERRIDES.contains(blockEntityType);
     }
 
     public static RegistrationInfo forRenderer(AltRenderer<?, ?> renderer) {
@@ -51,6 +52,10 @@ public final class AltRenderers {
 
     public static Map<AltRenderer<?, ?>, RegistrationInfo> getLoadedAltRenderers() {
         return Map.copyOf(LOADED_ALT_RENDERERS);
+    }
+
+    public static boolean renderersLoaded() {
+        return !LOADED_ALT_RENDERERS.isEmpty();
     }
 
     private static void clear() {

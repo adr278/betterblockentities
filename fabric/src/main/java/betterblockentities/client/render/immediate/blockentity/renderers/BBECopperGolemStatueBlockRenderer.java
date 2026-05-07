@@ -5,6 +5,8 @@ import betterblockentities.client.render.immediate.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
+import com.mojang.math.Axis;
+import com.mojang.math.Transformation;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.object.statue.CopperGolemStatueModel;
@@ -18,6 +20,7 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.animal.golem.CopperGolemOxidationLevels;
 import net.minecraft.world.level.block.CopperGolemStatueBlock;
 import net.minecraft.world.level.block.entity.CopperGolemStatueBlockEntity;
@@ -26,12 +29,17 @@ import net.minecraft.world.phys.Vec3;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
+import org.joml.Matrix4f;
 
 /* java/misc */
 import java.util.HashMap;
 import java.util.Map;
 
 public class BBECopperGolemStatueBlockRenderer implements BlockEntityRenderer<CopperGolemStatueBlockEntity, CopperGolemStatueRenderState> {
+    private static final Map<Direction, Transformation> TRANSFORMATIONS = Util.makeEnumMap(
+            Direction.class, BBECopperGolemStatueBlockRenderer::createModelTransformation
+    );
+
     private final Map<CopperGolemStatueBlock.Pose, CopperGolemStatueModel> models = new HashMap();
 
     public BBECopperGolemStatueBlockRenderer(BlockEntityRendererProvider.Context context) {
@@ -80,5 +88,13 @@ public class BBECopperGolemStatueBlockRenderer implements BlockEntityRenderer<Co
 
             poseStack.popPose();
         }
+    }
+
+    public static Transformation modelTransformation(final Direction facing) {
+        return TRANSFORMATIONS.get(facing);
+    }
+
+    private static Transformation createModelTransformation(final Direction entityDirection) {
+        return new Transformation(new Matrix4f().translation(0.5F, 0.0F, 0.5F).rotate(Axis.YP.rotationDegrees(-entityDirection.getOpposite().toYRot())));
     }
 }

@@ -2,6 +2,9 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* minecraft */
 import betterblockentities.client.BBE;
+import betterblockentities.client.model.geometry.SignTransformations;
+import betterblockentities.client.model.geometry.WallAndGroundTransformations;
+import com.mojang.math.Transformation;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.Model;
@@ -19,12 +22,14 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.MaterialSet;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.util.Unit;
 import net.minecraft.world.level.block.CeilingHangingSignBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.phys.Vec3;
 
@@ -39,10 +44,14 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableMap;
+import org.joml.Matrix4f;
 
 @Environment(EnvType.CLIENT)
 public class BBEHangingSignRenderer extends BBEAbstractSignRenderer {
-    public static final float MODEL_RENDER_SCALE = 1.0F;
+    public static final WallAndGroundTransformations<SignTransformations> TRANSFORMATIONS = new WallAndGroundTransformations<>(
+            BBEHangingSignRenderer::createWallTransformation, BBEHangingSignRenderer::createGroundTransformation, 16
+    );
+
     private static final Vec3 TEXT_OFFSET = new Vec3(0.0, -0.32F, 0.073F);
     private final Map<BBEHangingSignRenderer.ModelKey, Model.Simple> hangingSignModels;
 
@@ -158,5 +167,25 @@ public class BBEHangingSignRenderer extends BBEAbstractSignRenderer {
 
     @Environment(EnvType.CLIENT)
     public record ModelKey(WoodType woodType, BBEHangingSignRenderer.AttachmentType attachmentType) {
+    }
+
+    private static Matrix4f baseTransformation(final float angle) {
+        return new Matrix4f().translation(0.5F, 0.9375F, 0.5F).rotate(Axis.YP.rotationDegrees(-angle)).translate(0.0F, -0.3125F, 0.0F);
+    }
+
+    private static Transformation bodyTransformation(final float angle) {
+        return new Transformation(baseTransformation(angle).scale(1.0F, -1.0F, -1.0F));
+    }
+
+    private static SignTransformations createTransformations(final float angle) {
+        return new SignTransformations(bodyTransformation(angle));
+    }
+
+    private static SignTransformations createGroundTransformation(final int segment) {
+        return createTransformations(RotationSegment.convertToDegrees(segment));
+    }
+
+    private static SignTransformations createWallTransformation(final Direction direction) {
+        return createTransformations(direction.toYRot());
     }
 }

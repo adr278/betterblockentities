@@ -1,82 +1,85 @@
 package betterblockentities.mixin.sodium.pipeline;
 
 /* local */
+import betterblockentities.client.chunk.pipeline.BBEBlockRenderer;
 import betterblockentities.client.chunk.pipeline.BBEEmitter;
+import betterblockentities.client.chunk.translucent_sorting.TranslucentGeometryCollectorExt;
 
 /* minecraft */
 import net.minecraft.client.renderer.block.model.BlockStateModel;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
-import net.minecraft.util.TriState;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 
 /* sodium */
-import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
-import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
+import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
+import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 
 /* mixin */
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 
 /* java/misc */
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import java.util.function.Predicate;
 
 @Pseudo
 @Mixin(BlockRenderer.class)
-public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
-    @Shadow protected abstract void tintQuad(MutableQuadViewImpl quad);
-    @Shadow protected abstract void bufferQuad(MutableQuadViewImpl quad, float[] brightnesses, Material material);
+public abstract class BlockRendererMixin {
+    /* make sodium own this so it lives and dies alongside Sodium's BlockRenderer */
+    @Unique private BBEBlockRenderer bbeBlockRenderer;
 
-    @Redirect(
-            method = "renderModel(Lnet/minecraft/client/renderer/block/model/BlockStateModel;" +
-                    "Lnet/minecraft/world/level/block/state/BlockState;" +
-                    "Lnet/minecraft/core/BlockPos;" +
-                    "Lnet/minecraft/core/BlockPos;)V",
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void init(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters, CallbackInfo ci) {
+        this.bbeBlockRenderer = new BBEBlockRenderer((BlockRenderer)(Object)this);
+    }
+
+    @Redirect(method = "renderModel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/caffeinemc/mods/sodium/client/services/PlatformModelEmitter;" +
-                            "emitModel(Lnet/minecraft/client/renderer/block/model/BlockStateModel;" +
-                            "Ljava/util/function/Predicate;" +
-                            "Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;" +
-                            "Lnet/minecraft/util/RandomSource;" +
-                            "Lnet/minecraft/world/level/BlockAndTintGetter;" +
-                            "Lnet/minecraft/core/BlockPos;" +
-                            "Lnet/minecraft/world/level/block/state/BlockState;" +
-                            "Lnet/caffeinemc/mods/sodium/client/services/PlatformModelEmitter$Bufferer;)V"
+                    target = "Lnet/caffeinemc/mods/sodium/client/services/PlatformModelEmitter;emitModel(Lnet/minecraft/client/renderer/block/model/BlockStateModel;Ljava/util/function/Predicate;Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;Lnet/minecraft/util/RandomSource;Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/caffeinemc/mods/sodium/client/services/PlatformModelEmitter$Bufferer;)V"
             )
     )
     public void emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
-        BBEEmitter.emit(instance, model, isFaceCulled, emitter, random, level, this.slice, pos, state, bufferer, (BlockRenderer)(Object)this);
+        LevelSlice slice = ((AbstractBlockRenderContextAccessor)(Object)this).getSlice();
+        bbeBlockRenderer.emitBlockModel(instance, model, isFaceCulled, emitter, random, level, slice, pos, state, bufferer);
     }
 
-    @Override
-    protected void processQuad(MutableQuadViewImpl quad) {
-        TriState aoMode = quad.ambientOcclusion();
-        SodiumShadeMode shadeMode = quad.getShadeMode();
-        LightMode lightMode;
-        if (aoMode == TriState.DEFAULT) {
-            lightMode = this.defaultLightMode;
-        } else {
-            lightMode = this.useAmbientOcclusion && aoMode != TriState.FALSE ? LightMode.SMOOTH : LightMode.FLAT;
+    @WrapOperation(method = "bufferQuad",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/TranslucentGeometryCollector;appendQuad([Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;I)Z"
+            )
+    )
+    public boolean appendQuad(
+            TranslucentGeometryCollector instance,
+            ChunkVertexEncoder.Vertex[] vertices,
+            ModelQuadFacing facing,
+            int packedNormal,
+            Operation<Boolean> original,
+            @Local(ordinal = 0)MutableQuadViewImpl quad
+    ) {
+        TranslucentGeometryCollectorExt tscExt = (TranslucentGeometryCollectorExt)instance;
+
+        try {
+            if (quad.getTag() == BBEEmitter.NO_QUAD_SPLITTING) {
+                tscExt.setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode.NONE);
+            }
+            return original.call(instance, vertices, facing, packedNormal);
+        } finally {
+            tscExt.deferSplittingMode();
         }
-
-        boolean emissive = quad.emissive();
-        ChunkSectionLayer blendMode = quad.getRenderType();
-
-        Material material = DefaultMaterials.forChunkLayer(blendMode == null ? this.defaultRenderType : blendMode);
-
-        this.tintQuad(quad);
-        this.shadeQuad(quad, lightMode, emissive, shadeMode);
-        this.bufferQuad(quad, this.quadLightData.br, material);
     }
 }

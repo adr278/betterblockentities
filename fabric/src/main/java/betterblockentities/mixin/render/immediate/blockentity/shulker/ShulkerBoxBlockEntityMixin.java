@@ -9,6 +9,7 @@ import betterblockentities.client.render.immediate.blockentity.manager.Instanced
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -25,15 +26,23 @@ public abstract class ShulkerBoxBlockEntityMixin {
 
     @Inject(method = "<init>(Lnet/minecraft/world/item/DyeColor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
     private void init(CallbackInfo ci) {
-        BlockEntityExt ext = (BlockEntityExt)(Object)this;
-        ext.supportedBlockEntity(true);
+        BlockEntity blockEntity = (BlockEntity)(Object)this;
+        BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
+
         ext.optKind(InstancedBlockEntityManager.OptKind.SHULKER);
+
+        ext.supportedBlockEntity(
+                blockEntity.getType() == BlockEntityType.SHULKER_BOX
+        );
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
     private static void onTick(Level level, BlockPos blockPos, BlockState blockState, ShulkerBoxBlockEntity shulkerBoxBlockEntity, CallbackInfo ci) {
         ShulkerBoxBlockEntityMixin self = (ShulkerBoxBlockEntityMixin)(Object)shulkerBoxBlockEntity;
+        BlockEntityExt ext = (BlockEntityExt)(Object)shulkerBoxBlockEntity;
 
-        self.manager.tick(shulkerBoxBlockEntity.getProgress(0.5f) > 0.01f, ConfigCache.shulkerAnims);
+        if (ext.supportedBlockEntity()) {
+            self.manager.tick(shulkerBoxBlockEntity.getProgress(0.5f) > 0.01f, ConfigCache.shulkerAnims);
+        }
     }
 }

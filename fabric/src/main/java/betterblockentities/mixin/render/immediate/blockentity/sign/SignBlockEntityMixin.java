@@ -5,6 +5,8 @@ import betterblockentities.client.render.immediate.blockentity.extentions.BlockE
 
 /* minecraft */
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 
 /* mixin */
@@ -17,10 +19,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class SignBlockEntityMixin {
     @Inject(method = "<init>(Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
     private void init(CallbackInfo ci) {
+        BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)this;
-        ext.supportedBlockEntity(true);
+
         ext.terrainMeshReady(true);
         ext.hasSpecialManager(true);
         ext.optKind(InstancedBlockEntityManager.OptKind.SIGN);
+
+        ext.supportedBlockEntity(
+                blockEntity.getType() == BlockEntityType.SIGN ||
+                        blockEntity.getType() == BlockEntityType.HANGING_SIGN
+        );
     }
 }

@@ -2,6 +2,7 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.model.geometry.WallAndGroundTransformations;
 import betterblockentities.client.render.immediate.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
@@ -48,8 +49,12 @@ import org.joml.Vector3fc;
 import org.jspecify.annotations.Nullable;
 
 public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity, BannerRenderState> {
-    private static final int MAX_PATTERNS = 16;
-    private static final float SIZE = 0.6666667F;
+    private static final Vector3fc MODEL_SCALE = new Vector3f(0.6666667F, -0.6666667F, -0.6666667F);
+    private static final Vector3fc MODEL_TRANSLATION = new Vector3f(0.5F, 0.0F, 0.5F);
+    public static final WallAndGroundTransformations<Transformation> TRANSFORMATIONS = new WallAndGroundTransformations<>(
+            BBEBannerRenderer::createWallTransformation, BBEBannerRenderer::createGroundTransformation, 16
+    );
+
     private final MaterialSet materials;
     private final BannerModel standingModel;
     private final BannerModel wallModel;
@@ -58,10 +63,6 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
 
     public BBEBannerRenderer(BlockEntityRendererProvider.Context context) {
         this(context.entityModelSet(), context.materials());
-    }
-
-    public BBEBannerRenderer(SpecialModelRenderer.BakingContext bakingContext) {
-        this(bakingContext.entityModelSet(), bakingContext.materials());
     }
 
     public BBEBannerRenderer(EntityModelSet entityModelSet, MaterialSet materialSet) {
@@ -160,5 +161,17 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
     private static <S> void submitPatternLayer(MaterialSet materialSet, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, int j, Model<S> model, S object, Material material, DyeColor dyeColor, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay) {
         int k = dyeColor.getTextureDiffuseColor();
         submitNodeCollector.submitModel(model, object, poseStack, material.renderType(RenderTypes::entityNoOutline), i, j, k, materialSet.get(material), 0, crumblingOverlay);
+    }
+
+    private static Transformation modelTransformation(float angle) {
+        return new Transformation(MODEL_TRANSLATION, Axis.YP.rotationDegrees(-angle), MODEL_SCALE, null);
+    }
+
+    private static Transformation createGroundTransformation(int segment) {
+        return modelTransformation(RotationSegment.convertToDegrees(segment));
+    }
+
+    private static Transformation createWallTransformation(Direction direction) {
+        return modelTransformation(direction.toYRot());
     }
 }
