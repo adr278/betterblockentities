@@ -387,6 +387,14 @@ public class BBEBlockRenderer  {
         emitter.clear();
     }
 
+    /*
+    * strict internal draw order is VERY important here and needs to be preserved in the order each layer is emitted
+    * because each banner layer is coplanar and therefore exist at the same preceived depth. its know that certain
+    * translucent sorting systems can mess this up and cause strange z-fighting like artifacts by rearranging the
+    * translucent quads in a strange manner. Sodium has implemented code in their translucent sorting system to account
+    * for this, fortunately :). This implementation might still fail with certain shader-packs because of coplanar geometry +
+    * the draw state of the translucent render-pass (depth test on, depth write off)
+    */
     private void emitBanner(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter, BlockEntity blockEntity) {
         final boolean isWallBanner = !state.hasProperty(BlockStateProperties.ROTATION_16);
         final ModelLayerLocation baseLayer = ModelResourceUtil.getBannerBaseLayer(isWallBanner);
@@ -418,12 +426,13 @@ public class BBEBlockRenderer  {
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
-        /* emit base canvas */
-        emitter.setColor(bannerBlockEntity.getBaseColor().getTextureDiffuseColor());
-        emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
         final int fancy = EnumTypes.BannerGraphicsType.FANCY.ordinal();
         final ChunkSectionLayer rt = (ConfigCache.bannerGraphics == fancy) ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT;
+
+        /* emit base canvas */
+        emitter.setRenderType(rt);
+        emitter.setColor(bannerBlockEntity.getBaseColor().getTextureDiffuseColor());
+        emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
         /* emit banner layers */
         for (BannerPatternLayers.Layer layer : bannerBlockEntity.getPatterns().layers()) {
@@ -431,7 +440,6 @@ public class BBEBlockRenderer  {
             DyeColor layerColor = layer.color();
 
             emitter.setMaterial(layerMaterial);
-            emitter.setRenderType(rt);
             emitter.setColor(layerColor.getTextureDiffuseColor());
             emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
         }
