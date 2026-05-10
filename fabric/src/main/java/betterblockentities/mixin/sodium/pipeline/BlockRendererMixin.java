@@ -4,6 +4,14 @@ package betterblockentities.mixin.sodium.pipeline;
 import betterblockentities.client.chunk.pipeline.BBEBlockRenderer;
 
 /* minecraft */
+import betterblockentities.client.chunk.pipeline.BBEEmitter;
+import betterblockentities.client.chunk.translucent_sorting.TranslucentGeometryCollectorExt;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
@@ -50,5 +58,31 @@ public abstract class BlockRendererMixin {
     public void emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
         LevelSlice slice = ((AbstractBlockRenderContextAccessor)(Object)this).getSlice();
         bbeBlockRenderer.emitBlockModel(instance, model, isFaceCulled, emitter, random, level, slice, pos, state, bufferer);
+    }
+
+    @WrapOperation(method = "bufferQuad",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/TranslucentGeometryCollector;appendQuad([Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;I)Z"
+            )
+    )
+    public boolean appendQuad(
+            TranslucentGeometryCollector instance,
+            ChunkVertexEncoder.Vertex[] vertices,
+            ModelQuadFacing facing,
+            int packedNormal,
+            Operation<Boolean> original,
+            @Local(ordinal = 0)MutableQuadViewImpl quad
+    ) {
+        TranslucentGeometryCollectorExt tscExt = (TranslucentGeometryCollectorExt)instance;
+
+        try {
+            if (quad.getTag() == BBEEmitter.NO_QUAD_SPLITTING) {
+                tscExt.setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode.NONE);
+            }
+            return original.call(instance, vertices, facing, packedNormal);
+        } finally {
+            tscExt.deferSplittingMode();
+        }
     }
 }

@@ -432,6 +432,8 @@ public class BBEBlockRenderer  {
         /* emit base canvas */
         emitter.setRenderType(rt);
         emitter.setColor(bannerBlockEntity.getBaseColor().getTextureDiffuseColor());
+        emitter.setSplittingMode(BBEEmitter.QuadSplittingMode.NONE);
+
         emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
         /* emit banner layers */

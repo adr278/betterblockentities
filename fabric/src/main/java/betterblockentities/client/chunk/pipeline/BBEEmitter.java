@@ -34,6 +34,9 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class BBEEmitter {
+    /* quad tag, forcing quad splitting off */
+    public static int NO_QUAD_SPLITTING = "BBE-TS-QUAD-NO-SPLIT".hashCode();
+
     public static final int MAX_FACE_INDEX = 6;
     public static final int QUAD_VERTICES = 4;
     private final Vector3f scratchVector = new Vector3f();
@@ -51,6 +54,7 @@ public class BBEEmitter {
     private Quaternionf rotation;
     private Transformation b3dtransformation;
     private AmbientOcclusionMode aoMode;
+    private QuadSplittingMode quadSplittingMode;
     private float xRot = 0;
     private float yRot = 0;
     private float zRot = 0;
@@ -97,6 +101,7 @@ public class BBEEmitter {
                 applySprite(sodiumEmitter);
                 applyTransformation(sodiumEmitter);
                 applyColor(sodiumEmitter);
+                applyQuadSplittingMode(sodiumEmitter);
 
                 sodiumEmitterConsumer.accept(sodiumEmitter);
             }
@@ -168,6 +173,12 @@ public class BBEEmitter {
         }
     }
 
+    public void applyQuadSplittingMode(MutableQuadViewImpl sodiumEmitter) {
+        if (this.quadSplittingMode == QuadSplittingMode.NONE) {
+            sodiumEmitter.setTag(NO_QUAD_SPLITTING);
+        }
+    }
+
     public void setMaterial(SpriteId material) {
         this.material = material;
     }
@@ -202,6 +213,10 @@ public class BBEEmitter {
         this.aoMode = mode;
     }
 
+    public void setSplittingMode(QuadSplittingMode mode) {
+        this.quadSplittingMode = mode;
+    }
+
     public void clear() {
         this.material = null;
         this.renderType = null;
@@ -209,9 +224,16 @@ public class BBEEmitter {
         this.rotation = null;
         this.b3dtransformation = null;
         this.aoMode = null;
+        this.quadSplittingMode = null;
         this.xRot = 0;
         this.yRot = 0;
         this.zRot = 0;
         this.color = -1;
+    }
+
+    /* NONE = No splitting, DEFERRED = leave it to sodium to decide */
+    public enum QuadSplittingMode {
+        NONE,
+        DEFERRED
     }
 }
