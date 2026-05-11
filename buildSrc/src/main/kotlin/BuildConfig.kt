@@ -6,7 +6,7 @@ object BuildConfig {
 
     //fabric loader and api version
     const val FABRIC_LOADER_VERSION: String = "0.19.1"
-    const val FABRIC_API_VERSION: String = "0.145.4+26.1.2"
+    const val FABRIC_API_VERSION: String = "0.148.2+26.1.2"
 
     //minecraft version
     const val MINECRAFT_VERSION: String = "26.1.2"
