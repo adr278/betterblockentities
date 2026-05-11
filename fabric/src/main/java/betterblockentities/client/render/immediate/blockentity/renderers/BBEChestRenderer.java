@@ -54,7 +54,7 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
 
     public BBEChestRenderer(final BlockEntityRendererProvider.Context context) {
         this.sprites = context.sprites();
-        this.xmasTextures = xmasTextures();
+        this.xmasTextures = ConfigCache.christmasChests || xmasTextures();
         this.models = LAYERS.map((layer) -> new ChestModel(context.bakeLayer(layer)));
         this.bbeModels = LAYERS.map((layer) -> new ChestModelOverride(context.bakeLayer(layer)));
     }
