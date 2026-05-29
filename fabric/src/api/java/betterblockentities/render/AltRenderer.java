@@ -1,24 +1,24 @@
 package betterblockentities.render;
 
 /* minecraft */
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
-/* mojang */
+/* java/misc */
 import com.mojang.blaze3d.vertex.PoseStack;
+import org.jetbrains.annotations.Nullable;
 
-public interface AltRenderer<T extends BlockEntity, S extends BlockEntityRenderState> {
+public interface AltRenderer<T extends BlockEntity, S extends AltBlockEntityRenderState> {
     S createRenderState();
 
-    default void extractRenderState(final T blockEntity, final S state, final float partialTicks, final Vec3 cameraPosition, final ModelFeatureRenderer.CrumblingOverlay breakProgress) {
-        BlockEntityRenderState.extractBase(blockEntity, state, breakProgress);
+    default void extractRenderState(final T blockEntity, final S state, final float partialTicks, final Vec3 cameraPosition, final @Nullable BlockDestructionProgress breakProgress) {
+        AltBlockEntityRenderState.extractBase(blockEntity, state);
     }
 
-    void submit(final S state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera);
+    void submit(final S state, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final Camera camera, final int light, final int overlay);
 
     default int getViewDistance() {
         return 64;

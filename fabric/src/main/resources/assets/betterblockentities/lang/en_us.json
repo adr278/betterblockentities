@@ -25,12 +25,6 @@
   "bbe.config.storage.main.optimize.bed" : "Optimize Bed",
   "bbe.config.storage.main.optimize.bed.tooltip" : "Used to toggle bed optimizations ON or OFF",
 
-  "bbe.config.storage.main.optimize.copper_golem_statue" : "Optimize Copper Golem Statue",
-  "bbe.config.storage.main.optimize.copper_golem_statue.tooltip" : "Used to toggle copper golem statue optimizations ON or OFF",
-
-  "bbe.config.storage.main.optimize.shelf" : "Optimize Shelf",
-  "bbe.config.storage.main.optimize.shelf.tooltip" : "Used to toggle shelf optimizations ON or OFF",
-
   "bbe.config.storage.main.optimize.campfire" : "Optimize Campfire",
   "bbe.config.storage.main.optimize.campfire.tooltip" : "Used to toggle campfire optimizations ON or OFF",
 

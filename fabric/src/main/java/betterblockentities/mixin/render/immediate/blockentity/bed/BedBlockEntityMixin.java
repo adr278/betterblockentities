@@ -18,8 +18,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BedBlockEntity.class)
 public class BedBlockEntityMixin {
+    @Inject(method = "<init>(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
+    private void initTwoArg(CallbackInfo ci) {
+        initialize();
+    }
+
     @Inject(method = "<init>(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/item/DyeColor;)V", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    private void initThreeArg(CallbackInfo ci) {
+        initialize();
+    }
+
+    private void initialize() {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 

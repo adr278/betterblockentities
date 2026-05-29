@@ -27,12 +27,12 @@ public class BlockEntityRenderersMixin {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Inject(method = "createEntityRenderers", at = @At("HEAD"))
-    private static void replaceVanillaRenderers(CallbackInfoReturnable<Map<BlockEntityType<?>, BlockEntityRenderer<?, ?>>> cir) {
+    private static void replaceVanillaRenderers(CallbackInfoReturnable<Map<BlockEntityType<?>, BlockEntityRenderer<?>>> cir) {
         if (AltRenderers.hasRendererOverride(BlockEntityType.SIGN)) {
             removeRegistration(BlockEntityType.SIGN);
         } else {
             BlockEntityRendererProvider r0 =
-                    ConfigCache.optimizeSigns ? BBEStandingSignRenderer::new : StandingSignRenderer::new;
+                    ConfigCache.optimizeSigns ? BBEStandingSignRenderer::new : SignRenderer::new;
             BlockEntityRenderersAccessor.invokeRegister(BlockEntityType.SIGN, r0);
         }
 
@@ -106,14 +106,6 @@ public class BlockEntityRenderersMixin {
             BlockEntityRendererProvider r9 =
                     ConfigCache.optimizeDecoratedPots ? BBEDecoratedPotRenderer::new : DecoratedPotRenderer::new;
             BlockEntityRenderersAccessor.invokeRegister(BlockEntityType.DECORATED_POT, r9);
-        }
-
-        if (AltRenderers.hasRendererOverride(BlockEntityType.COPPER_GOLEM_STATUE)) {
-            removeRegistration(BlockEntityType.COPPER_GOLEM_STATUE);
-        } else {
-            BlockEntityRendererProvider r10 =
-                    ConfigCache.optimizeCopperGolemStatue ? BBECopperGolemStatueBlockRenderer::new : CopperGolemStatueBlockRenderer::new;
-            BlockEntityRenderersAccessor.invokeRegister(BlockEntityType.COPPER_GOLEM_STATUE, r10);
         }
     }
 

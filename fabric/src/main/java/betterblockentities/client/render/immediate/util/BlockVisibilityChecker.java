@@ -97,7 +97,7 @@ public final class BlockVisibilityChecker {
             return null;
         }
 
-        BlockPos otherPos = pos.offset(side.getUnitVec3i());
+        BlockPos otherPos = pos.relative(side);
         BlockEntity be = level.getBlockEntity(otherPos);
 
         return be instanceof ChestBlockEntity ? (ChestBlockEntity) be : null;

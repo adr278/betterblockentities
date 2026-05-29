@@ -104,7 +104,7 @@ public class BBEConfig {
                 String key = keyEl.getAsString().toLowerCase(Locale.ROOT);
 
                 /* existing option in default storage */
-                OptionObject<?> opt = storage.getOption(key);
+                OptionObject<?> opt = storage.getAllOptions().get(key);
                 if (opt == null) continue; //unknown option in file, ignore
 
                 if (valEl.isJsonNull()) {
@@ -210,10 +210,8 @@ public class BBEConfig {
             ConfigCache.optimizeBells = GenericConfigWrapper.MainStorage.optimizeBell();
             ConfigCache.optimizeBanners = GenericConfigWrapper.MainStorage.optimizeBanner();
             ConfigCache.bannerPose = GenericConfigWrapper.MainStorage.bannerPose();
-            ConfigCache.optimizeCopperGolemStatue = GenericConfigWrapper.MainStorage.optimizeCopperGolemStatue();
             ConfigCache.updateType = BBE.ModCompact.isSchedulerOptionLimited() ? EnumTypes.UpdateSchedulerType.SMART.ordinal() : GenericConfigWrapper.MainStorage.updateScheduler();
             ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();
-            ConfigCache.optimizeShelves = GenericConfigWrapper.MainStorage.optimizeShelf();
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
         }
         else {
@@ -224,8 +222,6 @@ public class BBEConfig {
             ConfigCache.optimizeShulker = false;
             ConfigCache.optimizeBells = false;
             ConfigCache.optimizeBanners = false;
-            ConfigCache.optimizeCopperGolemStatue = false;
-            ConfigCache.optimizeShelves = false;
             ConfigCache.optimizeCampfire = false;
         }
 
@@ -248,8 +244,6 @@ public class BBEConfig {
             ENABLED[InstancedBlockEntityManager.OptKind.POT]     = ConfigCache.optimizeDecoratedPots;
             ENABLED[InstancedBlockEntityManager.OptKind.BANNER]  = ConfigCache.optimizeBanners;
             ENABLED[InstancedBlockEntityManager.OptKind.BELL]    = ConfigCache.optimizeBells;
-            ENABLED[InstancedBlockEntityManager.OptKind.CGS]     = ConfigCache.optimizeCopperGolemStatue;
-            ENABLED[InstancedBlockEntityManager.OptKind.SHELF]     = ConfigCache.optimizeShelves;
             ENABLED[InstancedBlockEntityManager.OptKind.CAMPFIRE]     = ConfigCache.optimizeCampfire;
 
             ENABLED[InstancedBlockEntityManager.OptKind.NONE] = false;

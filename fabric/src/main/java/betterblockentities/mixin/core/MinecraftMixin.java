@@ -7,12 +7,10 @@ import betterblockentities.client.tasks.ManagerTasks;
 
 /* minecraft */
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.PlayerSkinRenderCache;
-import net.minecraft.client.renderer.block.BlockModelResolver;
+import net.minecraft.client.model.geom.EntityModelSet;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.item.ItemModelResolver;
-import net.minecraft.client.resources.model.ModelManager;
-import net.minecraft.client.resources.model.sprite.AtlasManager;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.client.Minecraft;
@@ -30,13 +28,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
     @Shadow @Final public Font font;
-    @Shadow @Final private ModelManager modelManager;
-    @Shadow @Final private BlockModelResolver blockModelResolver;
-    @Shadow @Final private ItemModelResolver itemModelResolver;
-    @Shadow @Final private EntityRenderDispatcher entityRenderDispatcher;
-    @Shadow @Final private AtlasManager atlasManager;
-    @Shadow @Final private PlayerSkinRenderCache playerSkinRenderCache;
     @Shadow @Final private ReloadableResourceManager resourceManager;
+    @Shadow public abstract BlockRenderDispatcher getBlockRenderer();
+    @Shadow public abstract ItemRenderer getItemRenderer();
+    @Shadow public abstract EntityRenderDispatcher getEntityRenderDispatcher();
+    @Shadow public abstract EntityModelSet getEntityModels();
 
     @WrapOperation(
             method = "<init>(Lnet/minecraft/client/main/GameConfig;)V",
@@ -48,12 +44,10 @@ public abstract class MinecraftMixin {
     void registerDispatchListener(Operation<Void> original) {
         BBE.GlobalScope.altRenderDispatcher = new AltRenderDispatcher(
                 this.font,
-                this.modelManager.entityModels(),
-                this.blockModelResolver,
-                this.itemModelResolver,
-                this.entityRenderDispatcher,
-                this.atlasManager,
-                this.playerSkinRenderCache
+                this::getEntityModels,
+                this::getBlockRenderer,
+                this::getItemRenderer,
+                this::getEntityRenderDispatcher
         );
 
         this.resourceManager.registerReloadListener(BBE.GlobalScope.altRenderDispatcher);

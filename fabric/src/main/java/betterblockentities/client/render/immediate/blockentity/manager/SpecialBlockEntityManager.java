@@ -44,14 +44,6 @@ public final class SpecialBlockEntityManager {
         }
 
         /* don't continue to extract this render state if we have no items to render */
-        else if (blockEntity instanceof ShelfBlockEntity shelf) {
-            for (ItemStack stack : shelf.getItems()) {
-                if (stack != ItemStack.EMPTY) {
-                    return true;
-                }
-            }
-            return false;
-        }
         else if (blockEntity instanceof CampfireBlockEntity campfire) {
             for (ItemStack stack : campfire.getItems()) {
                 if (stack != ItemStack.EMPTY) {
