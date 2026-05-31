@@ -2,234 +2,169 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.render.immediate.OverlayRenderer;
-import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
+import betterblockentities.client.gui.option.EnumTypes;
 
 /* minecraft */
-import net.minecraft.client.model.Model;
-import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.object.banner.BannerFlagModel;
-import net.minecraft.client.model.object.banner.BannerModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.blockentity.WallAndGroundTransformations;
-import net.minecraft.client.renderer.blockentity.state.BannerRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.special.SpecialModelRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.sprite.SpriteGetter;
-import net.minecraft.client.resources.model.sprite.SpriteId;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.util.Unit;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BannerBlock;
 import net.minecraft.world.level.block.WallBannerBlock;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
+import net.minecraft.world.level.block.entity.BannerPatternLayers.Layer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RotationSegment;
-import net.minecraft.world.phys.Vec3;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import com.mojang.math.Transformation;
 
-/* java/misc */
-import java.util.function.Consumer;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
+public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity> {
+    private static final int MAX_PATTERNS = 16;
+    private static final float MODEL_SCALE = 0.6666667F;
+    private static final String FLAG = "flag";
+    private static final String POLE = "pole";
+    private static final String BAR = "bar";
 
-public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity, BannerRenderState> {
-    private static final Vector3fc MODEL_SCALE = new Vector3f(0.6666667F, -0.6666667F, -0.6666667F);
-    private static final Vector3fc MODEL_TRANSLATION = new Vector3f(0.5F, 0.0F, 0.5F);
-    public static final WallAndGroundTransformations<Transformation> TRANSFORMATIONS = new WallAndGroundTransformations<>(
-            BBEBannerRenderer::createWallTransformation, BBEBannerRenderer::createGroundTransformation, 16
-    );
-    private final SpriteGetter sprites;
-    private final BannerModel standingModel;
-    private final BannerModel wallModel;
-    private final BannerFlagModel standingFlagModel;
-    private final BannerFlagModel wallFlagModel;
+    private final ModelPart flag;
+    private final ModelPart pole;
+    private final ModelPart bar;
 
     public BBEBannerRenderer(final BlockEntityRendererProvider.Context context) {
-        this(context.entityModelSet(), context.sprites());
+        final ModelPart root = context.bakeLayer(ModelLayers.BANNER);
+        this.flag = root.getChild(FLAG);
+        this.pole = root.getChild(POLE);
+        this.bar = root.getChild(BAR);
     }
 
-    public BBEBannerRenderer(final EntityModelSet modelSet, final SpriteGetter sprites) {
-        this.sprites = sprites;
-        this.standingModel = new BannerModel(modelSet.bakeLayer(ModelLayers.STANDING_BANNER));
-        this.wallModel = new BannerModel(modelSet.bakeLayer(ModelLayers.WALL_BANNER));
-        this.standingFlagModel = new BannerFlagModel(modelSet.bakeLayer(ModelLayers.STANDING_BANNER_FLAG));
-        this.wallFlagModel = new BannerFlagModel(modelSet.bakeLayer(ModelLayers.WALL_BANNER_FLAG));
-    }
+    @Override public void render(final BannerBlockEntity blockEntity, final float partialTick, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final int light, final int overlay) {
+        final Level level = blockEntity.getLevel();
+        final boolean noLevel = level == null;
+        long gameTime;
 
-    public BannerRenderState createRenderState() {
-        return new BannerRenderState();
-    }
-
-    public void extractRenderState(BannerBlockEntity blockEntity, BannerRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
-        BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
-        state.baseColor = blockEntity.getBaseColor();
-        state.patterns = blockEntity.getPatterns();
-        BlockState blockState = blockEntity.getBlockState();
-        if (blockState.getBlock() instanceof BannerBlock) {
-            state.transformation = TRANSFORMATIONS.freeTransformations((Integer)blockState.getValue(BannerBlock.ROTATION));
-            state.attachmentType = BannerBlock.AttachmentType.GROUND;
+        poseStack.pushPose();
+        if (noLevel) {
+            gameTime = 0L;
+            poseStack.translate(0.5F, 0.5F, 0.5F);
+            this.pole.visible = true;
         } else {
-            state.transformation = TRANSFORMATIONS.wallTransformation(blockState.getValue(WallBannerBlock.FACING));
-            state.attachmentType = BannerBlock.AttachmentType.WALL;
+            gameTime = level.getGameTime();
+            final BlockState blockState = blockEntity.getBlockState();
+            if (blockState.getBlock() instanceof BannerBlock) {
+                poseStack.translate(0.5F, 0.5F, 0.5F);
+                final float rotation = -RotationSegment.convertToDegrees(blockState.getValue(BannerBlock.ROTATION));
+                poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
+                this.pole.visible = true;
+            } else {
+                poseStack.translate(0.5F, -0.16666667F, 0.5F);
+                final float rotation = -blockState.getValue(WallBannerBlock.FACING).toYRot();
+                poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
+                poseStack.translate(0.0F, -0.3125F, -0.4375F);
+                this.pole.visible = false;
+            }
         }
 
-        long gameTime = blockEntity.getLevel() != null ? blockEntity.getLevel().getGameTime() : 0L;
-        BlockPos blockPos = blockEntity.getBlockPos();
-        
-        state.phase = ((float)Math.floorMod(blockPos.getX() * 7 + blockPos.getY() * 9 + blockPos.getZ() * 13 + gameTime, 100L) + partialTicks) / 100.0F;
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
-    }
-
-    private BannerModel bannerModel(final BannerBlock.AttachmentType type) {
-        return switch (type) {
-            case WALL -> this.wallModel;
-            case GROUND -> this.standingModel;
-        };
-    }
-
-    private BannerFlagModel flagModel(final BannerBlock.AttachmentType type) {
-        return switch (type) {
-            case WALL -> this.wallFlagModel;
-            case GROUND -> this.standingFlagModel;
-        };
-    }
-
-    public void submit(BannerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         poseStack.pushPose();
-        poseStack.mulPose(state.transformation);
+        poseStack.scale(MODEL_SCALE, -MODEL_SCALE, -MODEL_SCALE);
 
-        submitBanner(
-                state,
-                this.sprites,
+        final VertexConsumer baseConsumer = ModelBakery.BANNER_BASE.buffer(vertexConsumers, RenderType::entitySolid);
+        this.pole.render(poseStack, baseConsumer, light, overlay);
+        this.bar.render(poseStack, baseConsumer, light, overlay);
+
+        final BlockPos blockPos = blockEntity.getBlockPos();
+        final float phase = ((float) Math.floorMod(blockPos.getX() * 7L + blockPos.getY() * 9L + blockPos.getZ() * 13L + gameTime, 100L) + partialTick) / 100.0F;
+        final float step = -0.45F;
+        final float rotation = step * ConfigCache.bannerPose;
+        final float clamped = Mth.clamp(rotation, -4.05F, -0.45F);
+        this.flag.xRot = (float) Math.toRadians(clamped);
+        this.flag.y = -32.0F;
+
+        renderPatterns(
                 poseStack,
-                submitNodeCollector,
-                state.lightCoords,
-                OverlayTexture.NO_OVERLAY,
-                this.bannerModel(state.attachmentType),
-                this.flagModel(state.attachmentType),
-                state.phase,
-                state.baseColor,
-                state.patterns,
-                state.breakProgress,
-                0
+                vertexConsumers,
+                light,
+                overlay,
+                this.flag,
+                ModelBakery.BANNER_BASE,
+                true,
+                blockEntity.getBaseColor(),
+                blockEntity.getPatterns()
         );
+
+        poseStack.popPose();
         poseStack.popPose();
     }
 
-    private static void submitBanner(
-            BannerRenderState state,
-            SpriteGetter sprites,
-            PoseStack poseStack,
-            SubmitNodeCollector collector,
-            int lightCoords,
-            int overlayCoords,
-            BannerModel model,
-            BannerFlagModel flagModel,
-            float phase,
-            DyeColor baseColor,
-            BannerPatternLayers patterns,
-            ModelFeatureRenderer.CrumblingOverlay breakProgress,
-            int outlineColor
+    public static void renderPatterns(
+            final PoseStack poseStack,
+            final MultiBufferSource vertexConsumers,
+            final int light,
+            final int overlay,
+            final ModelPart flag,
+            final Material baseMaterial,
+            final boolean banner,
+            final DyeColor baseColor,
+            final BannerPatternLayers patternLayers
     ) {
-        SpriteId sprite = Sheets.BANNER_BASE;
-
-        BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
-
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, Unit.INSTANCE, lightCoords, overlayCoords, outlineColor, breakProgress);
-        if (!managed) {
-            collector.submitModel(model, Unit.INSTANCE, poseStack, lightCoords, overlayCoords, -1, sprite, sprites, outlineColor, breakProgress);
-        }
-
-        float step = -0.45f;
-        float rot = step * ConfigCache.bannerPose;
-        float rotClamped = Math.clamp(rot, -4.05f, -0.45f);
-        flagModel.root().getChild("flag").xRot = (float)Math.toRadians(rotClamped);
-
-        boolean managed2 = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, flagModel, null, lightCoords, overlayCoords, outlineColor, breakProgress);
-        if (!managed2) {
-            collector.submitModel(flagModel, phase, poseStack, lightCoords, overlayCoords, -1, sprite, sprites, outlineColor, breakProgress);
-        }
-
-        if (!managed && !managed2) {
-            submitPatterns(sprites, poseStack, collector, lightCoords, overlayCoords, flagModel, phase, true, baseColor, patterns, breakProgress);
-        }
+        renderPatterns(poseStack, vertexConsumers, light, overlay, flag, baseMaterial, banner, baseColor, patternLayers, false);
     }
 
-    public static <S> void submitPatterns(
-            SpriteGetter sprites,
-            PoseStack poseStack,
-            SubmitNodeCollector submitNodeCollector,
-            int lightCoords,
-            int overlayCoords,
-            Model<S> model,
-            S state,
-            boolean banner,
-            DyeColor baseColor,
-            BannerPatternLayers patterns,
-            ModelFeatureRenderer.CrumblingOverlay breakProgress
+    public static void renderPatterns(
+            final PoseStack poseStack,
+            final MultiBufferSource vertexConsumers,
+            final int light,
+            final int overlay,
+            final ModelPart flag,
+            final Material baseMaterial,
+            final boolean banner,
+            final DyeColor baseColor,
+            final BannerPatternLayers patternLayers,
+            final boolean glint
     ) {
-        submitPatternLayer(
-                sprites,
+        flag.render(poseStack, baseMaterial.buffer(vertexConsumers, RenderType::entitySolid, glint), light, overlay);
+        renderPatternLayer(
                 poseStack,
-                submitNodeCollector,
-                lightCoords,
-                overlayCoords,
-                model,
-                state,
-                banner ? Sheets.BANNER_PATTERN_BASE : Sheets.SHIELD_PATTERN_BASE,
-                baseColor,
-                breakProgress
+                vertexConsumers,
+                light,
+                overlay,
+                flag,
+                banner ? Sheets.BANNER_BASE : Sheets.SHIELD_BASE,
+                baseColor
         );
 
-        for (int maskIndex = 0; maskIndex < 16 && maskIndex < patterns.layers().size(); maskIndex++) {
-            BannerPatternLayers.Layer layer = (BannerPatternLayers.Layer)patterns.layers().get(maskIndex);
-            SpriteId sprite = banner ? Sheets.getBannerSprite(layer.pattern()) : Sheets.getShieldSprite(layer.pattern());
-            submitPatternLayer(sprites, poseStack, submitNodeCollector, lightCoords, overlayCoords, model, state, sprite, layer.color(), null);
+        for (int i = 0; i < MAX_PATTERNS && i < patternLayers.layers().size(); i++) {
+            final Layer layer = patternLayers.layers().get(i);
+            final Material material = banner ? Sheets.getBannerMaterial(layer.pattern()) : Sheets.getShieldMaterial(layer.pattern());
+            renderPatternLayer(poseStack, vertexConsumers, light, overlay, flag, material, layer.color());
         }
     }
 
-    private static <S> void submitPatternLayer(
-            SpriteGetter sprites,
-            PoseStack poseStack,
-            SubmitNodeCollector submitNodeCollector,
-            int lightCoords,
-            int overlayCoords,
-            Model<S> model,
-            S state,
-            SpriteId sprite,
-            DyeColor color,
-            ModelFeatureRenderer.CrumblingOverlay breakProgress
+    private static void renderPatternLayer(
+            final PoseStack poseStack,
+            final MultiBufferSource vertexConsumers,
+            final int light,
+            final int overlay,
+            final ModelPart flag,
+            final Material material,
+            final DyeColor color
     ) {
-        int diffuseColor = color.getTextureDiffuseColor();
-        submitNodeCollector.submitModel(
-                model, state, poseStack, sprite.renderType(RenderTypes::bannerPattern), lightCoords, overlayCoords, diffuseColor, sprites.get(sprite), 0, breakProgress
-        );
-    }
+        if (ConfigCache.bannerGraphics == EnumTypes.BannerGraphicsType.FAST.ordinal()) {
+            flag.render(poseStack, material.buffer(vertexConsumers, RenderType::entityCutoutNoCull), light, overlay, color.getTextureDiffuseColor());
+            return;
+        }
 
-    private static Transformation modelTransformation(float angle) {
-        return new Transformation(MODEL_TRANSLATION, Axis.YP.rotationDegrees(-angle), MODEL_SCALE, null);
-    }
-
-    private static Transformation createGroundTransformation(int segment) {
-        return modelTransformation(RotationSegment.convertToDegrees(segment));
-    }
-
-    private static Transformation createWallTransformation(Direction direction) {
-        return modelTransformation(direction.toYRot());
+        flag.render(poseStack, material.buffer(vertexConsumers, RenderType::entityNoOutline), light, overlay, color.getTextureDiffuseColor());
     }
 }

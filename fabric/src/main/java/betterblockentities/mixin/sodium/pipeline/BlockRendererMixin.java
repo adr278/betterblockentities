@@ -1,63 +1,145 @@
 package betterblockentities.mixin.sodium.pipeline;
 
 /* local */
+import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.chunk.translucent_sorting.QuadSplittingMode;
+import betterblockentities.client.chunk.translucent_sorting.TranslucentGeometryCollectorExt;
 import betterblockentities.client.chunk.pipeline.BBEBlockRenderer;
+import betterblockentities.render.AltRenderers;
+
+/* fabric */
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 
 /* minecraft */
-import betterblockentities.client.chunk.pipeline.BBEEmitter;
-import betterblockentities.client.chunk.translucent_sorting.TranslucentGeometryCollectorExt;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.DecoratedPotBlock;
+import net.minecraft.world.level.block.EnderChestBlock;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.BannerBlock;
+import net.minecraft.world.level.block.WallBannerBlock;
+import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.CeilingHangingSignBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.WallHangingSignBlock;
+import net.minecraft.world.level.block.WallSignBlock;
 
 /* sodium */
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
-import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
-import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
+import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
+import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 
 /* mixin */
-import org.spongepowered.asm.mixin.*;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /* java/misc */
-import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @Pseudo
 @Mixin(BlockRenderer.class)
 public abstract class BlockRendererMixin {
     /* make sodium own this so it lives and dies alongside Sodium's BlockRenderer */
-    @Unique private BBEBlockRenderer bbeBlockRenderer;
+    @Unique private static final ThreadLocal<BBEBlockRenderer> TERRAIN_RENDERER = ThreadLocal.withInitial(BBEBlockRenderer::new);
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    private void init(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters, CallbackInfo ci) {
-        this.bbeBlockRenderer = new BBEBlockRenderer((BlockRenderer)(Object)this);
-    }
-    
-    @Redirect(
-            method = "renderModel(Lnet/minecraft/client/renderer/block/dispatch/BlockStateModel;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;)V",
+    @WrapOperation(
+            method = "renderModel",
             at = @At(
                     value = "INVOKE",
-                    target = "net/caffeinemc/mods/sodium/client/services/PlatformModelEmitter.emitModel (Lnet/minecraft/client/renderer/block/dispatch/BlockStateModel;Ljava/util/function/Predicate;Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;Lnet/minecraft/util/RandomSource;Lnet/minecraft/client/renderer/block/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/caffeinemc/mods/sodium/client/services/PlatformModelEmitter$Bufferer;)V"
+                    target = "Lnet/fabricmc/fabric/api/renderer/v1/model/FabricBakedModel;emitBlockQuads(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Ljava/util/function/Supplier;Lnet/fabricmc/fabric/api/renderer/v1/render/RenderContext;)V"
             )
     )
-    public void emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
-        LevelSlice slice = ((AbstractBlockRenderContextAccessor)(Object)this).getSlice();
-        bbeBlockRenderer.emitBlockModel(instance, model, isFaceCulled, emitter, random, level, slice, pos, state, bufferer);
+    private void emitTerrainBEs(
+            final FabricBakedModel instance,
+            final BlockAndTintGetter level,
+            final BlockState state,
+            final BlockPos pos,
+            final Supplier<RandomSource> randomSupplier,
+            final RenderContext context,
+            final Operation<Void> original
+    ) {
+        if (!skipVanillaModelForTerrainBE(state)) {
+            original.call(instance, level, state, pos, randomSupplier, context);
+        }
+
+        final LevelSlice slice = ((AbstractBlockRenderContextAccessor) (Object) this).getSlice();
+        if (slice == null) {
+            return;
+        }
+
+        final MutableQuadViewImpl emitter = (MutableQuadViewImpl) ((AbstractBlockRenderContext) (Object) this).getEmitter();
+        TERRAIN_RENDERER.get().emitTerrainBlockEntityGeometry(emitter, slice, pos, state);
+    }
+
+    @Unique private static boolean skipVanillaModelForTerrainBE(final BlockState state) {
+        if (!ConfigCache.masterOptimize || !state.hasBlockEntity()) {
+            return false;
+        }
+
+        final Block block = state.getBlock();
+
+        if (block instanceof ChestBlock) {
+            if (!ConfigCache.optimizeChests) {
+                return false;
+            }
+
+            final BlockEntityType<?> type = state.is(Blocks.TRAPPED_CHEST)
+                    ? BlockEntityType.TRAPPED_CHEST
+                    : BlockEntityType.CHEST;
+            return !AltRenderers.hasRendererOverride(type);
+        }
+
+        if (block instanceof EnderChestBlock) {
+            return ConfigCache.optimizeChests && !AltRenderers.hasRendererOverride(BlockEntityType.ENDER_CHEST);
+        }
+
+        if (block instanceof BedBlock) {
+            return ConfigCache.optimizeBeds && !AltRenderers.hasRendererOverride(BlockEntityType.BED);
+        }
+
+        if (block instanceof ShulkerBoxBlock) {
+            return ConfigCache.optimizeShulker && !AltRenderers.hasRendererOverride(BlockEntityType.SHULKER_BOX);
+        }
+
+        if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
+            return ConfigCache.optimizeBanners && !AltRenderers.hasRendererOverride(BlockEntityType.BANNER);
+        }
+
+        if (block instanceof DecoratedPotBlock) {
+            return ConfigCache.optimizeDecoratedPots && !AltRenderers.hasRendererOverride(BlockEntityType.DECORATED_POT);
+        }
+
+        if (block instanceof StandingSignBlock
+                || block instanceof WallSignBlock
+                || block instanceof CeilingHangingSignBlock
+                || block instanceof WallHangingSignBlock) {
+            return ConfigCache.optimizeSigns
+                    && !AltRenderers.hasRendererOverride(BlockEntityType.SIGN)
+                    && !AltRenderers.hasRendererOverride(BlockEntityType.HANGING_SIGN);
+        }
+
+        if (block instanceof BellBlock) {
+            return false;
+        }
+
+        return false;
     }
 
     @WrapOperation(method = "bufferQuad",
@@ -66,23 +148,23 @@ public abstract class BlockRendererMixin {
                     target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/TranslucentGeometryCollector;appendQuad([Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;I)Z"
             )
     )
-    public boolean appendQuad(
-            TranslucentGeometryCollector instance,
-            ChunkVertexEncoder.Vertex[] vertices,
-            ModelQuadFacing facing,
-            int packedNormal,
-            Operation<Boolean> original,
-            @Local(ordinal = 0)MutableQuadViewImpl quad
+    private boolean preserveNoSplitTag(
+            final TranslucentGeometryCollector collector,
+            final ChunkVertexEncoder.Vertex[] vertices,
+            final ModelQuadFacing facing,
+            final int packedNormal,
+            final Operation<Boolean> original,
+            @Local(argsOnly = true) final MutableQuadViewImpl quad
     ) {
-        TranslucentGeometryCollectorExt tscExt = (TranslucentGeometryCollectorExt)instance;
+        final TranslucentGeometryCollectorExt collectorExt = (TranslucentGeometryCollectorExt) collector;
 
         try {
-            if (quad.getTag() == BBEEmitter.NO_QUAD_SPLITTING) {
-                tscExt.setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode.NONE);
+            if (quad.tag() == BBEBlockRenderer.NO_QUAD_SPLITTING_TAG) {
+                collectorExt.setIncomingQuadSplitMode(QuadSplittingMode.NONE);
             }
-            return original.call(instance, vertices, facing, packedNormal);
+            return original.call(collector, vertices, facing, packedNormal);
         } finally {
-            tscExt.deferSplittingMode();
+            collectorExt.deferSplittingMode();
         }
     }
 }

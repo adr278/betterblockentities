@@ -2,20 +2,22 @@ package betterblockentities.mixin.render;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.render.immediate.blockentity.misc.CrumblingRenderContext;
 
 /* minecraft */
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.SubmitNodeStorage;
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.state.level.LevelRenderState;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
+
+/* mixin extras */
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 /* mixin */
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,48 +27,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
-    @Inject(at = @At("HEAD"), method = "cullTerrain")
-    private void captureFrustum(Camera camera, Frustum frustum, boolean bl, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "setupRender")
+    private void captureFrustum(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator, CallbackInfo ci) {
         BBE.GlobalScope.frustum = frustum;
     }
 
-    @Inject(at = @At("HEAD"), method = "extractLevel")
-    private void updateAltRenderDispatcher(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo ci) {
-        BBE.GlobalScope.altRenderDispatcher.prepare(camera.position());
-    }
-
-    @Inject(at = @At("HEAD"), method = "submitBlockEntities")
-    private void updateSignRenderState(CallbackInfo ci) {
-        BBE.GlobalScope.limitVanillaSignRendering = true;
-    }
-
-    /*
-     *  give ourselves a lower priority so we can make sure this executes before any other mixins here
-    */
-    @Inject(method = "submitBlockEntities", at = @At("RETURN"), order = 900)
-    private void submitAltRenderers(PoseStack poseStack, LevelRenderState levelRenderState, SubmitNodeStorage submitNodeStorage, CallbackInfo ci) {
-        BBE.GlobalScope.limitVanillaSignRendering = false;
-
-        Vec3 cameraPos = levelRenderState.cameraRenderState.pos;
-        double camX = cameraPos.x();
-        double camY = cameraPos.y();
-        double camZ = cameraPos.z();
-
-        for (BlockEntityRenderState renderState : BBE.GlobalScope.altBlockEntityRenderStates) {
-            BlockPos blockPos = renderState.blockPos;
-            poseStack.pushPose();
-            poseStack.translate(blockPos.getX() - camX, blockPos.getY() - camY, blockPos.getZ() - camZ);
-            BBE.GlobalScope.altRenderDispatcher.submit(
-                    renderState, poseStack, submitNodeStorage, levelRenderState.cameraRenderState
-            );
-            poseStack.popPose();
+    @WrapOperation(
+            method = "renderLevel",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V",
+                    ordinal = 0
+            )
+    )
+    private void markCrumblingBlockEntityPass(
+            final BlockEntityRenderDispatcher dispatcher,
+            final BlockEntity blockEntity,
+            final float partialTick,
+            final PoseStack poseStack,
+            final MultiBufferSource vertexConsumers,
+            final Operation<Void> original
+    ) {
+        CrumblingRenderContext.push();
+        try {
+            original.call(dispatcher, blockEntity, partialTick, poseStack, vertexConsumers);
+        } finally {
+            CrumblingRenderContext.pop();
         }
-    }
-
-
-    @Inject(at = @At("TAIL"), method = "renderLevel")
-    private void clearRenderStates(CallbackInfo ci) {
-        BBE.GlobalScope.altBlockEntityRenderStates.clear();
-        BBE.GlobalScope.altRenderDispatcher.clearStateRendererPairs();
     }
 }

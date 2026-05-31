@@ -17,7 +17,7 @@ import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatt
 
 /* minecraft */
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public class SodiumConfigBuilder implements ConfigEntryPoint {
     private final SodiumConfigStorage bbeSodiumConfigStorage = new SodiumConfigStorage();
@@ -29,7 +29,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:master"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:master"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.master"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.master.tooltip"))
                             .setDefaultValue(true)
@@ -43,7 +43,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
             ));
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:optimize.chest"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.chest"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.chest"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.chest.tooltip"))
                             .setDefaultValue(true)
@@ -53,13 +53,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.chest").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                   builder.createBooleanOption(Identifier.parse("bbe:animation.chest"))
+                   builder.createBooleanOption(ResourceLocation.parse("bbe:animation.chest"))
                             .setName(Component.translatable("bbe.config.storage.main.animation.chest"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.animation.chest.tooltip"))
                             .setDefaultValue(true)
@@ -69,15 +69,15 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("animation.chest").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.chest")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.chest")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.chest")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.chest")
                             )
                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                            .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:misc.christmas_chest"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:misc.christmas_chest"))
                             .setName(Component.translatable("bbe.config.storage.main.misc.christmas_chest"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.misc.christmas_chest.tooltip"))
                             .setDefaultValue(false)
@@ -87,9 +87,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("misc.christmas_chest").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.chest")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.chest")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.chest")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.chest")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -98,7 +98,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:optimize.shulker"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.shulker"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.shulker"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.shulker.tooltip"))
                             .setDefaultValue(true)
@@ -108,13 +108,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.shulker").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:animation.shulker"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:animation.shulker"))
                             .setName(Component.translatable("bbe.config.storage.main.animation.shulker"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.animation.shulker.tooltip"))
                             .setDefaultValue(true)
@@ -124,9 +124,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("animation.shulker").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.shulker")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.shulker")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.shulker")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.shulker")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -135,7 +135,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:optimize.sign"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.sign"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.sign"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.sign.tooltip"))
                             .setDefaultValue(true)
@@ -145,13 +145,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.sign").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:misc.sign_text"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:misc.sign_text"))
                             .setName(Component.translatable("bbe.config.storage.main.misc.sign_text"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text.tooltip"))
                             .setDefaultValue(true)
@@ -161,15 +161,15 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("misc.sign_text").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.sign")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.sign")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.sign")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.sign")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createIntegerOption(Identifier.parse("bbe:misc.sign_text_distance"))
+                    builder.createIntegerOption(ResourceLocation.parse("bbe:misc.sign_text_distance"))
                             .setName(Component.translatable("bbe.config.storage.main.misc.sign_text_distance"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text_distance.tooltip"))
                             .setDefaultValue(16)
@@ -181,17 +181,17 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                             .setRange(new Range(1, 64, 1))
                             .setValueFormatter(ControlValueFormatterImpls.number())
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.sign")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:misc.sign_text")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.sign"),
-                                    Identifier.parse("bbe:misc.sign_text")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.sign")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:misc.sign_text")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.sign"),
+                                    ResourceLocation.parse("bbe:misc.sign_text")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:misc.sign_text_culling"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:misc.sign_text_culling"))
                             .setName(Component.translatable("bbe.config.storage.main.misc.sign_text_culling"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text_culling.tooltip"))
                             .setDefaultValue(true)
@@ -201,11 +201,11 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("misc.sign_text_culling").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.sign")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:misc.sign_text")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.sign"),
-                                    Identifier.parse("bbe:misc.sign_text")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.sign")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:misc.sign_text")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.sign"),
+                                    ResourceLocation.parse("bbe:misc.sign_text")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -214,7 +214,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:optimize.decoratedpot"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.decoratedpot"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.decoratedpot"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.decoratedpot.tooltip"))
                             .setDefaultValue(true)
@@ -224,13 +224,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.decoratedpot").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:animation.decoratedpot"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:animation.decoratedpot"))
                             .setName(Component.translatable("bbe.config.storage.main.animation.decoratedpot"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.animation.decoratedpot.tooltip"))
                             .setDefaultValue(true)
@@ -240,9 +240,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("animation.decoratedpot").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.decoratedpot")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.decoratedpot")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.decoratedpot")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.decoratedpot")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -251,7 +251,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:optimize.banner"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.banner"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.banner"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.banner.tooltip"))
                             .setDefaultValue(true)
@@ -261,13 +261,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.banner").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createIntegerOption(Identifier.parse("bbe:misc.banner_pose"))
+                    builder.createIntegerOption(ResourceLocation.parse("bbe:misc.banner_pose"))
                             .setName(Component.translatable("bbe.config.storage.main.misc.banner_pose"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.misc.banner_pose.tooltip"))
                             .setDefaultValue(16)
@@ -279,15 +279,15 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                             .setRange(new Range(1, 9, 1))
                             .setValueFormatter(ControlValueFormatterImpls.number())
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.banner")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.banner")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.banner")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.banner")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createEnumOption(Identifier.parse("bbe:misc.banner_graphics"), EnumTypes.BannerGraphicsType.class)
+                    builder.createEnumOption(ResourceLocation.parse("bbe:misc.banner_graphics"), EnumTypes.BannerGraphicsType.class)
                             .setName(Component.translatable("bbe.config.storage.main.misc.banner_graphics"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.misc.banner_graphics.tooltip"))
                             .setDefaultValue(EnumTypes.BannerGraphicsType.FANCY)
@@ -301,9 +301,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     Component.translatable("bbe.config.storage.main.misc.banner_graphics.type.fancy"),
                             }[e.ordinal()])
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.banner")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.banner")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.banner")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.banner")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -312,7 +312,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:optimize.bell"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.bell"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.bell"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.bell.tooltip"))
                             .setDefaultValue(true)
@@ -322,13 +322,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.bell").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
             )
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:animation.bell"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:animation.bell"))
                             .setName(Component.translatable("bbe.config.storage.main.animation.bell"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.animation.bell.tooltip"))
                             .setDefaultValue(true)
@@ -338,9 +338,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("animation.bell").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) &&
-                                    c.readBooleanOption(Identifier.parse("bbe:optimize.bell")),
-                                    Identifier.parse("bbe:master"), Identifier.parse("bbe:optimize.bell")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.bell")),
+                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.bell")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -349,7 +349,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createBooleanOption(Identifier.parse("bbe:optimize.bed"))
+                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.bed"))
                             .setName(Component.translatable("bbe.config.storage.main.optimize.bed"))
                             .setTooltip(Component.translatable("bbe.config.storage.main.optimize.bed.tooltip"))
                             .setDefaultValue(true)
@@ -359,7 +359,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.bed").getValue()
                             )
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -368,45 +368,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
-                        builder.createBooleanOption(Identifier.parse("bbe:optimize.copper_golem_statue"))
-                                .setName(Component.translatable("bbe.config.storage.main.optimize.copper_golem_statue"))
-                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.copper_golem_statue.tooltip"))
-                                .setDefaultValue(true)
-                                .setImpact(OptionImpact.HIGH)
-                                .setBinding(
-                                        value -> BBE.GlobalScope.CONFIG.MAIN.setOption("optimize.copper_golem_statue", value),
-                                        () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.copper_golem_statue").getValue()
-                                )
-                                .setEnabledProvider(c ->
-                                        c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
-                                )
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                                .setStorageHandler(this.saveMainConfigStorageObject)
-                )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-                .addOption(
-                        builder.createBooleanOption(Identifier.parse("bbe:optimize.shelf"))
-                                .setName(Component.translatable("bbe.config.storage.main.optimize.shelf"))
-                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.shelf.tooltip"))
-                                .setDefaultValue(true)
-                                .setImpact(OptionImpact.HIGH)
-                                .setBinding(
-                                        value -> BBE.GlobalScope.CONFIG.MAIN.setOption("optimize.shelf", value),
-                                        () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.shelf").getValue()
-                                )
-                                .setEnabledProvider(c ->
-                                        c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
-                                )
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                                .setStorageHandler(this.saveMainConfigStorageObject)
-                )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-                .addOption(
-                        builder.createBooleanOption(Identifier.parse("bbe:optimize.campfire"))
+                        builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.campfire"))
                                 .setName(Component.translatable("bbe.config.storage.main.optimize.campfire"))
                                 .setTooltip(Component.translatable("bbe.config.storage.main.optimize.campfire.tooltip"))
                                 .setDefaultValue(true)
@@ -416,7 +378,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                         () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.campfire").getValue()
                                 )
                                 .setEnabledProvider(c ->
-                                        c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                        c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
                                 )
                                 .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setStorageHandler(this.saveMainConfigStorageObject)
@@ -425,7 +387,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         BBEPage.addOptionGroup(builder.createOptionGroup()
             .addOption(
-                    builder.createEnumOption(Identifier.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
+                    builder.createEnumOption(ResourceLocation.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
                             .setName(Component.translatable("bbe.config.storage.main.misc.update_scheduler"))
                             .setTooltip(
                                     BBE.ModCompact.isSchedulerOptionLimited() ?
@@ -443,7 +405,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     Component.translatable("bbe.config.storage.main.misc.update_scheduler.type.smart"),
                             }[e.ordinal()])
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) && !BBE.ModCompact.isSchedulerOptionLimited(), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) && !BBE.ModCompact.isSchedulerOptionLimited(), ResourceLocation.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)
@@ -451,7 +413,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
 
         builder.registerOwnModOptions()
-                .setNonTintedIcon(Identifier.parse("betterblockentities:icon.png"))
+                .setNonTintedIcon(ResourceLocation.parse("betterblockentities:icon.png"))
                 .setColorTheme(builder.createColorTheme().setBaseThemeRGB(0xc68d46)) //old 0x603900
                 .addPage(BBEPage);
     }

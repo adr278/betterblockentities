@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ShulkerBoxBlockEntityMixin {
     @Unique private final InstancedBlockEntityManager manager = new InstancedBlockEntityManager((BlockEntity)(Object)this);
 
-    @Inject(method = "<init>", at = @At("TAIL"))
+    @Inject(method = "<init>(Lnet/minecraft/world/item/DyeColor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
     private void init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;

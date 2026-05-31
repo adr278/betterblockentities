@@ -91,41 +91,46 @@ The registered renderer is setup much like how any other `BlockEntityRenderer` i
 Instead of explaining exactly how to setup your renderer we will provide you with an example, including
 comments explaining what elements needs changing.
 
-Example skeleton renderer for a Copper-Golem-Statue:
+Example skeleton renderer for a Chest:
 ```java
 package com.example.examplemod;
 
 //api imports
-import betterblockentities.api.render.AltRenderer;
-import betterblockentities.api.render.AltRendererProvider;
+import betterblockentities.render.AltBlockEntityRenderState;
+import betterblockentities.render.AltRenderer;
+import betterblockentities.render.AltRendererProvider;
 
 //minecraft; mojang imports
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.blockentity.state.CopperGolemStatueRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.world.level.block.entity.CopperGolemStatueBlockEntity;
+import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.server.level.BlockDestructionProgress;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.phys.Vec3;
 import com.mojang.blaze3d.vertex.PoseStack;
+import org.jetbrains.annotations.Nullable;
 
 //make sure you implement AltRenderer here
-public class SuperCoolCGSRenderer implements AltRenderer<CopperGolemStatueBlockEntity, CopperGolemStatueRenderState> {
-    public SuperCoolCGSRenderer(final AltRendererProvider.Context context) {
+public class SuperCoolChestRenderer implements AltRenderer<ChestBlockEntity, SuperCoolChestRenderer.ChestRenderState> {
+    public static class ChestRenderState extends AltBlockEntityRenderState {
+        //... custom state fields
+    }
+
+    public SuperCoolChestRenderer(final AltRendererProvider.Context context) {
         //... make sure that each constructor that takes in a provider
         //    context uses AltRendererProvider.Context and not the vanilla
         //    equivalent BlockEntityRendererProvider.Context
     }
 
-    public CopperGolemStatueRenderState createRenderState() {
-        return new CopperGolemStatueRenderState();
+    public ChestRenderState createRenderState() {
+        return new ChestRenderState();
     }
 
     public void extractRenderState(
-            final CopperGolemStatueBlockEntity blockEntity,
-            final CopperGolemStatueRenderState state,
+            final ChestBlockEntity blockEntity,
+            final ChestRenderState state,
             final float partialTicks,
             final Vec3 cameraPosition,
-            final ModelFeatureRenderer.CrumblingOverlay breakProgress
+            final @Nullable BlockDestructionProgress breakProgress
     ) {
         //make sure you don't forget to call the super class function here
         //also make sure AltRenderer is used
@@ -135,12 +140,14 @@ public class SuperCoolCGSRenderer implements AltRenderer<CopperGolemStatueBlockE
     }
 
     public void submit(
-            final CopperGolemStatueRenderState state,
+            final ChestRenderState state,
             final PoseStack poseStack,
-            final SubmitNodeCollector submitNodeCollector,
-            final CameraRenderState camera
+            final MultiBufferSource vertexConsumers,
+            final Camera camera,
+            final int light,
+            final int overlay
     ) {
-        //... do rendering logic, submit with submitNodeCollector...
+        //... do rendering logic
     }
     
     //implement shouldRender(...) for user controlled renderer management
@@ -178,13 +185,16 @@ When registering a renderer you will need to pass in two arguments:
 - `SupportedBlockEntityTypes blockEntityType` - will be the `BlockEntityType` that your renderer belongs to (aka the BlockEntity you want to render additional stuff to)
 - `AltRendererProvider rendererProvider` - this will be your renderer that implements `AltRenderer`
 
+Note: some enum entries may be unavailable on older Minecraft versions. If an entry has no backing
+`BlockEntityType` on the current runtime, registration for that entry is ignored.
+
 Here is a full example of renderer registration;
 
 ```java
 public class BBEEntryPoint implements BBEApiEntryPoint {
     @Override
     public void registerRenderers(AltRendererRegistration context) {
-        context.registerRenderer(SupportedBlockEntityTypes.COPPER_GOLEM_STATUE, SuperCoolCGSRenderer::new);
+        context.registerRenderer(SupportedBlockEntityTypes.CHEST, SuperCoolChestRenderer::new);
     }
 }
 ```

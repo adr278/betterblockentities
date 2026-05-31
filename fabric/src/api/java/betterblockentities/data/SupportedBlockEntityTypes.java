@@ -13,8 +13,7 @@ public enum SupportedBlockEntityTypes {
     DECORATED_POT(BlockEntityType.DECORATED_POT),
     BANNER(BlockEntityType.BANNER),
     BELL(BlockEntityType.BELL),
-    BED(BlockEntityType.BED),
-    COPPER_GOLEM_STATUE(BlockEntityType.COPPER_GOLEM_STATUE);
+    BED(BlockEntityType.BED);
 
     private final BlockEntityType<?> blockEntityType;
 

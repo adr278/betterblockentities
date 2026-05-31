@@ -29,8 +29,6 @@ public class ConfigBuilder {
                 new BooleanOption("optimize.banner", true),
                 new BooleanOption("optimize.bell", true),
                 new BooleanOption("optimize.bed", true),
-                new BooleanOption("optimize.copper_golem_statue", true),
-                new BooleanOption("optimize.shelf", true),
                 new BooleanOption("optimize.campfire", true),
 
                 new BooleanOption("animation.chest", true),

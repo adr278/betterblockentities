@@ -1,7 +1,7 @@
 package betterblockentities.mixin.sodium.translucent_sorting;
 
 /* local */
-import betterblockentities.client.chunk.pipeline.BBEEmitter;
+import betterblockentities.client.chunk.translucent_sorting.QuadSplittingMode;
 import betterblockentities.client.chunk.translucent_sorting.TQuadExt;
 
 /* sodium */
@@ -28,16 +28,16 @@ public class InnerPartitionBSPNodeMixin {
     )
     private static void skipSplitForTaggedQuads(
             @Coerce Object workspace,
-            IntArrayList splittingGroup,
-            int candidateIndex, FullTQuad insideQuad,
-            Vector3fc splitPlane,
-            float splitDistance,
-            IntArrayList outside,
-            IntArrayList inside,
-            Operation<Void> original
+            final IntArrayList splittingGroup,
+            final int candidateIndex,
+            final FullTQuad insideQuad,
+            final Vector3fc splitPlane,
+            final float splitDistance,
+            final IntArrayList outside,
+            final IntArrayList inside,
+            final Operation<Void> original
     ) {
-        TQuadExt tQuadExt = (TQuadExt)insideQuad;
-        if (tQuadExt.getSplittingMode() == BBEEmitter.QuadSplittingMode.NONE) {
+        if (((TQuadExt) insideQuad).getSplittingMode() == QuadSplittingMode.NONE) {
             splittingGroup.add(candidateIndex);
             return;
         }

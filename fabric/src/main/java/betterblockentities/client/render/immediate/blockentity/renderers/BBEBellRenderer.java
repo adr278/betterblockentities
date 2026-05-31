@@ -2,62 +2,56 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.render.immediate.OverlayRenderer;
-import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.object.bell.BellModel;
-import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.blockentity.state.BellRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.sprite.SpriteGetter;
-import net.minecraft.client.resources.model.sprite.SpriteId;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BellBlockEntity;
-import net.minecraft.world.phys.Vec3;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-public class BBEBellRenderer implements BlockEntityRenderer<BellBlockEntity, BellRenderState> {
-    public static final SpriteId BELL_TEXTURE = Sheets.BLOCK_ENTITIES_MAPPER.defaultNamespaceApply("bell/bell_body");
-    private final SpriteGetter sprites;
-    private final BellModel model;
+public class BBEBellRenderer implements BlockEntityRenderer<BellBlockEntity> {
+    public static final Material BELL_TEXTURE = new Material(TextureAtlas.LOCATION_BLOCKS, ResourceLocation.withDefaultNamespace("entity/bell/bell_body"));
+    private final ModelPart bellBody;
 
-    public BBEBellRenderer(final BlockEntityRendererProvider.Context context) {
-        this.sprites = context.sprites();
-        this.model = new BellModel(context.bakeLayer(ModelLayers.BELL));
+    public BBEBellRenderer(BlockEntityRendererProvider.Context context) {
+        this.bellBody = context.bakeLayer(ModelLayers.BELL).getChild("bell_body");
     }
 
-    public BellRenderState createRenderState() {
-        return new BellRenderState();
-    }
+    @Override public void render(final BellBlockEntity blockEntity, final float partialTick, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final int light, final int overlay) {
+        final float ticks = blockEntity.ticks + partialTick;
+        float xRot = 0.0F;
+        float zRot = 0.0F;
 
-    public void extractRenderState(BellBlockEntity blockEntity, BellRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
-        BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
-        state.ticks = blockEntity.ticks + partialTicks;
-
-        state.shakeDirection = ConfigCache.bellAnims ? blockEntity.shaking ? blockEntity.clickDirection : null : null;
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
-    }
-
-    public void submit(BellRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
-        BellModel.State modelState = new BellModel.State(state.ticks, state.shakeDirection);
-        this.model.setupAnim(modelState);
-
-        BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
-
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, modelState, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
-        if (!managed) {
-            submitNodeCollector.submitModel(
-                    this.model, modelState, poseStack, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, BELL_TEXTURE, this.sprites, 0, state.breakProgress
-            );
+        final Direction shakeDirection = ConfigCache.bellAnims && blockEntity.shaking ? blockEntity.clickDirection : null;
+        if (shakeDirection != null) {
+            final float angle = Mth.sin(ticks / (float) Math.PI) / (4.0F + ticks / 3.0F);
+            if (shakeDirection == Direction.NORTH) {
+                xRot = -angle;
+            } else if (shakeDirection == Direction.SOUTH) {
+                xRot = angle;
+            } else if (shakeDirection == Direction.EAST) {
+                zRot = -angle;
+            } else if (shakeDirection == Direction.WEST) {
+                zRot = angle;
+            }
         }
+
+        this.bellBody.xRot = xRot;
+        this.bellBody.zRot = zRot;
+
+        final VertexConsumer consumer = BELL_TEXTURE.buffer(vertexConsumers, RenderType::entitySolid);
+        this.bellBody.render(poseStack, consumer, light, overlay);
     }
 }

@@ -1,138 +1,84 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
-/* local */
-import betterblockentities.client.render.immediate.OverlayRenderer;
-import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
-
 /* minecraft */
-import net.minecraft.client.model.Model;
-import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BrightnessCombiner;
-import net.minecraft.client.renderer.blockentity.state.BedRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.special.SpecialModelRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.sprite.SpriteGetter;
-import net.minecraft.client.resources.model.sprite.SpriteId;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
-import net.minecraft.util.Unit;
-import net.minecraft.util.Util;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.DoubleBlockCombiner;
 import net.minecraft.world.level.block.entity.BedBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
-import net.minecraft.world.phys.Vec3;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import com.mojang.math.Transformation;
 
-/* java/misc */
-import java.util.Map;
-import java.util.function.Consumer;
-import org.joml.Matrix4f;
-import org.joml.Vector3fc;
+public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity> {
+    private final ModelPart headRoot;
+    private final ModelPart footRoot;
 
-public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRenderState> {
-    private static final Map<Direction, Transformation> TRANSFORMATIONS = Util.makeEnumMap(Direction.class, BBEBedRenderer::createModelTransform);
-    private final SpriteGetter sprites;
-    private final Model.Simple headModel;
-    private final Model.Simple footModel;
-
-    public BBEBedRenderer(BlockEntityRendererProvider.Context context) {
-        this(context.sprites(), context.entityModelSet());
+    public BBEBedRenderer(final BlockEntityRendererProvider.Context context) {
+        this.headRoot = context.bakeLayer(ModelLayers.BED_HEAD);
+        this.footRoot = context.bakeLayer(ModelLayers.BED_FOOT);
     }
 
-    public BBEBedRenderer(SpriteGetter sprites, EntityModelSet entityModelSet) {
-        this.sprites = sprites;
-        this.headModel = new Model.Simple(entityModelSet.bakeLayer(ModelLayers.BED_HEAD), RenderTypes::entitySolid);
-        this.footModel = new Model.Simple(entityModelSet.bakeLayer(ModelLayers.BED_FOOT), RenderTypes::entitySolid);
-    }
+    @Override public void render(final BedBlockEntity blockEntity, final float partialTick, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final int light, final int overlay) {
+        final Material material = Sheets.BED_TEXTURES[blockEntity.getColor().getId()];
+        final Level level = blockEntity.getLevel();
 
-    public BedRenderState createRenderState() {
-        return new BedRenderState();
-    }
-
-    public void extractRenderState(BedBlockEntity blockEntity, BedRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress) {
-        BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
-        state.color = blockEntity.getColor();
-        state.facing = blockEntity.getBlockState().getValue(BedBlock.FACING);
-        state.part = blockEntity.getBlockState().getValue(BedBlock.PART);
-        if (blockEntity.getLevel() != null) {
-            DoubleBlockCombiner.NeighborCombineResult<? extends BedBlockEntity> combineResult = DoubleBlockCombiner.combineWithNeigbour(
+        if (level != null) {
+            final BlockState blockState = blockEntity.getBlockState();
+            final DoubleBlockCombiner.NeighborCombineResult<? extends BedBlockEntity> combineResult = DoubleBlockCombiner.combineWithNeigbour(
                     BlockEntityType.BED,
                     BedBlock::getBlockType,
                     BedBlock::getConnectedDirection,
                     ChestBlock.FACING,
-                    blockEntity.getBlockState(),
-                    blockEntity.getLevel(),
+                    blockState,
+                    level,
                     blockEntity.getBlockPos(),
                     (levelAccessor, blockPos) -> false
             );
-            state.lightCoords = combineResult.apply(new BrightnessCombiner<>()).get(state.lightCoords);
+            final int packedLight = combineResult.apply(new BrightnessCombiner<>()).get(light);
+            final ModelPart partRoot = blockState.getValue(BedBlock.PART) == BedPart.HEAD ? this.headRoot : this.footRoot;
+            final Direction facing = blockState.getValue(BedBlock.FACING);
+            renderPiece(poseStack, vertexConsumers, partRoot, facing, material, packedLight, overlay, false);
+        } else {
+            renderPiece(poseStack, vertexConsumers, this.headRoot, Direction.SOUTH, material, light, overlay, false);
+            renderPiece(poseStack, vertexConsumers, this.footRoot, Direction.SOUTH, material, light, overlay, true);
         }
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
-    public void submit(BedRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
-        SpriteId sprite = Sheets.getBedSprite(state.color);
-        poseStack.pushPose();
-        poseStack.mulPose(modelTransform(state.facing));
-
-        this.submitPiece(state, state.part, sprite, poseStack, submitNodeCollector, state.lightCoords, OverlayTexture.NO_OVERLAY, state.breakProgress, 0);
-
-        poseStack.popPose();
-    }
-
-    public void submitPiece(
-            BedRenderState state,
-            BedPart part,
-            SpriteId sprite,
-            PoseStack poseStack,
-            SubmitNodeCollector submitNodeCollector,
-            int lightCoords,
-            int overlayCoords,
-            ModelFeatureRenderer.CrumblingOverlay breakProgress,
-            int outlineColor
+    private static void renderPiece(
+            final PoseStack poseStack,
+            final MultiBufferSource vertexConsumers,
+            final ModelPart modelRoot,
+            final Direction facing,
+            final Material material,
+            final int light,
+            final int overlay,
+            final boolean foot
     ) {
-        Model.Simple model = this.getPieceModel(part);
+        poseStack.pushPose();
+        poseStack.translate(0.0F, 0.5625F, foot ? -1.0F : 0.0F);
+        poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
+        poseStack.translate(0.5F, 0.5F, 0.5F);
+        poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F + facing.toYRot()));
+        poseStack.translate(-0.5F, -0.5F, -0.5F);
 
-        BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
-
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, Unit.INSTANCE, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
-        if (!managed) {
-            submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, lightCoords, overlayCoords, -1, sprite, this.sprites, outlineColor, breakProgress);
-        }
-    }
-
-    private Model.Simple getPieceModel(BedPart part) {
-        return switch (part) {
-            case HEAD -> this.headModel;
-            case FOOT -> this.footModel;
-        };
-    }
-
-    private static Transformation createModelTransform(Direction direction) {
-        return new Transformation(
-                new Matrix4f()
-                        .translation(0.0F, 0.5625F, 0.0F)
-                        .rotate(Axis.XP.rotationDegrees(90.0F))
-                        .rotateAround(Axis.ZP.rotationDegrees(180.0F + direction.toYRot()), 0.5F, 0.5F, 0.5F)
-        );
-    }
-
-    public static Transformation modelTransform(Direction direction) {
-        return (Transformation)TRANSFORMATIONS.get(direction);
+        final VertexConsumer consumer = material.buffer(vertexConsumers, RenderType::entitySolid);
+        modelRoot.render(poseStack, consumer, light, overlay);
+        poseStack.popPose();
     }
 }

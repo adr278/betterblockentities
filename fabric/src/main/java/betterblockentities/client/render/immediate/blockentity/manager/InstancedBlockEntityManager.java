@@ -111,9 +111,9 @@ public final class InstancedBlockEntityManager {
      *   FINISHED   -> safe to remove from queue
      */
     public int run() {
-        if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF] ||
-            AltRenderers.hasRendererOverride(blockEntity.getType()))
-        {
+        if (!ext.supportedBlockEntity()
+                || !BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]
+                || AltRenderers.hasRendererOverride(blockEntity.getType())) {
             phase = Phase.IDLE;
             return ManagerTasks.FINISHED;
         }
@@ -259,8 +259,6 @@ public final class InstancedBlockEntityManager {
         public static final byte POT    = 5;
         public static final byte BANNER = 6;
         public static final byte BELL   = 7;
-        public static final byte CGS    = 8;
-        public static final byte SHELF  = 9;
         public static final byte CAMPFIRE  = 10;
     }
 }

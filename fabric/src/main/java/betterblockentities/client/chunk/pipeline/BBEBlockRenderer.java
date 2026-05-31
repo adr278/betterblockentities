@@ -1,513 +1,574 @@
 package betterblockentities.client.chunk.pipeline;
 
 /* local */
-import betterblockentities.client.BBE;
-import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
 import betterblockentities.client.chunk.util.ModelResourceUtil;
+import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.gui.option.EnumTypes;
 import betterblockentities.client.model.geometry.GeometryRegistry;
-import betterblockentities.client.model.MaterialSelector;
-import betterblockentities.client.model.MultiPartBlockModel;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
-import betterblockentities.client.render.immediate.blockentity.renderers.*;
-import betterblockentities.client.tasks.TaskScheduler;
 import betterblockentities.client.tasks.ResourceTasks;
 import betterblockentities.render.AltRenderers;
 
+/* fabric */
+import net.fabricmc.fabric.api.renderer.v1.Renderer;
+import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
+import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
+import net.fabricmc.fabric.api.renderer.v1.material.MaterialFinder;
+import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
+
 /* minecraft */
-import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
-import net.minecraft.client.renderer.blockentity.state.ChestRenderState;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.blockentity.BellRenderer;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.sprite.SpriteId;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.BannerBlock;
+import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.CeilingHangingSignBlock;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.DecoratedPotBlock;
+import net.minecraft.world.level.block.EnderChestBlock;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.WallBannerBlock;
+import net.minecraft.world.level.block.WallHangingSignBlock;
+import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.ChestType;
-import net.minecraft.world.level.block.state.properties.WoodType;
+import net.minecraft.world.level.block.state.properties.*;
+
+/* mojang */
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 
 /* sodium */
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
+import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 
 /* java/misc */
-import java.util.*;
-import java.util.function.Predicate;
+import org.joml.Matrix4f;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * A wrapper/redirect for {@link net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer#renderModel} ->
- * {@link net.caffeinemc.mods.sodium.client.services.DefaultModelEmitter#emitModel} which hands over mesh assembly to us
- */
+public final class BBEBlockRenderer {
+    public static final int NO_QUAD_SPLITTING_TAG = "BBE-TS-QUAD-NO-SPLIT".hashCode();
 
-public class BBEBlockRenderer  {
-    /* allocate part lists once per instance creation and push;clear accordingly, reduces memory churn A LOT */
-    private final ArrayList<BlockStateModelPart> PRIMARY_MODEL_PARTS = new ArrayList<>(64);
-    private final ArrayList<BlockStateModelPart> SECONDARY_MODEL_PARTS = new ArrayList<>(64);
+    private static final Map<BlendMode, RenderMaterial> MATERIALS = buildMaterials();
+    private static final Set<Material> MISSING_MATERIAL_SPRITES = ConcurrentHashMap.newKeySet();
 
-    private final BBEEmitter emitter;
+    private final BBEEmitter emitter = new BBEEmitter();
+    private final PoseStack poseStack = new PoseStack();
 
-    public BBEBlockRenderer(BlockRenderer sodiumBlockRenderer) {
-        this.emitter = new BBEEmitter(sodiumBlockRenderer);
-    }
-
-    public void emitBlockModel(PlatformModelEmitter sodiumPlatformEmitter, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl sodiumEmitter, RandomSource random, BlockAndTintGetter level, LevelSlice slice, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
-        /* default path for blocks with block models added through resource packs */
-        sodiumPlatformEmitter.emitModel(model, isFaceCulled, sodiumEmitter, random, level, pos, state, bufferer);
-
+    public void emitTerrainBlockEntityGeometry(
+            final MutableQuadViewImpl quadEmitter,
+            final LevelSlice slice,
+            final BlockPos pos,
+            final BlockState state
+    ) {
         if (!ConfigCache.masterOptimize || !state.hasBlockEntity()) {
             return;
         }
 
-        final BlockEntity blockEntity = tryGetBlockEntity(pos, slice);
-        if (blockEntity == null) {
+        ensureGeometryReady();
+
+        final BlockEntity blockEntity = tryGetBlockEntity(slice, pos);
+        if (!(blockEntity instanceof BlockEntityExt ext)) {
             return;
         }
 
-        /* skip if the declared BlockEntityType is not supported (could be a modded block entity) */
-        final BlockEntityExt ext = (BlockEntityExt)blockEntity;
         if (!ext.supportedBlockEntity()) {
             return;
         }
+        if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]) {
+            return;
+        }
+        if (AltRenderers.hasRendererOverride(blockEntity.getType())) {
+            return;
+        }
 
-        final Block block = state.getBlock();
+        this.emitter.bind(quadEmitter);
+        final int light = LevelRenderer.getLightColor(slice, pos);
+        final BlockState blockState = blockEntity.getBlockState();
+        final var block = blockState.getBlock();
 
         if (block instanceof ChestBlock || block instanceof EnderChestBlock) {
-            if (ConfigCache.optimizeChests && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitChest(isFaceCulled, random, state, this.emitter, blockEntity);
+            if (ConfigCache.optimizeChests) {
+                emitChest(blockEntity, ext, blockState, light);
+            }
+        } else if (block instanceof ShulkerBoxBlock shulkerBoxBlock) {
+            if (ConfigCache.optimizeShulker) {
+                emitShulker(ext, shulkerBoxBlock, blockState, light);
+            }
+        } else if (block instanceof BedBlock bedBlock) {
+            if (ConfigCache.optimizeBeds) {
+                emitBed(bedBlock, blockState, light);
+            }
+        } else if (block instanceof BellBlock) {
+            if (ConfigCache.optimizeBells) {
+                emitBell(ext, light);
+            }
+        } else if (block instanceof DecoratedPotBlock) {
+            if (ConfigCache.optimizeDecoratedPots && blockEntity instanceof DecoratedPotBlockEntity decoratedPot) {
+                emitDecoratedPot(ext, decoratedPot, light);
+            }
+        } else if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
+            if (ConfigCache.optimizeBanners && blockEntity instanceof BannerBlockEntity banner) {
+                emitBanner(banner, blockState, light);
+            }
+        } else if (block instanceof StandingSignBlock || block instanceof WallSignBlock) {
+            if (ConfigCache.optimizeSigns) {
+                SignBlock signBlock = (SignBlock) block;
+                emitSign(blockState, signBlock.type(), light);
+            }
+        } else if (block instanceof CeilingHangingSignBlock || block instanceof WallHangingSignBlock) {
+            if (ConfigCache.optimizeSigns) {
+                SignBlock signBlock = (SignBlock) block;
+                emitHangingSign(blockState, signBlock.type(), light);
             }
         }
 
-        else if (block instanceof ShulkerBoxBlock) {
-            if (ConfigCache.optimizeShulker && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitShulker(isFaceCulled, random, state, this.emitter, blockEntity);
-            }
-        }
-
-        else if (block instanceof CeilingHangingSignBlock || block instanceof WallHangingSignBlock) {
-            if (ConfigCache.optimizeSigns && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitHangingSign(isFaceCulled, random, state, this.emitter);
-            }
-        }
-
-        else if (block instanceof StandingSignBlock || block instanceof WallSignBlock) {
-            if (ConfigCache.optimizeSigns && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitSign(isFaceCulled, random, state, this.emitter);
-            }
-        }
-
-        else if (block instanceof BellBlock) {
-            if (ConfigCache.optimizeBells && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitBell(isFaceCulled, random, this.emitter, blockEntity);
-            }
-        }
-
-        else if (block instanceof DecoratedPotBlock) {
-            if (ConfigCache.optimizeDecoratedPots && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitDecoratedPot(isFaceCulled, state, random, this.emitter, blockEntity);
-            }
-        }
-
-        else if (block instanceof BedBlock) {
-            if (ConfigCache.optimizeBeds && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitBed(isFaceCulled, random, state, this.emitter);
-            }
-        }
-
-        else if (block instanceof WallBannerBlock || block instanceof BannerBlock) {
-            if (ConfigCache.optimizeBanners && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitBanner(isFaceCulled, random, state, this.emitter, blockEntity);
-            }
-        }
-
-        else if (block instanceof CopperGolemStatueBlock) {
-            if (ConfigCache.optimizeCopperGolemStatue && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
-                emitCopperGolemStatue(isFaceCulled, random, state, this.emitter);
-            }
-        }
+        this.emitter.clearState();
     }
 
-    private void emitChest(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter, BlockEntity blockEntity) {
-        final ModelLayerLocation layer = ModelResourceUtil.getChestLayer(state);
-        final Map<String, BlockStateModel> pairs = tryGetPairs(layer);
-
-        if (pairs.isEmpty()) {
+    private void emitChest(
+            final BlockEntity blockEntity,
+            final BlockEntityExt ext,
+            final BlockState state,
+            final int light
+    ) {
+        final GeometryRegistry.ModelTemplate template = GeometryRegistry.getModel(ModelResourceUtil.getChestLayer(state));
+        if (template == null) {
             return;
         }
 
-        ModelResourceUtil.collectSplitModelParts(blockEntity, PRIMARY_MODEL_PARTS, pairs, random);
-
-        final boolean christmas = ConfigCache.christmasChests;
-        ChestRenderState.ChestMaterialType chestMat = MaterialSelector.getChestMaterial(blockEntity, christmas);
         final ChestType type = state.hasProperty(ChestBlock.TYPE) ? state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
-        final SpriteId material = Sheets.chooseSprite(chestMat, type);
-
-        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-
-        emitter.setMaterial(material);
-        emitter.setTransformation(BBEChestRenderer.modelTransformation(facing));
-        emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        clearParts();
-        emitter.clear();
-    }
-
-    private void emitShulker(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter, BlockEntity blockEntity) {
-        if (!shouldRender((BlockEntityExt)blockEntity)) {
+        final Material material = Sheets.chooseMaterial(blockEntity, type, ConfigCache.christmasChests);
+        final TextureAtlasSprite sprite = spriteForMaterial(material);
+        if (sprite == null) {
             return;
         }
 
-        final ModelLayerLocation layer = ModelResourceUtil.getShulkerBoxLayer();
-        final Map<String, BlockStateModel> pairs = tryGetPairs(layer);
+        this.poseStack.setIdentity();
+        final float angle = state.getValue(ChestBlock.FACING).toYRot();
+        this.poseStack.translate(0.5F, 0.5F, 0.5F);
+        this.poseStack.mulPose(Axis.YP.rotationDegrees(-angle));
+        this.poseStack.translate(-0.5F, -0.5F, -0.5F);
 
-        if (pairs.isEmpty()) {
-            return;
-        }
+        final boolean drawLid = shouldRender(ext);
+        final boolean addBase = drawLid || ConfigCache.updateType != EnumTypes.UpdateSchedulerType.SMART.ordinal();
 
-        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
+        this.emitter.setMaterial(toMaterial(BlendMode.DEFAULT));
+        this.emitter.setSprite(sprite);
+        this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
 
-        DyeColor color = ((ShulkerBoxBlock) state.getBlock()).getColor();
-        SpriteId shulkerMaterial = (color == null) ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION : Sheets.getShulkerBoxSprite(color);
-
-        Direction facing = state.getValue(BlockStateProperties.FACING);
-
-        emitter.setMaterial(shulkerMaterial);
-        emitter.setRenderType(ChunkSectionLayer.CUTOUT);
-        emitter.setTransformation(BBEShulkerBoxRenderer.modelTransform(facing));
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        clearParts();
-        emitter.clear();
-    }
-
-    private void emitSign(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter) {
-        final ModelLayerLocation layerLocation = ModelResourceUtil.getSignLayer(state);
-        final Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation);
-
-        if (pairs.isEmpty()) {
-            return;
-        }
-
-        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
-
-        WoodType woodType = ((SignBlock) state.getBlock()).type();
-        SpriteId signMaterial = Sheets.getSignSprite(woodType);
-
-        final boolean isWallSign = !state.hasProperty(BlockStateProperties.ROTATION_16);
-
-        emitter.setMaterial(signMaterial);
-        emitter.setRenderType(ChunkSectionLayer.SOLID);
-
-        if (isWallSign) {
-            Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-            emitter.setTransformation(
-                    BBEStandingSignRenderer.TRANSFORMATIONS.wallTransformation(facing).body()
-            );
-        }
-        else {
-            int rotationSegment = state.getValue(BlockStateProperties.ROTATION_16);
-            emitter.setTransformation(
-                    BBEStandingSignRenderer.TRANSFORMATIONS.freeTransformations(rotationSegment).body()
-            );
-        }
-
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        clearParts();
-        emitter.clear();
-    }
-
-    private void emitHangingSign(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter) {
-        final boolean isWall = !state.hasProperty(CeilingHangingSignBlock.ATTACHED);
-        final boolean attached = !isWall && state.getValue(CeilingHangingSignBlock.ATTACHED);
-
-        final ModelLayerLocation layerLocation = ModelResourceUtil.getHangingSignLayer(state);
-        final Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation);
-
-        if (pairs.isEmpty()) {
-            return;
-        }
-
-        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
-
-        WoodType woodType = ((SignBlock) state.getBlock()).type();
-        SpriteId signMaterial = Sheets.getHangingSignSprite(woodType);
-
-        emitter.setMaterial(signMaterial);
-        emitter.setRenderType(ChunkSectionLayer.CUTOUT);
-
-        /* invert chains to fix backface culling issue, this is shit but hey >) */
-        BlockStateModel chains = pairs.get(attached ? "vChains" : "normalChains");
-        if (chains != null) {
-            ModelResourceUtil.collectSingleModelParts(SECONDARY_MODEL_PARTS, chains, random);
-
-            if (!isWall) {
-                int rotationSegment = state.getValue(BlockStateProperties.ROTATION_16);
-                int oppositeSegment = (rotationSegment + 8) & 15;
-                emitter.setTransformation(
-                        BBEHangingSignRenderer.TRANSFORMATIONS.freeTransformations(oppositeSegment).body()
-                );
+        final List<GeometryRegistry.QuadTemplate> bottom = template.quads("bottom");
+        if (addBase) {
+            if (!bottom.isEmpty()) {
+                this.emitter.emit(bottom, light);
+            } else {
+                this.emitter.emit(template.quads(), light);
+                return;
             }
-            else {
-                Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING).getOpposite();
-                emitter.setTransformation(
-                        BBEHangingSignRenderer.TRANSFORMATIONS.wallTransformation(facing).body()
-                );
+        }
+
+        if (drawLid) {
+            final List<GeometryRegistry.QuadTemplate> lid = template.quads("lid");
+            final List<GeometryRegistry.QuadTemplate> lock = template.quads("lock");
+
+            if (!lid.isEmpty()) {
+                this.emitter.emit(lid, light);
             }
-            emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
+            if (!lock.isEmpty()) {
+                this.emitter.emit(lock, light);
+            }
         }
-
-        if (!isWall) {
-            int rotationSegment = state.getValue(BlockStateProperties.ROTATION_16);
-            emitter.setTransformation(BBEHangingSignRenderer.TRANSFORMATIONS.freeTransformations(rotationSegment).body());
-        }
-        else {
-            Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-            emitter.setTransformation(BBEHangingSignRenderer.TRANSFORMATIONS.wallTransformation(facing).body());
-        }
-
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        clearParts();
-        emitter.clear();
     }
 
-    private void emitBell(Predicate<Direction> isFaceCulled, RandomSource random, BBEEmitter emitter, BlockEntity blockEntity) {
-        if (!shouldRender((BlockEntityExt)blockEntity)) {
+    private void emitShulker(
+            final BlockEntityExt ext,
+            final ShulkerBoxBlock block,
+            final BlockState state,
+            final int light
+    ) {
+        if (!shouldRender(ext)) {
             return;
         }
 
-        final ModelLayerLocation layer = ModelResourceUtil.getBellLayer();
-        final Map<String, BlockStateModel> pairs = tryGetPairs(layer);
-
-        if (pairs.isEmpty()) {
+        final GeometryRegistry.ModelTemplate template = GeometryRegistry.getModel(ModelResourceUtil.getShulkerBoxLayer());
+        if (template == null) {
             return;
         }
 
-        pairs.values().forEach((model) -> {
-            ModelResourceUtil.collectSingleModelParts(PRIMARY_MODEL_PARTS, model, random);
-        });
+        final DyeColor color = block.getColor();
+        final Material material = color == null ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION : Sheets.SHULKER_TEXTURE_LOCATION.get(color.getId());
+        final TextureAtlasSprite sprite = spriteForMaterial(material);
+        if (sprite == null) {
+            return;
+        }
 
-        SpriteId bellBodyMaterial = BBEBellRenderer.BELL_TEXTURE;
+        this.poseStack.setIdentity();
+        final Direction facing = state.getValue(ShulkerBoxBlock.FACING);
+        this.poseStack.translate(0.5F, 0.5F, 0.5F);
+        this.poseStack.scale(0.9995F, 0.9995F, 0.9995F);
+        this.poseStack.mulPose(facing.getRotation());
+        this.poseStack.scale(1.0F, -1.0F, -1.0F);
+        this.poseStack.translate(0.0F, -1.0F, 0.0F);
 
-        emitter.setMaterial(bellBodyMaterial);
-        emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        clearParts();
-        emitter.clear();
+        this.emitter.setMaterial(toMaterial(BlendMode.CUTOUT));
+        this.emitter.setSprite(sprite);
+        this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
+        this.emitter.emit(template.quads(), light);
     }
 
-    private void emitBed(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter) {
-        final ModelLayerLocation layer = ModelResourceUtil.getBedLayer(state);
-        final Map<String, BlockStateModel> pairs = tryGetPairs(layer);
-
-        if (pairs.isEmpty()) {
+    private void emitBed(final BedBlock bedBlock, final BlockState state, final int light) {
+        final GeometryRegistry.ModelTemplate template = GeometryRegistry.getModel(ModelResourceUtil.getBedLayer(state));
+        if (template == null) {
             return;
         }
 
-        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
+        final Material material = Sheets.BED_TEXTURES[bedBlock.getColor().getId()];
+        final TextureAtlasSprite sprite = spriteForMaterial(material);
+        if (sprite == null) {
+            return;
+        }
 
-        DyeColor color = ((BedBlock) state.getBlock()).getColor();
-        SpriteId bedMaterial = Sheets.getBedSprite(color);
+        final Direction facing = state.getValue(BedBlock.FACING);
 
-        Direction facing = state.getValue(BedBlock.FACING);
+        this.poseStack.setIdentity();
+        this.poseStack.translate(0.0F, 0.5625F, 0.0F);
+        this.poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
+        this.poseStack.translate(0.5F, 0.5F, 0.5F);
+        this.poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F + facing.toYRot()));
+        this.poseStack.translate(-0.5F, -0.5F, -0.5F);
 
-        emitter.setMaterial(bedMaterial);
-        emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.setTransformation(BBEBedRenderer.modelTransform(facing));
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        clearParts();
-        emitter.clear();
+        this.emitter.setMaterial(toMaterial(BlendMode.DEFAULT));
+        this.emitter.setSprite(sprite);
+        this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
+        this.emitter.emit(template.quads(), light);
     }
 
-    private void emitDecoratedPot(Predicate<Direction> isFaceCulled, BlockState state, RandomSource random, BBEEmitter emitter, BlockEntity blockEntity) {
-        if (!shouldRender((BlockEntityExt)blockEntity)) {
+    private void emitBell(final BlockEntityExt ext, final int light) {
+        if (!shouldRender(ext)) {
             return;
         }
 
-        final ModelLayerLocation baseLayer = ModelResourceUtil.getDecoratedPotBaseLayer();
-        final ModelLayerLocation sideLayer = ModelResourceUtil.getDecoratedPotSideLayer();
-
-        final Map<String, BlockStateModel> basePairs = tryGetPairs(baseLayer);
-        final Map<String, BlockStateModel> sidePairs = tryGetPairs(sideLayer);
-
-        if (basePairs.isEmpty() || sidePairs.isEmpty()) {
+        final GeometryRegistry.ModelTemplate template = GeometryRegistry.getModel(ModelResourceUtil.getBellLayer());
+        if (template == null) {
             return;
         }
 
-        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, basePairs.values(), random);
-
-        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-
-        emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.setTransformation(BBEDecoratedPotRenderer.modelTransformation(facing));
-
-        /* emit the base (top and bottom) */
-        emitter.setMaterial(Sheets.DECORATED_POT_BASE);
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)blockEntity;
-
-        PotDecorations decorations = decoratedPotBlockEntity.getDecorations();
-        for (Map.Entry<String, BlockStateModel> e : sidePairs.entrySet()) {
-            String modelName = e.getKey();
-            BlockStateModel model = e.getValue();
-
-            ModelResourceUtil.collectSingleModelParts(SECONDARY_MODEL_PARTS, model, random);
-
-            SpriteId sideMaterial = switch (modelName) {
-                case "back"  -> MaterialSelector.getDPSideMaterial(decorations.back());
-                case "front" -> MaterialSelector.getDPSideMaterial(decorations.front());
-                case "left"  -> MaterialSelector.getDPSideMaterial(decorations.left());
-                case "right" -> MaterialSelector.getDPSideMaterial(decorations.right());
-                default      -> MaterialSelector.getDPSideMaterial(Optional.empty());
-            };
-
-            /* emit sides (patterns) */
-            emitter.setMaterial(sideMaterial);
-            emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-            clearParts();
+        final TextureAtlasSprite sprite = spriteForMaterial(BellRenderer.BELL_RESOURCE_LOCATION);
+        if (sprite == null) {
+            return;
         }
-        emitter.clear();
+
+        this.poseStack.setIdentity();
+        this.emitter.setMaterial(toMaterial(BlendMode.DEFAULT));
+        this.emitter.setSprite(sprite);
+        this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
+        this.emitter.emit(template.quads(), light);
     }
 
-    /*
-    * strict internal draw order is VERY important here and needs to be preserved in the order each layer is emitted
-    * because each banner layer is coplanar and therefore exist at the same preceived depth. its know that certain
-    * translucent sorting systems can mess this up and cause strange z-fighting like artifacts by rearranging the
-    * translucent quads in a strange manner. Sodium has implemented code in their translucent sorting system to account
-    * for this, fortunately :). This implementation might still fail with certain shader-packs because of coplanar geometry +
-    * the draw state of the translucent render-pass (depth test on, depth write off)
-    */
-    private void emitBanner(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter, BlockEntity blockEntity) {
-        final boolean isWallBanner = !state.hasProperty(BlockStateProperties.ROTATION_16);
-        final ModelLayerLocation baseLayer = ModelResourceUtil.getBannerBaseLayer(isWallBanner);
-        final ModelLayerLocation flagLayer = ModelResourceUtil.getBannerFlagLayer(isWallBanner);
-
-        final Map<String, BlockStateModel> basePairs = tryGetPairs(baseLayer);
-        final Map<String, BlockStateModel> canvasPairs = tryGetPairs(flagLayer);
-
-        if (basePairs.isEmpty() || canvasPairs.isEmpty()) {
+    private void emitDecoratedPot(
+            final BlockEntityExt ext,
+            final DecoratedPotBlockEntity pot,
+            final int light
+    ) {
+        if (!shouldRender(ext)) {
             return;
         }
 
-        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, basePairs.values(), random);
-        ModelResourceUtil.collectMultiModelParts(SECONDARY_MODEL_PARTS, canvasPairs.values(), random);
-
-        BannerBlockEntity bannerBlockEntity = (BannerBlockEntity)blockEntity;
-
-        if (isWallBanner) {
-            Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-            emitter.setTransformation(BBEBannerRenderer.TRANSFORMATIONS.wallTransformation(facing));
-        }
-        else {
-            int rotationSegment = state.getValue(BlockStateProperties.ROTATION_16);
-            emitter.setTransformation(BBEBannerRenderer.TRANSFORMATIONS.freeTransformations(rotationSegment));
-        }
-
-        /* emit pole */
-        emitter.setMaterial(Sheets.BANNER_BASE);
-        emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        final int fancy = EnumTypes.BannerGraphicsType.FANCY.ordinal();
-        final ChunkSectionLayer rt = (ConfigCache.bannerGraphics == fancy) ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT;
-
-        /* emit base canvas */
-        emitter.setRenderType(rt);
-        emitter.setColor(bannerBlockEntity.getBaseColor().getTextureDiffuseColor());
-        emitter.setSplittingMode(BBEEmitter.QuadSplittingMode.NONE);
-
-        emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        /* emit banner layers */
-        for (BannerPatternLayers.Layer layer : bannerBlockEntity.getPatterns().layers()) {
-            SpriteId layerMaterial = MaterialSelector.getBannerMaterial(layer.pattern());
-            DyeColor layerColor = layer.color();
-
-            emitter.setMaterial(layerMaterial);
-            emitter.setColor(layerColor.getTextureDiffuseColor());
-            emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-        }
-
-        clearParts();
-        emitter.clear();
-    }
-
-    private void emitCopperGolemStatue(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter) {
-        final ModelLayerLocation layerLocation = ModelResourceUtil.getCGSLayer(state);
-        final Map<String, BlockStateModel> pairs = tryGetPairs(layerLocation);
-
-        if (pairs.isEmpty()) {
+        final GeometryRegistry.ModelTemplate baseTemplate = GeometryRegistry.getModel(ModelResourceUtil.getDecoratedPotBaseLayer());
+        final GeometryRegistry.ModelTemplate sideTemplate = GeometryRegistry.getModel(ModelResourceUtil.getDecoratedPotSideLayer());
+        if (baseTemplate == null || sideTemplate == null) {
             return;
         }
 
-        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
+        this.poseStack.setIdentity();
+        final Direction facing = pot.getDirection();
+        this.poseStack.translate(0.5D, 0.0D, 0.5D);
+        this.poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - facing.toYRot()));
+        this.poseStack.translate(-0.5D, 0.0D, -0.5D);
 
-        CopperGolemStatueBlock cgsBlock = (CopperGolemStatueBlock)state.getBlock();
-        TextureAtlasSprite sprite = ModelResourceUtil.getCGSSprite(cgsBlock);
+        final Matrix4f transform = new Matrix4f(this.poseStack.last().pose());
+        this.emitter.setMaterial(toMaterial(BlendMode.DEFAULT));
+        this.emitter.setTransform(transform);
 
-        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        final TextureAtlasSprite baseSprite = spriteForMaterial(Sheets.DECORATED_POT_BASE);
+        if (baseSprite != null) {
+            this.emitter.setSprite(baseSprite);
+            this.emitter.emit(baseTemplate.quads(), light);
+        }
 
-        emitter.setSprite(sprite);
-        emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.setTransformation(BBECopperGolemStatueBlockRenderer.modelTransformation(facing));
-        emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
-
-        clearParts();
-        emitter.clear();
+        final PotDecorations decorations = pot.getDecorations();
+        emitPotSide(sideTemplate, "front", getPotSideMaterial(decorations.front()), light);
+        emitPotSide(sideTemplate, "back", getPotSideMaterial(decorations.back()), light);
+        emitPotSide(sideTemplate, "left", getPotSideMaterial(decorations.left()), light);
+        emitPotSide(sideTemplate, "right", getPotSideMaterial(decorations.right()), light);
     }
 
-    /*
-     *  some servers can send invalid block data which makes LevelSlice#getBlockEntity
-     *  return null. guard against potential exception as well
-     */
-    private static BlockEntity tryGetBlockEntity(BlockPos pos, LevelSlice slice) {
+    private void emitPotSide(
+            final GeometryRegistry.ModelTemplate sideTemplate,
+            final String part,
+            final Material material,
+            final int light
+    ) {
+        final TextureAtlasSprite sprite = spriteForMaterial(material);
+        if (sprite == null) {
+            return;
+        }
+
+        this.emitter.setSprite(sprite);
+        final List<GeometryRegistry.QuadTemplate> quads = sideTemplate.quads(part);
+        if (quads.isEmpty()) {
+            return;
+        }
+        this.emitter.emit(quads, light);
+    }
+
+    private void emitBanner(final BannerBlockEntity banner, final BlockState state, final int light) {
+        final GeometryRegistry.ModelTemplate template = GeometryRegistry.getModel(ModelResourceUtil.getBannerLayer());
+        if (template == null) {
+            return;
+        }
+
+        this.poseStack.setIdentity();
+        final boolean wall = state.getBlock() instanceof WallBannerBlock;
+        if (!wall) {
+            this.poseStack.translate(0.5F, 0.5F, 0.5F);
+            this.poseStack.mulPose(Axis.YP.rotationDegrees(-RotationSegment.convertToDegrees(state.getValue(BannerBlock.ROTATION))));
+        } else {
+            this.poseStack.translate(0.5F, -0.16666667F, 0.5F);
+            this.poseStack.mulPose(Axis.YP.rotationDegrees(-state.getValue(WallBannerBlock.FACING).toYRot()));
+            this.poseStack.translate(0.0F, -0.3125F, -0.4375F);
+        }
+        this.poseStack.scale(0.6666667F, -0.6666667F, -0.6666667F);
+
+        this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
+
+        final TextureAtlasSprite poleSprite = spriteForMaterial(ModelBakery.BANNER_BASE);
+        if (poleSprite != null) {
+            this.emitter.setMaterial(toMaterial(BlendMode.DEFAULT));
+            this.emitter.setSprite(poleSprite);
+            this.emitter.setColor(0xFFFFFFFF);
+            if (!wall) {
+                this.emitter.emit(template.quads("pole"), light);
+            }
+            this.emitter.emit(template.quads("bar"), light);
+        }
+
+        final List<GeometryRegistry.QuadTemplate> flagQuads = template.quads("flag");
+        if (flagQuads.isEmpty()) {
+            return;
+        }
+        final BlendMode flagBlend = ConfigCache.bannerGraphics == EnumTypes.BannerGraphicsType.FAST.ordinal()
+                ? BlendMode.CUTOUT
+                : BlendMode.TRANSLUCENT;
+        final TextureAtlasSprite solidFlagSprite = spriteForMaterial(ModelBakery.BANNER_BASE);
+        final TextureAtlasSprite basePatternSprite = spriteForMaterial(Sheets.BANNER_BASE);
+        if (solidFlagSprite == null || basePatternSprite == null) {
+            return;
+        }
+
+        this.emitter.setMaterial(toMaterial(BlendMode.DEFAULT));
+        this.emitter.setDisableSplit(false);
+        this.emitter.setSprite(solidFlagSprite);
+        this.emitter.setColor(0xFFFFFFFF);
+        this.emitter.emit(flagQuads, light);
+
+        this.emitter.setMaterial(toMaterial(flagBlend));
+        this.emitter.setDisableSplit(true);
+        this.emitter.setSprite(basePatternSprite);
+        this.emitter.setColor(banner.getBaseColor().getTextureDiffuseColor() | 0xFF000000);
+        this.emitter.emit(flagQuads, light);
+
+        final List<BannerPatternLayers.Layer> layers = banner.getPatterns().layers();
+        for (int i = 0; i < 16 && i < layers.size(); i++) {
+            final BannerPatternLayers.Layer layer = layers.get(i);
+            final Material patternMaterial = Sheets.getBannerMaterial(layer.pattern());
+            final TextureAtlasSprite sprite = spriteForMaterial(patternMaterial);
+            if (sprite == null) {
+                continue;
+            }
+            this.emitter.setSprite(sprite);
+            this.emitter.setColor(layer.color().getTextureDiffuseColor() | 0xFF000000);
+            this.emitter.emit(flagQuads, light);
+        }
+
+        this.emitter.setDisableSplit(false);
+        this.emitter.setColor(0xFFFFFFFF);
+    }
+
+    private void emitSign(final BlockState state, final WoodType woodType, final int light) {
+        final GeometryRegistry.ModelTemplate template = GeometryRegistry.getModel(ModelResourceUtil.getSignLayer(state));
+        if (template == null) {
+            return;
+        }
+
+        this.poseStack.setIdentity();
+        if (state.getBlock() instanceof StandingSignBlock) {
+            final float angle = RotationSegment.convertToDegrees(state.getValue(BlockStateProperties.ROTATION_16));
+            this.poseStack.translate(0.5F, 0.5F, 0.5F);
+            this.poseStack.mulPose(Axis.YP.rotationDegrees(-angle));
+        } else {
+            final Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+            this.poseStack.translate(0.5F, 0.5F, 0.5F);
+            this.poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
+            this.poseStack.translate(0.0F, -0.3125F, -0.4375F);
+        }
+        this.poseStack.scale(0.6666667F, -0.6666667F, -0.6666667F);
+
+        final TextureAtlasSprite sprite = spriteForMaterial(Sheets.getSignMaterial(woodType));
+        if (sprite == null) {
+            return;
+        }
+
+        this.emitter.setMaterial(toMaterial(BlendMode.DEFAULT));
+        this.emitter.setSprite(sprite);
+        this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
+
+        final List<GeometryRegistry.QuadTemplate> signQuads = template.quads("sign");
+        if (signQuads.isEmpty()) {
+            this.emitter.emit(template.quads(), light);
+            return;
+        }
+
+        this.emitter.emit(signQuads, light);
+        if (state.getBlock() instanceof StandingSignBlock) {
+            this.emitter.emit(template.quads("stick"), light);
+        }
+    }
+
+    private void emitHangingSign(final BlockState state, final WoodType woodType, final int light) {
+        final GeometryRegistry.ModelTemplate template = GeometryRegistry.getModel(ModelResourceUtil.getHangingSignLayer(state));
+        if (template == null) {
+            return;
+        }
+
+        this.poseStack.setIdentity();
+        if (state.hasProperty(BlockStateProperties.ROTATION_16)) {
+            final float angle = RotationSegment.convertToDegrees(state.getValue(BlockStateProperties.ROTATION_16));
+            this.poseStack.translate(0.5, 0.9375, 0.5);
+            this.poseStack.mulPose(Axis.YP.rotationDegrees(-angle));
+            this.poseStack.translate(0.0F, -0.3125F, 0.0F);
+        } else {
+            final Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+            this.poseStack.translate(0.5, 0.9375, 0.5);
+            this.poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
+            this.poseStack.translate(0.0F, -0.3125F, 0.0F);
+        }
+        this.poseStack.scale(1.0F, -1.0F, -1.0F);
+
+        final TextureAtlasSprite sprite = spriteForMaterial(Sheets.getHangingSignMaterial(woodType));
+        if (sprite == null) {
+            return;
+        }
+
+        this.emitter.setMaterial(toMaterial(BlendMode.CUTOUT));
+        this.emitter.setSprite(sprite);
+        this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
+        final List<GeometryRegistry.QuadTemplate> boardQuads = template.quads("board");
+        if (!boardQuads.isEmpty()) {
+            this.emitter.emit(boardQuads, light);
+        }
+
+        final boolean wall = !(state.getBlock() instanceof CeilingHangingSignBlock);
+        final boolean attached = !wall && state.getValue(CeilingHangingSignBlock.ATTACHED);
+
+        if (wall) {
+            this.emitter.emit(template.quads("plank"), light);
+            this.emitter.emit(template.quads("normalChains"), light);
+            return;
+        }
+
+        if (attached) {
+            this.emitter.emit(template.quads("vChains"), light);
+        } else {
+            this.emitter.emit(template.quads("normalChains"), light);
+        }
+    }
+
+    private static Material getPotSideMaterial(final Optional<Item> decorationItem) {
+        if (decorationItem.isPresent()) {
+            final Material material = Sheets.getDecoratedPotMaterial(DecoratedPotPatterns.getPatternFromItem(decorationItem.get()));
+            if (material != null) {
+                return material;
+            }
+        }
+        return Sheets.DECORATED_POT_SIDE;
+    }
+
+    private static void ensureGeometryReady() {
+        if (GeometryRegistry.getCache().isEmpty()) {
+            ResourceTasks.populateGeometryRegistry();
+        }
+    }
+
+    private static BlockEntity tryGetBlockEntity(final LevelSlice slice, final BlockPos pos) {
         try {
             return slice.getBlockEntity(pos);
-        } catch (RuntimeException e) {
-            BBE.getLogger().error("Failed to fetch block entity at {}. " + "LevelSlice#getBlockEntity threw an exception!", pos, e);
-            throw e;
+        } catch (RuntimeException ignored) {
+            return null;
         }
     }
 
-    private static Map<String, BlockStateModel> tryGetPairs(ModelLayerLocation location) {
-        try {
-            MultiPartBlockModel model = (MultiPartBlockModel)GeometryRegistry.getModel(location);
-            return model.getPairs();
-        } catch (Exception e) {
-            TaskScheduler.schedule(() -> {
-                if (ResourceTasks.populateGeometryRegistry() == ResourceTasks.FAILED) {
-                    throw new RuntimeException("Failed to repopulate geometry registry after failed location lookup!");
-                }
-                SectionUpdateDispatcher.queueUpdateAllSections();
-            });
-            return Map.of();
-        }
-    }
-
-    public static boolean shouldRender(BlockEntityExt ext) {
+    private static boolean shouldRender(final BlockEntityExt ext) {
         return ext.renderingMode() == RenderingMode.TERRAIN;
     }
 
-    private void clearParts() {
-        PRIMARY_MODEL_PARTS.clear();
-        SECONDARY_MODEL_PARTS.clear();
+    private static TextureAtlasSprite spriteForMaterial(final Material material) {
+        try {
+            final TextureAtlasSprite sprite = Minecraft.getInstance()
+                    .getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+                    .apply(material.texture());
+            if (sprite.contents().name().equals(MissingTextureAtlasSprite.getLocation()) && MISSING_MATERIAL_SPRITES.add(material)) {
+                betterblockentities.client.BBE.getLogger().warn(
+                        "Missing material sprite for texture {} from atlas {}",
+                        material.texture(),
+                        material.atlasLocation()
+                );
+            }
+            return sprite;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static RenderMaterial toMaterial(final BlendMode blendMode) {
+        final RenderMaterial material = MATERIALS.get(blendMode);
+        if (material != null) {
+            return material;
+        }
+        return MATERIALS.get(BlendMode.DEFAULT);
+    }
+
+    private static Map<BlendMode, RenderMaterial> buildMaterials() {
+        final Map<BlendMode, RenderMaterial> materials = new EnumMap<>(BlendMode.class);
+        final Renderer renderer = RendererAccess.INSTANCE.getRenderer();
+        if (renderer == null) {
+            return materials;
+        }
+
+        final MaterialFinder finder = renderer.materialFinder();
+        for (BlendMode mode : BlendMode.values()) {
+            materials.put(mode, finder.clear().blendMode(mode).find());
+        }
+        return materials;
     }
 }

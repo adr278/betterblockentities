@@ -1,7 +1,7 @@
 package betterblockentities.mixin.sodium.translucent_sorting;
 
 /* local */
-import betterblockentities.client.chunk.pipeline.BBEEmitter;
+import betterblockentities.client.chunk.translucent_sorting.QuadSplittingMode;
 import betterblockentities.client.chunk.translucent_sorting.TQuadExt;
 
 /* sodium */
@@ -13,15 +13,15 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(TQuad.class)
 public class TQuadMixin implements TQuadExt {
-    @Unique private BBEEmitter.QuadSplittingMode splittingMode;
+    @Unique private QuadSplittingMode splittingMode = QuadSplittingMode.DEFERRED;
 
     @Override
-    public void setSplittingMode(BBEEmitter.QuadSplittingMode mode) {
+    public void setSplittingMode(final QuadSplittingMode mode) {
         this.splittingMode = mode;
     }
 
     @Override
-    public BBEEmitter.QuadSplittingMode getSplittingMode() {
+    public QuadSplittingMode getSplittingMode() {
         return this.splittingMode;
     }
 }

@@ -2,11 +2,10 @@ package betterblockentities.client;
 
 /* local */
 import betterblockentities.registration.RegistrationCollection;
+import betterblockentities.render.AltBlockEntityRenderState;
 import betterblockentities.render.AltRenderDispatcher;
-import betterblockentities.client.gui.DebugScreen;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
-import betterblockentities.mixin.gui.DebugScreenEntriesAccessor;
 
 /* fabric */
 import com.google.common.collect.ImmutableList;
@@ -14,11 +13,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 
 /* minecraft */
-import net.minecraft.client.gui.components.debug.DebugEntryCategory;
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 
 /* java/misc */
 import org.slf4j.Logger;
@@ -36,17 +31,12 @@ public class BBE implements ClientModInitializer {
         getLogger().info("Building config cache from user defined config file...");
         BBEConfig.updateConfigCache();
 
-        DebugScreenEntriesAccessor.invokeRegister(GlobalScope.DEBUG_ID, new DebugScreen());
-
         getLogger().info("Collecting API Entrypoint's...");
         RegistrationCollection.collectEntryPoints();
     }
 
     public static class GlobalScope {
-        /* debug */
         private static final Logger LOGGER = LoggerFactory.getLogger("BBE-Logger");
-        public static DebugEntryCategory DEBUG_CATEGORY = new DebugEntryCategory(Component.literal("BBE"), 10F);
-        public static Identifier DEBUG_ID = Identifier.fromNamespaceAndPath("bbe", "debug");
 
         /* config */
         public static final BBEConfig CONFIG = new BBEConfig();
@@ -55,7 +45,7 @@ public class BBE implements ClientModInitializer {
         /* runtime render data */
         public static Frustum frustum;
         public static AltRenderDispatcher altRenderDispatcher;
-        public static List<BlockEntityRenderState> altBlockEntityRenderStates = new ArrayList<>();
+        public static List<AltBlockEntityRenderState> altBlockEntityRenderStates = new ArrayList<>();
         public static boolean limitVanillaSignRendering = false;
     }
 
@@ -63,8 +53,7 @@ public class BBE implements ClientModInitializer {
     public static class ModCompact {
         private static ImmutableList<String> modList = ImmutableList.of(
                 "entity_model_features",
-                "litematica",
-                "malilib"
+                "litematica"
         );
 
         private static ImmutableList<String> loadedMods;
