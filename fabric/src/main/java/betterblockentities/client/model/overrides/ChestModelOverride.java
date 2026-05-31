@@ -8,19 +8,10 @@ import betterblockentities.client.gui.option.EnumTypes;
 import net.minecraft.client.model.geom.ModelPart;
 
 public final class ChestModelOverride {
-    public static void applyOptimization(final ModelPart bottom) {
+    public static void splitModel(final ModelPart bottom) {
         if (ConfigCache.updateType != EnumTypes.UpdateSchedulerType.SMART.ordinal()) {
             bottom.skipDraw = true;
             bottom.visible = false;
-            return;
         }
-
-        bottom.skipDraw = false;
-        bottom.visible = true;
-    }
-
-    public static void clearOptimization(final ModelPart bottom) {
-        bottom.skipDraw = false;
-        bottom.visible = true;
     }
 }

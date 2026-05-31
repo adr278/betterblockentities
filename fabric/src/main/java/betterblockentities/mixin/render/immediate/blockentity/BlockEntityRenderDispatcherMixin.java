@@ -3,6 +3,7 @@ package betterblockentities.mixin.render.immediate.blockentity;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.BBEConfig;
+import betterblockentities.client.render.immediate.blockentity.misc.CrumblingOverlayConsumer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.manager.SpecialBlockEntityManager;
@@ -12,10 +13,11 @@ import betterblockentities.render.AltBlockEntityRenderState;
 import betterblockentities.render.AltRenderers;
 
 /* minecraft */
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -24,15 +26,14 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 
 /* mixin */
-import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /* java/misc */
@@ -40,10 +41,24 @@ import java.util.List;
 
 @Mixin(BlockEntityRenderDispatcher.class)
 public abstract class BlockEntityRenderDispatcherMixin {
-    @Shadow private Camera camera;
+    @Shadow public Camera camera;
+
+    @WrapOperation(
+            method = "renderItem",
+            at = @At(
+                    value = "INVOKE",
+                    target = "net/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher.tryRender (Lnet/minecraft/world/level/block/entity/BlockEntity;Ljava/lang/Runnable;)V",
+                    ordinal = 0
+            )
+    )
+    public <E extends BlockEntity> void detectItemInvokedRenderers(BlockEntity blockEntity, Runnable runnable, Operation<Void> original) {
+        BBE.GlobalScope.isItemInvoked = true;
+        original.call(blockEntity, runnable);
+        BBE.GlobalScope.isItemInvoked = false;
+    }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void cancelTerrainReadyBlockEntities(
+    private void manageBlockEntities(
             final BlockEntity blockEntity,
             final float partialTick,
             final PoseStack poseStack,
@@ -51,19 +66,17 @@ public abstract class BlockEntityRenderDispatcherMixin {
             final CallbackInfo ci
     ) {
         final BlockEntityExt ext = (BlockEntityExt) blockEntity;
-        final byte optKind = resolveOptKind(blockEntity, ext);
+
         BBE.GlobalScope.limitVanillaSignRendering = false;
 
-        if (!shouldUseTerrainPath(ext, optKind)) {
+        if (!shouldManage(ext)) {
             return;
         }
 
-        final boolean renderSpecialsInImmediate = shouldRenderSpecialsInImmediate(blockEntity, ext, optKind);
+        final boolean renderSpecialsInImmediate = shouldRenderSpecialsInImmediate(blockEntity, ext);
         final boolean crumblingPass = isCrumblingPass(vertexConsumers);
 
-        if (optKind == InstancedBlockEntityManager.OptKind.SIGN) {
-            BBE.GlobalScope.limitVanillaSignRendering = renderSpecialsInImmediate && !crumblingPass;
-        }
+        BBE.GlobalScope.limitVanillaSignRendering = renderSpecialsInImmediate && !crumblingPass;
 
         if (crumblingPass) {
             if (!renderSpecialsInImmediate) {
@@ -76,6 +89,14 @@ public abstract class BlockEntityRenderDispatcherMixin {
         if (!renderSpecialsInImmediate) {
             ci.cancel();
         }
+    }
+
+    @Unique private static boolean isCrumblingPass(final MultiBufferSource vertexConsumers) {
+        if (CrumblingRenderContext.isActive()) {
+            return true;
+        }
+
+        return !(vertexConsumers instanceof MultiBufferSource.BufferSource);
     }
 
     @Inject(method = "render", at = @At("RETURN"))
@@ -126,72 +147,21 @@ public abstract class BlockEntityRenderDispatcherMixin {
         BBE.GlobalScope.altRenderDispatcher.clearStateRendererPairs();
     }
 
-    @Unique private static boolean shouldUseTerrainPath(final BlockEntityExt ext, final byte optKind) {
-        return optKind != InstancedBlockEntityManager.OptKind.NONE
-                && BBEConfig.OptEnabledTable.ENABLED[optKind & 0xFF]
+    @Unique private static boolean shouldManage(final BlockEntityExt ext) {
+        return BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]
                 && ext.terrainMeshReady()
                 && ext.renderingMode() == RenderingMode.TERRAIN;
     }
 
     @Unique private static boolean shouldRenderSpecialsInImmediate(
             final BlockEntity blockEntity,
-            final BlockEntityExt ext,
-            final byte optKind
+            final BlockEntityExt ext
     ) {
         if (!ext.hasSpecialManager()) {
             return false;
         }
 
-        if (optKind != InstancedBlockEntityManager.OptKind.CAMPFIRE
-                && optKind != InstancedBlockEntityManager.OptKind.SIGN) {
-            return false;
-        }
-
         return SpecialBlockEntityManager.shouldRender(blockEntity);
-    }
-
-    @Unique private static boolean isCrumblingPass(final MultiBufferSource vertexConsumers) {
-        if (CrumblingRenderContext.isActive()) {
-            return true;
-        }
-
-        return !(vertexConsumers instanceof MultiBufferSource.BufferSource);
-    }
-
-    @Unique private static byte resolveOptKind(final BlockEntity blockEntity, final BlockEntityExt ext) {
-        final byte existing = ext.optKind();
-        if (existing != InstancedBlockEntityManager.OptKind.NONE) {
-            return existing;
-        }
-
-        final BlockEntityType<?> type = blockEntity.getType();
-
-        if (type == BlockEntityType.CHEST || type == BlockEntityType.TRAPPED_CHEST || type == BlockEntityType.ENDER_CHEST) {
-            return InstancedBlockEntityManager.OptKind.CHEST;
-        }
-        if (type == BlockEntityType.SIGN || type == BlockEntityType.HANGING_SIGN) {
-            return InstancedBlockEntityManager.OptKind.SIGN;
-        }
-        if (type == BlockEntityType.BED) {
-            return InstancedBlockEntityManager.OptKind.BED;
-        }
-        if (type == BlockEntityType.SHULKER_BOX) {
-            return InstancedBlockEntityManager.OptKind.SHULKER;
-        }
-        if (type == BlockEntityType.DECORATED_POT) {
-            return InstancedBlockEntityManager.OptKind.POT;
-        }
-        if (type == BlockEntityType.BANNER) {
-            return InstancedBlockEntityManager.OptKind.BANNER;
-        }
-        if (type == BlockEntityType.BELL) {
-            return InstancedBlockEntityManager.OptKind.BELL;
-        }
-        if (type == BlockEntityType.CAMPFIRE) {
-            return InstancedBlockEntityManager.OptKind.CAMPFIRE;
-        }
-
-        return InstancedBlockEntityManager.OptKind.NONE;
     }
 
     @Unique private void renderCrumblingOnly(
@@ -220,53 +190,11 @@ public abstract class BlockEntityRenderDispatcherMixin {
                 blockEntity,
                 partialTick,
                 poseStack,
-                new CrumblingOnlyBufferSource(vertexConsumers),
+                new CrumblingOverlayConsumer.CrumblingOnlyBufferSource(vertexConsumers),
                 light,
                 OverlayTexture.NO_OVERLAY
         );
     }
 
-    @Unique private record CrumblingOnlyBufferSource(MultiBufferSource delegate) implements MultiBufferSource {
 
-        @Override public @NonNull VertexConsumer getBuffer(final RenderType renderType) {
-                if (!renderType.affectsCrumbling()) {
-                    return NoopVertexConsumer.INSTANCE;
-                }
-
-                final VertexConsumer vertexConsumer = this.delegate.getBuffer(renderType);
-                if (vertexConsumer instanceof VertexMultiConsumerDoubleAccessor doubleConsumer) {
-                    return doubleConsumer.getFirst();
-                }
-
-                return vertexConsumer;
-            }
-        }
-
-    @Unique private enum NoopVertexConsumer implements VertexConsumer {
-        INSTANCE;
-
-        @Override public @NonNull VertexConsumer addVertex(final float x, final float y, final float z) {
-            return this;
-        }
-
-        @Override public @NonNull VertexConsumer setColor(final int red, final int green, final int blue, final int alpha) {
-            return this;
-        }
-
-        @Override public @NonNull VertexConsumer setUv(final float u, final float v) {
-            return this;
-        }
-
-        @Override public @NonNull VertexConsumer setUv1(final int u, final int v) {
-            return this;
-        }
-
-        @Override public @NonNull VertexConsumer setUv2(final int u, final int v) {
-            return this;
-        }
-
-        @Override public @NonNull VertexConsumer setNormal(final float normalX, final float normalY, final float normalZ) {
-            return this;
-        }
-    }
 }

@@ -1,13 +1,16 @@
 package betterblockentities.client.chunk.pipeline;
 
 /* local */
-import betterblockentities.client.model.geometry.GeometryRegistry;
+import betterblockentities.mixin.sodium.pipeline.MutableQuadViewImplAccessor;
 
 /* fabric */
 import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 
 /* minecraft */
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.util.RandomSource;
 
 /* sodium */
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
@@ -15,12 +18,13 @@ import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 /* java/misc */
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-
 import java.util.List;
+import java.util.function.Supplier;
 
 public final class BBEEmitter {
+    public static final int NO_QUAD_SPLITTING_TAG = "BBE-TS-QUAD-NO-SPLIT".hashCode();
+
     private final Vector3f scratch = new Vector3f();
-    private final Vector3f normalScratch = new Vector3f();
     private MutableQuadViewImpl emitter;
     private RenderMaterial material;
     private TextureAtlasSprite sprite;
@@ -52,61 +56,73 @@ public final class BBEEmitter {
         this.disableSplit = disableSplit;
     }
 
-    public void emit(final List<GeometryRegistry.QuadTemplate> quads, final int packedLight) {
-        if (this.emitter == null || this.material == null || this.sprite == null || quads.isEmpty()) {
+    public void emit(List<BakedModel> models, Supplier<RandomSource> randomSupplier) {
+        if (this.emitter == null || this.material == null || this.sprite == null) {
             return;
         }
 
-        for (GeometryRegistry.QuadTemplate quad : quads) {
-            this.emitter.clear();
+        for (BakedModel model : models) {
+            List<BakedQuad> quads = model.getQuads(null, null, randomSupplier.get());
 
-            final float[] pos = quad.positions();
-            final float[] uv = quad.uvs();
-            final float[] normal = quad.normals();
-            final float uMin = this.sprite.getU0();
-            final float vMin = this.sprite.getV0();
-            final float uSpan = this.sprite.getU1() - uMin;
-            final float vSpan = this.sprite.getV1() - vMin;
-            float normalX = normal[0];
-            float normalY = normal[1];
-            float normalZ = normal[2];
+            for (BakedQuad quad : quads) {
+                int[] vertices = quad.getVertices();
+                ((MutableQuadViewImplAccessor)this.emitter).fromVanillaInternalInvoke(vertices, 0);
+
+                applyMaterial();
+                applySprite();
+                applyRotation();
+                applyColor();
+                applySplittingMode();
+
+                this.emitter.faceNormal();
+                this.emitter.emitDirectly();
+            }
+        }
+    }
+
+    private void applyMaterial() {
+        this.emitter.material(this.material);
+    }
+
+    private void applySprite() {
+        final float uMin = this.sprite.getU0();
+        final float uSpan = this.sprite.getU1() - uMin;
+        final float vMin = this.sprite.getV0();
+        final float vSpan = this.sprite.getV1() - vMin;
+
+        for (int i = 0; i < 4; i++) {
+            this.emitter.uv(i, uMin + this.emitter.u(i) * uSpan, vMin + this.emitter.v(i) * vSpan);
+        }
+
+        this.emitter.cachedSprite(sprite);
+    }
+
+    private void applyRotation() {
+        for (int i = 0; i < 4; i++) {
+            float x = this.emitter.x(i);
+            float y = this.emitter.y(i);
+            float z = this.emitter.z(i);
 
             if (this.transform != null) {
-                this.transform.transformDirection(normalX, normalY, normalZ, this.normalScratch).normalize();
-                normalX = this.normalScratch.x();
-                normalY = this.normalScratch.y();
-                normalZ = this.normalScratch.z();
+                this.transform.transformPosition(x, y, z, this.scratch);
+                x = this.scratch.x();
+                y = this.scratch.y();
+                z = this.scratch.z();
             }
 
-            for (int i = 0; i < 4; i++) {
-                final int posIdx = i * 3;
-                final int uvIdx = i * 2;
+            this.emitter.pos(i, x, y, z);
+        }
+    }
 
-                float x = pos[posIdx];
-                float y = pos[posIdx + 1];
-                float z = pos[posIdx + 2];
+    private void applyColor() {
+        for (int i = 0; i < 4; i++) {
+            this.emitter.color(i, this.color);
+        }
+    }
 
-                if (this.transform != null) {
-                    this.transform.transformPosition(x, y, z, this.scratch);
-                    x = this.scratch.x();
-                    y = this.scratch.y();
-                    z = this.scratch.z();
-                }
-
-                this.emitter.pos(i, x, y, z);
-                this.emitter.color(i, this.color);
-                this.emitter.uv(i, uMin + uv[uvIdx] * uSpan, vMin + uv[uvIdx + 1] * vSpan);
-                this.emitter.lightmap(i, packedLight);
-                this.emitter.normal(i, normalX, normalY, normalZ);
-            }
-
-            this.emitter.material(this.material);
-
-            if (this.disableSplit) {
-                this.emitter.tag(BBEBlockRenderer.NO_QUAD_SPLITTING_TAG);
-            }
-
-            this.emitter.emitDirectly();
+    private void applySplittingMode() {
+        if (this.disableSplit) {
+            this.emitter.tag(NO_QUAD_SPLITTING_TAG);
         }
     }
 

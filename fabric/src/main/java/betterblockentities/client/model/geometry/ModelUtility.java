@@ -1,9 +1,13 @@
 package betterblockentities.client.model.geometry;
 
+/* local */
+import betterblockentities.client.BBE;
 import betterblockentities.mixin.model.modelpart.ModelPartCubeAccessor;
 
 /* minecraft */
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 
 /* mojang */
@@ -12,124 +16,62 @@ import com.mojang.blaze3d.vertex.PoseStack;
 /* java/misc */
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Utility for baking ModelPart trees into reusable quad templates.
  */
 public class ModelUtility {
+    private static final Vector3f scratch = new Vector3f();
 
-    public static GeometryRegistry.ModelTemplate bakeTemplate(final ModelPart root, final PoseStack stack) {
-        final Map<String, List<GeometryRegistry.QuadTemplate>> partQuads = new HashMap<>();
-        final List<GeometryRegistry.QuadTemplate> allQuads = new ArrayList<>();
-
-        root.visit(stack, (pose, path, index, cube) -> {
-            final String topLevelPart = topLevelPart(path);
-            final List<GeometryRegistry.QuadTemplate> bucket = partQuads.computeIfAbsent(topLevelPart, ignored -> new ArrayList<>());
-
-            for (ModelPart.Polygon polygon : ((ModelPartCubeAccessor) (Object) cube).getPolygons()) {
-                final GeometryRegistry.QuadTemplate quad = bakePolygon(pose, polygon);
-                if (quad == null) {
+    public static void toBakedQuads(ModelPart part, List<BakedQuad> output, TextureAtlasSprite sprite, PoseStack stack) {
+        part.visit(stack, (pose, name, idx, cube) -> {
+            ModelPartCubeAccessor acc = (ModelPartCubeAccessor)cube;
+            for (ModelPart.Polygon poly : acc.getPolygons()) {
+                if (poly.vertices.length != 4) {
+                    BBE.getLogger().error("Non-quad polygon detected when assembling block geometry! Skipping");
                     continue;
                 }
 
-                allQuads.add(quad);
-                bucket.add(quad);
-            }
-        });
+                int[] vertices = new int[32];
 
-        if (partQuads.isEmpty() && !allQuads.isEmpty()) {
-            partQuads.put("root", allQuads);
-        }
+                Vector3f normal = pose.transformNormal(poly.normal, new Vector3f());
 
-        return new GeometryRegistry.ModelTemplate(allQuads, partQuads);
-    }
+                for (int i = 0; i < 4; i++) {
+                    ModelPart.Vertex vertex = poly.vertices[i];
 
-    public static List<GeometryRegistry.QuadTemplate> bakePart(final ModelPart part, final PoseStack stack) {
-        final List<GeometryRegistry.QuadTemplate> quads = new ArrayList<>();
+                    Vector3f pos = pose.pose().transformPosition(vertex.pos.x / 16, vertex.pos.y / 16, vertex.pos.z / 16, scratch);
 
-        part.visit(stack, (pose, path, index, cube) -> {
-            for (ModelPart.Polygon polygon : ((ModelPartCubeAccessor) (Object) cube).getPolygons()) {
-                final GeometryRegistry.QuadTemplate baked = bakePolygon(pose, polygon);
-                if (baked != null) {
-                    quads.add(baked);
+                    int baseIndex = i * 8;
+
+                    //vertex position
+                    vertices[baseIndex] = Float.floatToRawIntBits(pos.x());
+                    vertices[baseIndex + 1] = Float.floatToRawIntBits(pos.y());
+                    vertices[baseIndex + 2] = Float.floatToRawIntBits(pos.z());
+
+                    //color
+                    vertices[baseIndex + 3] = -1;
+
+                    //uv
+                    vertices[baseIndex + 4] = Float.floatToRawIntBits(vertex.u);
+                    vertices[baseIndex + 5] = Float.floatToRawIntBits(vertex.v);
+
+                    //unused it seems like
+                    vertices[baseIndex + 6] = 0;
+                    vertices[baseIndex + 7] = 0;
                 }
+
+                Direction face = normalToDirection(normal);
+
+                output.add(new BakedQuad(
+                        vertices,
+                        -1,
+                        face,
+                        sprite,
+                        true
+                ));
             }
         });
-
-        return quads;
-    }
-
-    private static GeometryRegistry.QuadTemplate bakePolygon(final PoseStack.Pose pose, final ModelPart.Polygon polygon) {
-        final ModelPart.Vertex[] vertices = polygon.vertices;
-        if (vertices.length != 4) {
-            return null;
-        }
-
-        final float[] positions = new float[12];
-        final float[] uvs = new float[8];
-        final float[] normals = new float[3];
-        final Vector3f transformedNormal = pose.transformNormal(polygon.normal, new Vector3f());
-
-        normals[0] = transformedNormal.x();
-        normals[1] = transformedNormal.y();
-        normals[2] = transformedNormal.z();
-
-        for (int i = 0; i < 4; i++) {
-            final ModelPart.Vertex vertex = vertices[i];
-            final float modelX = vertex.pos.x() / 16.0F;
-            final float modelY = vertex.pos.y() / 16.0F;
-            final float modelZ = vertex.pos.z() / 16.0F;
-            final Vector3f transformedPos = pose.pose().transformPosition(modelX, modelY, modelZ, new Vector3f());
-            final int posIndex = i * 3;
-            final int uvIndex = i * 2;
-
-            positions[posIndex] = transformedPos.x();
-            positions[posIndex + 1] = transformedPos.y();
-            positions[posIndex + 2] = transformedPos.z();
-
-            uvs[uvIndex] = vertex.u;
-            uvs[uvIndex + 1] = vertex.v;
-        }
-
-        return new GeometryRegistry.QuadTemplate(positions, uvs, normals, normalToDirection(transformedNormal));
-    }
-
-    private static String topLevelPart(final String path) {
-        if (path == null || path.isEmpty()) {
-            return "root";
-        }
-
-        String normalized = path;
-        while (normalized.startsWith("/")) {
-            normalized = normalized.substring(1);
-        }
-
-        if (normalized.isEmpty()) {
-            return "root";
-        }
-
-        final int firstSeparator = normalized.indexOf('/');
-        if (firstSeparator < 0) {
-            return normalized;
-        }
-
-        final String first = normalized.substring(0, firstSeparator);
-        final String remainder = normalized.substring(firstSeparator + 1);
-        if (remainder.isEmpty()) {
-            return first;
-        }
-
-        final int secondSeparator = remainder.indexOf('/');
-        final String second = secondSeparator >= 0 ? remainder.substring(0, secondSeparator) : remainder;
-        if ((first.equals("main") || first.equals("root")) && !second.isEmpty()) {
-            return second;
-        }
-
-        return first;
     }
 
     public static Direction normalToDirection(final Vector3fc normal) {

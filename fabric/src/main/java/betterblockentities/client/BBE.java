@@ -47,6 +47,7 @@ public class BBE implements ClientModInitializer {
         public static AltRenderDispatcher altRenderDispatcher;
         public static List<AltBlockEntityRenderState> altBlockEntityRenderStates = new ArrayList<>();
         public static boolean limitVanillaSignRendering = false;
+        public static boolean isItemInvoked = false;
     }
 
 
