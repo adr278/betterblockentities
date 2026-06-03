@@ -35,7 +35,10 @@
     "sodium": ">=0.8.12-alpha.4"
   },
   "breaks": {
-    "optifabric": "*"
+    "optifabric": "*",
+    "vanillin": "*",
+    "enhancedblockentities": "*",
+    "betterbeds": "*"
   },
   "custom": {
 
