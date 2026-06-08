@@ -13,17 +13,17 @@ import com.google.common.collect.ImmutableMap;
 import java.util.*;
 
 public final class AltRenderers {
-    private static final Map<AltRenderer<?, ?>, RegistrationInfo> LOADED_ALT_RENDERERS = new IdentityHashMap<>();
+    private static final Map<AltRenderer<?>, RegistrationInfo> LOADED_ALT_RENDERERS = new IdentityHashMap<>();
     private static final Set<BlockEntityType<?>> OVERRIDES = new ReferenceOpenHashSet<>();
 
-    public static Map<BlockEntityType<?>, List<AltRenderer<?, ?>>> createAltEntityRenderers(final AltRendererProvider.Context context) {
+    public static Map<BlockEntityType<?>, List<AltRenderer<?>>> createAltEntityRenderers(final AltRendererProvider.Context context) {
         clear();
 
-        Map<BlockEntityType<?>, List<AltRenderer<?, ?>>> grouped = new HashMap<>();
+        Map<BlockEntityType<?>, List<AltRenderer<?>>> grouped = new HashMap<>();
 
         for (RegistrationInfo altRendererInfo : RegistrationCollection.getRegistrations().values()) {
             BlockEntityType<?> type = altRendererInfo.blockEntityType().type();
-            AltRenderer<?, ?> renderer = altRendererInfo.rendererProvider().create(context);
+            AltRenderer<?> renderer = altRendererInfo.rendererProvider().create(context);
 
             if (renderer.dedicatedRenderer()) {
                 OVERRIDES.add(type);
@@ -33,9 +33,9 @@ public final class AltRenderers {
             grouped.computeIfAbsent(type, ignored -> new ArrayList<>()).add(renderer);
         }
 
-        ImmutableMap.Builder<BlockEntityType<?>, List<AltRenderer<?, ?>>> result = ImmutableMap.builder();
+        ImmutableMap.Builder<BlockEntityType<?>, List<AltRenderer<?>>> result = ImmutableMap.builder();
 
-        for (Map.Entry<BlockEntityType<?>, List<AltRenderer<?, ?>>> entry : grouped.entrySet()) {
+        for (Map.Entry<BlockEntityType<?>, List<AltRenderer<?>>> entry : grouped.entrySet()) {
             result.put(entry.getKey(), List.copyOf(entry.getValue()));
         }
 
@@ -46,11 +46,11 @@ public final class AltRenderers {
         return OVERRIDES.contains(blockEntityType);
     }
 
-    public static RegistrationInfo forRenderer(AltRenderer<?, ?> renderer) {
+    public static RegistrationInfo forRenderer(AltRenderer<?> renderer) {
         return LOADED_ALT_RENDERERS.get(renderer);
     }
 
-    public static Map<AltRenderer<?, ?>, RegistrationInfo> getLoadedAltRenderers() {
+    public static Map<AltRenderer<?>, RegistrationInfo> getLoadedAltRenderers() {
         return Map.copyOf(LOADED_ALT_RENDERERS);
     }
 

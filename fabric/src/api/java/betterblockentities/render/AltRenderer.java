@@ -11,20 +11,18 @@ import net.minecraft.world.phys.Vec3;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.jetbrains.annotations.Nullable;
 
-public interface AltRenderer<T extends BlockEntity, S extends AltBlockEntityRenderState> {
-    S createRenderState();
+public interface AltRenderer<T extends BlockEntity> {
+    void render(BlockEntity blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j);
 
-    default void extractRenderState(final T blockEntity, final S state, final float partialTicks, final Vec3 cameraPosition, final @Nullable BlockDestructionProgress breakProgress) {
-        AltBlockEntityRenderState.extractBase(blockEntity, state);
+    default boolean shouldRenderOffScreen(BlockEntity blockEntity) {
+        return false;
     }
-
-    void submit(final S state, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final Camera camera, final int light, final int overlay);
 
     default int getViewDistance() {
         return 64;
     }
 
-    default boolean shouldRender(final T blockEntity, final Vec3 cameraPosition) {
+    default boolean shouldRender(BlockEntity blockEntity, final Vec3 cameraPosition) {
         return Vec3.atCenterOf(blockEntity.getBlockPos()).closerThan(cameraPosition, this.getViewDistance());
     }
 

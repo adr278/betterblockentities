@@ -5,11 +5,10 @@ import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.render.immediate.blockentity.misc.CrumblingOverlayConsumer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
-import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.manager.SpecialBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.misc.CrumblingRenderContext;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
-import betterblockentities.render.AltBlockEntityRenderState;
+import betterblockentities.render.AltRenderer;
 import betterblockentities.render.AltRenderers;
 
 /* minecraft */
@@ -21,19 +20,19 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /* mixin */
+import net.minecraft.world.phys.HitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /* java/misc */
@@ -65,6 +64,18 @@ public abstract class BlockEntityRenderDispatcherMixin {
             final MultiBufferSource vertexConsumers,
             final CallbackInfo ci
     ) {
+        if (AltRenderers.renderersLoaded()) {
+            int light = LevelRenderer.getLightColor(blockEntity.getLevel(), blockEntity.getBlockPos());
+
+            List<AltRenderer<?>> altRenderers = BBE.GlobalScope.altRenderDispatcher.getRenderers(blockEntity);
+
+            if (altRenderers != null) {
+                for (AltRenderer<?> altRenderer : altRenderers) {
+                    altRenderer.render(blockEntity, partialTick, poseStack, vertexConsumers, light, OverlayTexture.NO_OVERLAY);
+                }
+            }
+        }
+
         final BlockEntityExt ext = (BlockEntityExt) blockEntity;
 
         BBE.GlobalScope.limitVanillaSignRendering = false;
@@ -110,6 +121,12 @@ public abstract class BlockEntityRenderDispatcherMixin {
         BBE.GlobalScope.limitVanillaSignRendering = false;
     }
 
+    @Inject(method = "prepare", at = @At("TAIL"))
+    private void prepare(Level level, Camera camera, HitResult hitResult, CallbackInfo ci) {
+        BBE.GlobalScope.altRenderDispatcher.prepare(level, camera, hitResult);
+    }
+
+
     @Inject(method = "render", at = @At("TAIL"))
     private void submitAltRenderers(
             final BlockEntity blockEntity,
@@ -118,33 +135,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
             final MultiBufferSource vertexConsumers,
             final CallbackInfo ci
     ) {
-        if (!AltRenderers.renderersLoaded() || BBE.GlobalScope.altRenderDispatcher == null || this.camera == null) {
-            return;
-        }
 
-        BBE.GlobalScope.altRenderDispatcher.prepare(this.camera.getPosition());
-
-        List<AltBlockEntityRenderState> states =
-                BBE.GlobalScope.altRenderDispatcher.tryExtractRenderStates(blockEntity, partialTick, null);
-
-        if (states.isEmpty()) {
-            return;
-        }
-
-        assert blockEntity.getLevel() != null;
-        int light = LevelRenderer.getLightColor(blockEntity.getLevel(), blockEntity.getBlockPos());
-        for (AltBlockEntityRenderState state : states) {
-            BBE.GlobalScope.altRenderDispatcher.submit(
-                    state,
-                    poseStack,
-                    vertexConsumers,
-                    this.camera,
-                    light,
-                    OverlayTexture.NO_OVERLAY
-            );
-        }
-
-        BBE.GlobalScope.altRenderDispatcher.clearStateRendererPairs();
     }
 
     @Unique private static boolean shouldManage(final BlockEntityExt ext) {

@@ -2,7 +2,6 @@ package betterblockentities.client;
 
 /* local */
 import betterblockentities.registration.RegistrationCollection;
-import betterblockentities.render.AltBlockEntityRenderState;
 import betterblockentities.render.AltRenderDispatcher;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
@@ -45,7 +44,6 @@ public class BBE implements ClientModInitializer {
         /* runtime render data */
         public static Frustum frustum;
         public static AltRenderDispatcher altRenderDispatcher;
-        public static List<AltBlockEntityRenderState> altBlockEntityRenderStates = new ArrayList<>();
         public static boolean limitVanillaSignRendering = false;
         public static boolean isItemInvoked = false;
     }

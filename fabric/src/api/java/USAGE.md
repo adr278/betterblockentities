@@ -92,11 +92,12 @@ Instead of explaining exactly how to setup your renderer we will provide you wit
 comments explaining what elements needs changing.
 
 Example skeleton renderer for a Chest:
+
 ```java
 package com.example.examplemod;
 
 //api imports
-import betterblockentities.render.AltBlockEntityRenderState;
+
 import betterblockentities.render.AltRenderer;
 import betterblockentities.render.AltRendererProvider;
 
@@ -110,46 +111,17 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import org.jetbrains.annotations.Nullable;
 
 //make sure you implement AltRenderer here
-public class SuperCoolChestRenderer implements AltRenderer<ChestBlockEntity, SuperCoolChestRenderer.ChestRenderState> {
-    public static class ChestRenderState extends AltBlockEntityRenderState {
-        //... custom state fields
-    }
-
+public class SuperCoolChestRenderer implements AltRenderer<ChestBlockEntity> {
     public SuperCoolChestRenderer(final AltRendererProvider.Context context) {
         //... make sure that each constructor that takes in a provider
         //    context uses AltRendererProvider.Context and not the vanilla
         //    equivalent BlockEntityRendererProvider.Context
     }
-
-    public ChestRenderState createRenderState() {
-        return new ChestRenderState();
-    }
-
-    public void extractRenderState(
-            final ChestBlockEntity blockEntity,
-            final ChestRenderState state,
-            final float partialTicks,
-            final Vec3 cameraPosition,
-            final @Nullable BlockDestructionProgress breakProgress
-    ) {
-        //make sure you don't forget to call the super class function here
-        //also make sure AltRenderer is used
-        AltRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
-
-        //... do your renderstate setup
-    }
-
-    public void submit(
-            final ChestRenderState state,
-            final PoseStack poseStack,
-            final MultiBufferSource vertexConsumers,
-            final Camera camera,
-            final int light,
-            final int overlay
-    ) {
-        //... do rendering logic
-    }
     
+    void render(BlockEntity blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
+        //your renderer code goes here...
+    }
+
     //implement shouldRender(...) for user controlled renderer management
     //implement dedicatedRenderer(...) to stop BBE rendering
 }

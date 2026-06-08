@@ -32,7 +32,7 @@ public abstract class MinecraftMixin {
     @Shadow public abstract BlockRenderDispatcher getBlockRenderer();
     @Shadow public abstract ItemRenderer getItemRenderer();
     @Shadow public abstract EntityRenderDispatcher getEntityRenderDispatcher();
-    @Shadow public abstract EntityModelSet getEntityModels();
+    @Shadow @Final private EntityModelSet entityModels;
 
     @WrapOperation(
             method = "<init>(Lnet/minecraft/client/main/GameConfig;)V",
@@ -44,7 +44,7 @@ public abstract class MinecraftMixin {
     void registerDispatchListener(Operation<Void> original) {
         BBE.GlobalScope.altRenderDispatcher = new AltRenderDispatcher(
                 this.font,
-                this::getEntityModels,
+                this.entityModels,
                 this::getBlockRenderer,
                 this::getItemRenderer,
                 this::getEntityRenderDispatcher

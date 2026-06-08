@@ -4,18 +4,36 @@ package betterblockentities.render;
 import betterblockentities.data.RegistrationInfo;
 
 /* minecraft */
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.model.geom.EntityModelSet;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /* mojang */
@@ -33,116 +51,115 @@ import java.util.function.Supplier;
 
 /* annotations */
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
 
 public class AltRenderDispatcher implements ResourceManagerReloadListener {
-    private Map<BlockEntityType<?>, List<AltRenderer<?, ?>>> renderers = ImmutableMap.of();
-    private final Map<AltBlockEntityRenderState, AltRenderer<?, ?>> stateRendererPairs = new HashMap<>();
-
+    private Map<BlockEntityType<?>, List<AltRenderer<?>>> renderers = ImmutableMap.of();
     private final Font font;
-    private final Supplier<EntityModelSet> entityModelSet;
-    private Vec3 cameraPos = Vec3.ZERO;
+    private final EntityModelSet entityModelSet;
+    public Level level;
+    public Camera camera;
+    public HitResult cameraHitResult;
     private final Supplier<BlockRenderDispatcher> blockRenderDispatcher;
     private final Supplier<ItemRenderer> itemRenderer;
     private final Supplier<EntityRenderDispatcher> entityRenderer;
 
     public AltRenderDispatcher(
-            final Font font,
-            final Supplier<EntityModelSet> entityModelSet,
-            final Supplier<BlockRenderDispatcher> blockRenderDispatcher,
-            final Supplier<ItemRenderer> itemRenderer,
-            final Supplier<EntityRenderDispatcher> entityRenderDispatcher
+            Font font,
+            EntityModelSet entityModelSet,
+            Supplier<BlockRenderDispatcher> supplier,
+            Supplier<ItemRenderer> supplier2,
+            Supplier<EntityRenderDispatcher> supplier3
     ) {
-        this.blockRenderDispatcher = blockRenderDispatcher;
-        this.itemRenderer = itemRenderer;
-        this.entityRenderer = entityRenderDispatcher;
+        this.itemRenderer = supplier2;
+        this.entityRenderer = supplier3;
         this.font = font;
         this.entityModelSet = entityModelSet;
+        this.blockRenderDispatcher = supplier;
     }
 
-    @SuppressWarnings("unchecked")
-    public <E extends BlockEntity, S extends AltBlockEntityRenderState> List<AltRenderer<E, S>> getRenderers(final E blockEntity) {
-        return (List<AltRenderer<E, S>>) (List<?>) this.renderers.getOrDefault(blockEntity.getType(), List.of());
+    @Nullable
+    public List<AltRenderer<?>> getRenderers(BlockEntity blockEntity) {
+        return this.renderers.get(blockEntity.getType());
     }
 
-    @SuppressWarnings("unchecked")
-    public <S extends AltBlockEntityRenderState> List<AltRenderer<?, S>> getRenderers(final S state) {
-        BlockEntityType<?> type = state.blockEntityType();
-        if (type == null) {
-            return List.of();
+    public void prepare(Level level, Camera camera, HitResult hitResult) {
+        if (this.level != level) {
+            this.setLevel(level);
         }
 
-        return (List<AltRenderer<?, S>>) (List<?>) this.renderers.getOrDefault(type, List.of());
+        this.camera = camera;
+        this.cameraHitResult = hitResult;
     }
 
-    public void prepare(final Vec3 cameraPos) {
-        this.cameraPos = cameraPos;
-    }
+    public void render(BlockEntity blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource) {
+        List<AltRenderer<?>> altRenderers = this.getRenderers(blockEntity);
 
-    /* no logging in the hotpath, we just throw, an error here is unexpected and the implementing dev is not at fault most likely */
-    public <E extends BlockEntity, S extends AltBlockEntityRenderState> List<S> tryExtractRenderStates(final E blockEntity, final float partialTicks, final @Nullable BlockDestructionProgress breakProgress) {
-        List<AltRenderer<E, S>> renderers = this.getRenderers(blockEntity);
-
-        if (renderers.isEmpty()) {
-            return List.of();
-        } else if (!blockEntity.hasLevel() || !blockEntity.getType().isValid(blockEntity.getBlockState())) {
-            return List.of();
-        }
-
-        Vec3 cameraPosition = this.cameraPos;
-        List<S> states = new ArrayList<>();
-
-        for (AltRenderer<E, S> renderer : renderers) {
-            RegistrationInfo regInfo = AltRenderers.forRenderer(renderer);
-            if (regInfo == null) {
-                throw new RuntimeException("RegistrationInfo for a registered AltRenderer was null!");
+        for (AltRenderer<?> altRenderer : altRenderers) {
+            if (altRenderer != null) {
+                if (blockEntity.hasLevel() && blockEntity.getType().isValid(blockEntity.getBlockState())) {
+                    if (altRenderer.shouldRender(blockEntity, this.camera.getPosition())) {
+                        tryRender(blockEntity, () -> setupAndRender(altRenderer, blockEntity, f, poseStack, multiBufferSource));
+                    }
+                }
             }
-
-            if (!renderer.shouldRender(blockEntity, this.cameraPos)) {
-                continue;
-            }
-
-            S state = renderer.createRenderState();
-
-            addStateRendererPair(state, renderer);
-
-            renderer.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
-            states.add(state);
         }
-        return states;
     }
 
-    /* no logging in the hotpath, we just throw, an error here is unexpected and the implementing dev is not at fault most likely */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public <S extends AltBlockEntityRenderState> void submit(final S state, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final Camera camera, final int light, final int overlay) {
-        AltRenderer renderer = stateRendererPairs.get(state);
-
-        if (renderer == null) {
-            throw new RuntimeException("Could not map this AltBlockEntityRenderState to a registered AltRenderer -> " + state);
+    private static void setupAndRender(
+            AltRenderer<?> AltRenderer, BlockEntity blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource
+    ) {
+        Level level = blockEntity.getLevel();
+        int i;
+        if (level != null) {
+            i = LevelRenderer.getLightColor(level, blockEntity.getBlockPos());
+        } else {
+            i = 15728880;
         }
 
+        AltRenderer.render(blockEntity, f, poseStack, multiBufferSource, i, OverlayTexture.NO_OVERLAY);
+    }
+
+    public boolean renderItem(BlockEntity blockEntity, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
+        List<AltRenderer<?>> altRenderers = this.getRenderers(blockEntity);
+
+        for (AltRenderer<?> altRenderer : altRenderers) {
+            if (altRenderer == null) {
+                return true;
+            } else {
+                tryRender(blockEntity, () -> altRenderer.render(blockEntity, 0.0F, poseStack, multiBufferSource, i, j));
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static void tryRender(BlockEntity blockEntity, Runnable runnable) {
         try {
-            renderer.submit(state, poseStack, vertexConsumers, camera, light, overlay);
-        } catch (Exception e) {
-            throw new RuntimeException("An exception was caught inside a registered AltRenderer -> ", e);
+            runnable.run();
+        } catch (Throwable var5) {
+            CrashReport crashReport = CrashReport.forThrowable(var5, "Rendering Block Entity");
+            CrashReportCategory crashReportCategory = crashReport.addCategory("Block Entity Details");
+            blockEntity.fillCrashReportCategory(crashReportCategory);
+            throw new ReportedException(crashReport);
         }
     }
 
-    private <E extends BlockEntity, S extends AltBlockEntityRenderState> void addStateRendererPair(final S state, final AltRenderer<E, S> renderer) {
-        stateRendererPairs.put(state, renderer);
-    }
-
-    public  void clearStateRendererPairs() {
-        stateRendererPairs.clear();
+    public void setLevel(@Nullable Level level) {
+        this.level = level;
+        if (level == null) {
+            this.camera = null;
+        }
     }
 
     @Override
-    public void onResourceManagerReload(final ResourceManager resourceManager) {
-        AltRendererProvider.Context context = new AltRendererProvider.Context(
+    public void onResourceManagerReload(ResourceManager resourceManager) {
+        AltRendererProvider.Context context = new  AltRendererProvider.Context(
                 this,
-                this.blockRenderDispatcher.get(),
-                this.itemRenderer.get(),
-                this.entityRenderer.get(),
-                this.entityModelSet.get(),
+                (BlockRenderDispatcher)this.blockRenderDispatcher.get(),
+                (ItemRenderer)this.itemRenderer.get(),
+                (EntityRenderDispatcher)this.entityRenderer.get(),
+                this.entityModelSet,
                 this.font
         );
         this.renderers = AltRenderers.createAltEntityRenderers(context);
