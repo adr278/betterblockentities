@@ -63,8 +63,7 @@ public class BBE implements ClientModInitializer {
     public static class ModCompact {
         private static ImmutableList<String> modList = ImmutableList.of(
                 "entity_model_features",
-                "litematica",
-                "malilib"
+                "litematica"
         );
 
         private static ImmutableList<String> loadedMods;
