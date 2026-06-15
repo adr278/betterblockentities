@@ -1,7 +1,6 @@
 package betterblockentities.client.render.immediate.blockentity.misc;
 
 /* local */
-import betterblockentities.mixin.render.immediate.blockentity.VertexMultiConsumerDoubleAccessor;
 
 /* minecraft */
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -14,18 +13,18 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import org.jspecify.annotations.NonNull;
 
 public class CrumblingOverlayConsumer {
-    public record CrumblingOnlyBufferSource(MultiBufferSource delegate) implements MultiBufferSource {
+    public record CrumblingOnlyBufferSource(MultiBufferSource delegate, VertexConsumer consumer) implements MultiBufferSource {
         @Override public @NonNull VertexConsumer getBuffer(final RenderType renderType) {
             if (!renderType.affectsCrumbling()) {
                 return NoopVertexConsumer.INSTANCE;
             }
 
-            final VertexConsumer vertexConsumer = this.delegate.getBuffer(renderType);
-            if (vertexConsumer instanceof VertexMultiConsumerDoubleAccessor doubleConsumer) {
-                return doubleConsumer.getFirst();
-            }
+            //final VertexConsumer vertexConsumer = this.delegate.getBuffer(renderType);
+            //if (vertexConsumer instanceof VertexMultiConsumerDoubleAccessor doubleConsumer) {
+            //    return doubleConsumer.getFirst();
+            //}
 
-            return vertexConsumer;
+            return consumer;
         }
     }
 

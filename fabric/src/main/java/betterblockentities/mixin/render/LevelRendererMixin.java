@@ -31,28 +31,4 @@ public class LevelRendererMixin {
     private void captureFrustum(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator, CallbackInfo ci) {
         BBE.GlobalScope.frustum = frustum;
     }
-
-    @WrapOperation(
-            method = "renderLevel",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V",
-                    ordinal = 0
-            )
-    )
-    private void markCrumblingBlockEntityPass(
-            final BlockEntityRenderDispatcher dispatcher,
-            final BlockEntity blockEntity,
-            final float partialTick,
-            final PoseStack poseStack,
-            final MultiBufferSource vertexConsumers,
-            final Operation<Void> original
-    ) {
-        CrumblingRenderContext.push();
-        try {
-            original.call(dispatcher, blockEntity, partialTick, poseStack, vertexConsumers);
-        } finally {
-            CrumblingRenderContext.pop();
-        }
-    }
 }
