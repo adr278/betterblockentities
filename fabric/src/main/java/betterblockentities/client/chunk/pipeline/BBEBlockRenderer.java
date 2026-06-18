@@ -3,7 +3,7 @@ package betterblockentities.client.chunk.pipeline;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
-import betterblockentities.client.chunk.util.ModelResourceUtil;
+import betterblockentities.client.model.geometry.ModelResourceUtil;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.gui.option.EnumTypes;
 import betterblockentities.client.model.geometry.GeometryRegistry;

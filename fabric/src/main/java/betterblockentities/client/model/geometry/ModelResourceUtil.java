@@ -1,4 +1,4 @@
-package betterblockentities.client.chunk.util;
+package betterblockentities.client.model.geometry;
 
 /* local */
 

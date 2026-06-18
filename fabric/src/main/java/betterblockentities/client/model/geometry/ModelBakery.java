@@ -21,7 +21,7 @@ import com.mojang.math.Axis;
  * runs our model baking / geometry setup code and appends each model to our registry
  * this should only ever be scheduled to be run on the main thread
  */
-public class ModelGenerator {
+public class ModelBakery {
     public static int generateAppend() {
         PoseStack stack = new PoseStack();
 
