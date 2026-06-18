@@ -5,6 +5,7 @@ import betterblockentities.client.chunk.util.QuadTransform;
 import betterblockentities.mixin.sodium.pipeline.AbstractBlockRenderContextAccessor;
 
 /* minecraft */
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -24,6 +25,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Transformation;
 
 /* java/misc */
+import net.minecraft.data.AtlasIds;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -48,13 +51,13 @@ public class BBEEmitter {
     private final AbstractBlockRenderContextAccessor sodiumContext;
 
     /* quad render data */
-    private SpriteId material;
     private ChunkSectionLayer renderType;
     private TextureAtlasSprite sprite;
     private Quaternionf rotation;
     private Transformation b3dtransformation;
     private AmbientOcclusionMode aoMode;
     private QuadSplittingMode quadSplittingMode;
+    private SodiumShadeMode shadeMode;
     private float xRot = 0;
     private float yRot = 0;
     private float zRot = 0;
@@ -93,15 +96,15 @@ public class BBEEmitter {
 
                 sodiumEmitter.fromBakedQuad(quad);
                 sodiumEmitter.setCullFace(cullFace);
-                sodiumEmitter.setShadeMode(SodiumShadeMode.ENHANCED);
 
                 /* modify sodium emitter data */
-                applyAmbientOcclusionMode(sodiumEmitter, sodiumAO);
-                applyRenderType(sodiumEmitter);
-                applySprite(sodiumEmitter);
-                applyTransformation(sodiumEmitter);
-                applyColor(sodiumEmitter);
-                applyQuadSplittingMode(sodiumEmitter);
+                this.applyShadeMode(sodiumEmitter);
+                this.applyAmbientOcclusionMode(sodiumEmitter, sodiumAO);
+                this.applyRenderType(sodiumEmitter);
+                this.applySprite(sodiumEmitter);
+                this.applyTransformation(sodiumEmitter);
+                this.applyColor(sodiumEmitter);
+                this.applyQuadSplittingMode(sodiumEmitter);
 
                 sodiumEmitterConsumer.accept(sodiumEmitter);
             }
@@ -116,10 +119,6 @@ public class BBEEmitter {
     }
 
     private void applySprite(MutableQuadViewImpl sodiumEmitter) {
-        if (this.material != null) {
-            this.sprite = QuadTransform.getBlockSprite(this.material.texture());
-        }
-
         if (this.sprite != null) {
             QuadTransform.remapSprite(this.sprite, sodiumEmitter);
         }
@@ -173,14 +172,19 @@ public class BBEEmitter {
         }
     }
 
+    private void applyShadeMode(MutableQuadViewImpl sodiumEmitter) {
+        if (this.shadeMode == null) {
+            sodiumEmitter.setShadeMode(SodiumShadeMode.ENHANCED);
+        }
+        else {
+            sodiumEmitter.setShadeMode(this.shadeMode);
+        }
+    }
+
     public void applyQuadSplittingMode(MutableQuadViewImpl sodiumEmitter) {
         if (this.quadSplittingMode == QuadSplittingMode.NONE) {
             sodiumEmitter.setTag(NO_QUAD_SPLITTING);
         }
-    }
-
-    public void setMaterial(SpriteId material) {
-        this.material = material;
     }
 
     public void setRenderType(ChunkSectionLayer layer) {
@@ -209,22 +213,39 @@ public class BBEEmitter {
         this.sprite = sprite;
     }
 
+    public void setSprite(SpriteId identifier) {
+        if (identifier != null) {
+            this.sprite = this.getBlockSprite(identifier.texture());
+        }
+    }
+
     public void setAmbientOcclusionMode(AmbientOcclusionMode mode) {
         this.aoMode = mode;
+    }
+
+    public void setShadeMode(SodiumShadeMode mode) {
+        this.shadeMode = mode;
     }
 
     public void setSplittingMode(QuadSplittingMode mode) {
         this.quadSplittingMode = mode;
     }
 
+    private TextureAtlasSprite getBlockSprite(Identifier id) {
+        var atlas = Minecraft.getInstance()
+                .getAtlasManager()
+                .getAtlasOrThrow(AtlasIds.BLOCKS);
+        return atlas.getSprite(id);
+    }
+
     public void clear() {
-        this.material = null;
         this.renderType = null;
         this.sprite = null;
         this.rotation = null;
         this.b3dtransformation = null;
         this.aoMode = null;
         this.quadSplittingMode = null;
+        this.shadeMode = null;
         this.xRot = 0;
         this.yRot = 0;
         this.zRot = 0;
