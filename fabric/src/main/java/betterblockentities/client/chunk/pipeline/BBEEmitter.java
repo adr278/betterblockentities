@@ -2,10 +2,10 @@ package betterblockentities.client.chunk.pipeline;
 
 /* local */
 import betterblockentities.client.chunk.util.QuadTransform;
+import betterblockentities.client.model.texture.SpriteSelector;
 import betterblockentities.mixin.sodium.pipeline.AbstractBlockRenderContextAccessor;
 
 /* minecraft */
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -25,8 +25,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Transformation;
 
 /* java/misc */
-import net.minecraft.data.AtlasIds;
-import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -215,7 +213,7 @@ public class BBEEmitter {
 
     public void setSprite(SpriteId identifier) {
         if (identifier != null) {
-            this.sprite = this.getBlockSprite(identifier.texture());
+            this.sprite = SpriteSelector.getBlockSprite(identifier.texture());
         }
     }
 
@@ -229,13 +227,6 @@ public class BBEEmitter {
 
     public void setSplittingMode(QuadSplittingMode mode) {
         this.quadSplittingMode = mode;
-    }
-
-    private TextureAtlasSprite getBlockSprite(Identifier id) {
-        var atlas = Minecraft.getInstance()
-                .getAtlasManager()
-                .getAtlasOrThrow(AtlasIds.BLOCKS);
-        return atlas.getSprite(id);
     }
 
     public void clear() {

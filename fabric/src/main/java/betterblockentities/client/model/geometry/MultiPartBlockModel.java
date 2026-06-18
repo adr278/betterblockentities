@@ -1,8 +1,7 @@
-package betterblockentities.client.model;
+package betterblockentities.client.model.geometry;
 
 /* local */
 import betterblockentities.client.BBE;
-import betterblockentities.client.model.geometry.ModelUtility;
 import betterblockentities.mixin.model.modelpart.ModelPartAccessor;
 
 /* minecraft */

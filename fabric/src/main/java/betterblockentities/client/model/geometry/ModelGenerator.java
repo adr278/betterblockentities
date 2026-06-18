@@ -3,6 +3,7 @@ package betterblockentities.client.model.geometry;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.model.texture.PlaceHolderSpriteIdentifiers;
 import betterblockentities.client.tasks.ResourceTasks;
 
 /* minecraft */
@@ -30,7 +31,7 @@ public class ModelGenerator {
         }
 
         /* iterate all supported layers, bake root, transform, build and append geometry to registry */
-        for (ModelLayerLocation layer : GeometryRegistry.SupportedVanillaModelLayers.ALL) {
+        for (ModelLayerLocation layer : SupportedModelLayers.ALL) {
             try {
                 bakeLayerSetupAndAppend(entityModelSet, layer, stack);
             }
@@ -86,19 +87,19 @@ public class ModelGenerator {
     }
 
     private static void setupShulker(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
-        GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.SHULKER, stack);
+        GeometryRegistry.cacheGeometry(layer, root, PlaceHolderSpriteIdentifiers.SHULKER, stack);
     }
 
     private static void setupChest(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
-        GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.CHEST, stack);
+        GeometryRegistry.cacheGeometry(layer, root, PlaceHolderSpriteIdentifiers.CHEST, stack);
     }
 
     private static void setupBell(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
-        GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.BELL_BODY, stack);
+        GeometryRegistry.cacheGeometry(layer, root, PlaceHolderSpriteIdentifiers.BELL_BODY, stack);
     }
 
     private static void setupDecoratedPot(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
-        GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.DECORATED_POT_BASE, stack);
+        GeometryRegistry.cacheGeometry(layer, root, PlaceHolderSpriteIdentifiers.DECORATED_POT_BASE, stack);
     }
 
     private static void setupBanners(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
@@ -110,14 +111,14 @@ public class ModelGenerator {
             float rotClamped = Math.clamp(rot, -4.05f, -0.45f);
             flag.xRot = (float)Math.toRadians(rotClamped);
         }
-        GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.BANNER, stack);
+        GeometryRegistry.cacheGeometry(layer, root, PlaceHolderSpriteIdentifiers.BANNER, stack);
     }
 
     private static void setupCopperGolemStatue(ModelLayerLocation layer, ModelPart root, PoseStack stack) {
         stack.pushPose();
         stack.mulPose(Axis.XP.rotationDegrees(180));
         stack.mulPose(Axis.YP.rotationDegrees(180));
-        GeometryRegistry.cacheGeometry(layer, root, GeometryRegistry.PlaceHolderSpriteIdentifiers.COPPER_GOLEM_STATUE, stack);
+        GeometryRegistry.cacheGeometry(layer, root, PlaceHolderSpriteIdentifiers.COPPER_GOLEM_STATUE, stack);
         stack.popPose();
     }
 

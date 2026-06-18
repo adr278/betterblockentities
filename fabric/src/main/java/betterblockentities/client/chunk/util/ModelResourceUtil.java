@@ -1,30 +1,20 @@
 package betterblockentities.client.chunk.util;
 
 /* local */
-import betterblockentities.client.chunk.pipeline.BBEBlockRenderer;
-import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.gui.option.EnumTypes;
-import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 
 /* local */
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.animal.golem.CopperGolemOxidationLevels;
-import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTypes;
-import net.minecraft.world.level.block.state.BlockState;
+        import net.minecraft.util.RandomSource;
+        import net.minecraft.world.level.block.*;
+        import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.ChestType;
 
 /* java/misc */
 import java.util.ArrayList;
-import java.util.Map;
 
 public class ModelResourceUtil {
     public static ModelLayerLocation getChestLayer(BlockState state) {
@@ -79,27 +69,6 @@ public class ModelResourceUtil {
         return ModelLayers.DECORATED_POT_SIDES;
     }
 
-    public static void collectSplitModelParts(BlockEntity blockEntity, ArrayList<BlockStateModelPart> dst, Map<String, BlockStateModel> pairs, RandomSource random) {
-        final boolean drawLid = BBEBlockRenderer.shouldRender((BlockEntityExt)blockEntity);
-        boolean addBase = true;
-
-        if (!drawLid && ConfigCache.updateType == EnumTypes.UpdateSchedulerType.SMART.ordinal()) {
-            addBase = false;
-        }
-
-        boolean sw = blockEntity.is(BlockEntityTypes.SHULKER_BOX);
-
-        if (addBase) {
-            collectSingleModelParts(dst, pairs.get(sw ? "base" : "bottom"), random);
-        }
-        if (drawLid) {
-            collectSingleModelParts(dst, pairs.get("lid"), random);
-            if (!sw) {
-                collectSingleModelParts(dst, pairs.get("lock"), random);
-            }
-        }
-    }
-
     public static void collectSingleModelParts(ArrayList<BlockStateModelPart> parts, BlockStateModel model, RandomSource random) {
         if (model != null) {
             model.collectParts(random, parts);
@@ -110,20 +79,5 @@ public class ModelResourceUtil {
         for (BlockStateModel blockModel : models) {
             collectSingleModelParts(parts, blockModel, random);
         }
-    }
-
-    public static TextureAtlasSprite getCGSSprite(CopperGolemStatueBlock cgsBlock) {
-        final Identifier texture = CopperGolemOxidationLevels.getOxidationLevel(cgsBlock.getWeatheringState()).texture();
-
-        String path = texture.getPath();
-        if (path.endsWith(".png")) {
-            path = path.substring(0, path.length() - 4);
-        }
-        if (path.startsWith("textures/")) {
-            path = path.substring("textures/".length());
-        }
-
-        Identifier strippedTexture = Identifier.withDefaultNamespace(path);
-         return QuadTransform.getBlockSprite(strippedTexture);
     }
 }
