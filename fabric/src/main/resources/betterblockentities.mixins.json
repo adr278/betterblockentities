@@ -12,7 +12,6 @@
     "render.LevelRendererMixin",
     "render.immediate.blockentity.BlockEntityRenderersAccessor",
     "render.immediate.blockentity.BlockEntityRenderersMixin",
-    "render.immediate.blockentity.BlockEntityRenderStateAccessor",
     "render.immediate.blockentity.banner.BannerBlockEntityMixin",
     "render.immediate.blockentity.banner.BannerRendererAccessor",
     "render.immediate.blockentity.bell.BellBlockEntityMixin",
@@ -47,5 +46,6 @@
     "defaultRequire": 1
   },
   "client": [
+
   ]
 }

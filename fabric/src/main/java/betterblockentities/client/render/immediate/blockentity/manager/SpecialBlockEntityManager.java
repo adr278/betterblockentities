@@ -2,10 +2,19 @@ package betterblockentities.client.render.immediate.blockentity.manager;
 
 import betterblockentities.client.gui.config.ConfigCache;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.blockentity.state.SignRenderState;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Special cases where we might need special behavior : push the render-state at all times etc...
@@ -13,14 +22,176 @@ import net.minecraft.world.level.block.entity.*;
 public final class SpecialBlockEntityManager {
     private SpecialBlockEntityManager() {}
 
-    public static boolean shouldRender(BlockEntity blockEntity) {
-        Entity entity = Minecraft.getInstance().getCameraEntity();
-        if (entity == null) return true;
+    public static @Nullable BlockEntityRenderState extractManagedState(BlockEntity blockEntity, CameraRenderState cameraRenderState, float partialTicks, ModelFeatureRenderer.CrumblingOverlay breakProgress, boolean isGloballyRendered) {
+        Entity cameraEntity = Minecraft.getInstance().getCameraEntity();
+        if (cameraEntity == null) {
+            return null;
+        }
 
-        /* check distance to sign from player */
-        if (blockEntity instanceof SignBlockEntity sign) {
-            if (!ConfigCache.signText) return false;
+        if (blockEntity instanceof SignBlockEntity signBlockEntity) {
+            return SignManager.extractSignState(
+                    cameraEntity,
+                    signBlockEntity,
+                    cameraRenderState,
+                    partialTicks,
+                    breakProgress,
+                    isGloballyRendered
+            );
+        }
+        else if (blockEntity instanceof ShelfBlockEntity shelfBlockEntity) {
+            return ShelfManager.extractShelfState(
+                    shelfBlockEntity,
+                    cameraRenderState,
+                    partialTicks,
+                    breakProgress,
+                    isGloballyRendered
+            );
+        }
+        else if (blockEntity instanceof CampfireBlockEntity campfireBlockEntity) {
+            return CampfireManager.extractCampfireState(
+                    campfireBlockEntity,
+                    cameraRenderState,
+                    partialTicks,
+                    breakProgress,
+                    isGloballyRendered
+            );
+        }
+        return null;
+    }
 
+    private static class CampfireManager {
+        private static @Nullable BlockEntityRenderState extractCampfireState(
+                CampfireBlockEntity blockEntity,
+                CameraRenderState cameraRenderState,
+                float partialTicks,
+                ModelFeatureRenderer.CrumblingOverlay breakProgress,
+                boolean isGloballyRendered
+        ) {
+            for (ItemStack stack : blockEntity.getItems()) {
+                if (stack != ItemStack.EMPTY) {
+                    return Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(
+                            blockEntity,
+                            partialTicks,
+                            breakProgress,
+                            isGloballyRendered
+                    );
+                }
+            }
+            return null;
+        }
+    }
+
+    private static class ShelfManager {
+        private static @Nullable BlockEntityRenderState extractShelfState(
+                ShelfBlockEntity blockEntity,
+                CameraRenderState cameraRenderState,
+                float partialTicks,
+                ModelFeatureRenderer.CrumblingOverlay breakProgress,
+                boolean isGloballyRendered
+        ) {
+            for (ItemStack stack : blockEntity.getItems()) {
+                if (stack != ItemStack.EMPTY) {
+                    return Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(
+                            blockEntity,
+                            partialTicks,
+                            breakProgress,
+                            isGloballyRendered
+                    );
+                }
+            }
+            return null;
+        }
+    }
+
+    private static class SignManager {
+        private static @Nullable BlockEntityRenderState extractSignState(
+                Entity cameraEntity,
+                SignBlockEntity blockEntity,
+                CameraRenderState cameraRenderState,
+                float partialTicks,
+                ModelFeatureRenderer.CrumblingOverlay breakProgress,
+                boolean isGloballyRendered)
+        {
+            if (!ConfigCache.signText) {
+                return null;
+            }
+
+            if (!checkDistanceToCamera(cameraEntity, blockEntity)) {
+                return null;
+            }
+
+            SignRenderState editorState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(
+                    blockEntity,
+                    partialTicks,
+                    breakProgress,
+                    isGloballyRendered
+            );
+
+            if (!ConfigCache.signTextCulling) {
+                return editorState;
+            }
+
+            boolean hasFront = hasAnyText(blockEntity.getFrontText(), false);
+            boolean hasBack  = hasAnyText(blockEntity.getBackText(), false);
+
+            if (!hasFront && !hasBack) {
+                return null;
+            }
+
+            boolean frontTest = isCameraFrontFacing(blockEntity, cameraRenderState);
+            boolean drawFront = hasFront && frontTest;
+            boolean drawBack = hasBack && !frontTest;
+
+            /* if both sides are not visible, don't extract this render-state */
+            if (!drawFront && !drawBack || editorState == null) {
+                return null;
+            }
+
+            /* invalidate these accordingly so they don't get rendered */
+            if (!drawFront) {
+                editorState.frontText = null;
+            }
+
+            if (!drawBack) {
+                editorState.backText = null;
+            }
+
+            return editorState;
+        }
+
+        private static boolean isCameraFrontFacing(SignBlockEntity blockEntity, CameraRenderState cameraRenderState) {
+            BlockState blockState = blockEntity.getBlockState();
+            SignBlock signBlock = (SignBlock)blockState.getBlock();
+            BlockPos blockPos = blockEntity.getBlockPos();
+            Vec3 camPos = cameraRenderState.pos;
+
+            Vec3 off = signBlock.getSignHitboxCenterPosition(blockState);
+            double sx = blockPos.getX() + off.x;
+            double sz = blockPos.getZ() + off.z;
+
+            /* vector from sign center to camera (XZ only) */
+            double dx = camPos.x - sx;
+            double dz = camPos.z - sz;
+
+            /* fast side test: dot(frontNormal, toCam) > 0, front normal is derived from the sign's yaw degrees */
+            double rotRad = signBlock.getYRotationDegrees(blockState) * (Math.PI / 180.0);
+            double nx = -Math.sin(rotRad);
+            final double nz =  Math.cos(rotRad);
+
+            /* small epsilon, reduces flicker */
+            return (nx * dx + nz * dz) > 1e-3;
+        }
+
+        private static boolean hasAnyText(SignText text, boolean filtered) {
+            if (text == null) return false;
+            Component[] lines = text.getMessages(filtered);
+            for (int i = 0; i < 4; i++) {
+                if (!lines[i].getString().isEmpty()) return true;
+            }
+            return false;
+        }
+
+        private static boolean checkDistanceToCamera(Entity cameraEntity, SignBlockEntity blockEntity) {
             double maxDistSq = (double) ConfigCache.signTextRenderDistance * (double) ConfigCache.signTextRenderDistance;
 
             var pos = blockEntity.getBlockPos();
@@ -28,47 +199,11 @@ public final class SpecialBlockEntityManager {
             double cy = pos.getY() + 0.5;
             double cz = pos.getZ() + 0.5;
 
-            if (entity.distanceToSqr(cx, cy, cz) > maxDistSq) {
+            if (cameraEntity.distanceToSqr(cx, cy, cz) > maxDistSq) {
                 return false;
             }
 
-            SignText frontText = sign.getFrontText();
-            SignText backText = sign.getBackText();
-
-            /* prematurely check if the sign has any text at all, if not, don't proceed, we continue to cull each side inside the renderer */
-            final boolean hasFront = hasAnyText(frontText, false);
-            final boolean hasBack  = hasAnyText(backText, false);
-            if (!hasFront && !hasBack) return false;
-
             return true;
         }
-
-        /* don't continue to extract this render state if we have no items to render */
-        else if (blockEntity instanceof ShelfBlockEntity shelf) {
-            for (ItemStack stack : shelf.getItems()) {
-                if (stack != ItemStack.EMPTY) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else if (blockEntity instanceof CampfireBlockEntity campfire) {
-            for (ItemStack stack : campfire.getItems()) {
-                if (stack != ItemStack.EMPTY) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    }
-
-    public static boolean hasAnyText(SignText text, boolean filtered) {
-        if (text == null) return false;
-        Component[] lines = text.getMessages(filtered);
-        for (int i = 0; i < 4; i++) {
-            if (!lines[i].getString().isEmpty()) return true;
-        }
-        return false;
     }
 }

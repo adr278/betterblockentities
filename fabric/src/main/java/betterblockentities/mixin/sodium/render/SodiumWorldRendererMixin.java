@@ -75,11 +75,16 @@ public abstract class SodiumWorldRendererMixin {
 
         /* manage this block entity if optimizations for it is turned on */
         BlockEntityExt ext = (BlockEntityExt)blockEntity;
-        if (shouldManage(ext, crumblingOverlay))  {
-            boolean cancel = !ext.hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(blockEntity);
-            if (cancel) {
-                return;
+        if (this.shouldManage(ext, crumblingOverlay)) {
+            if (ext.hasSpecialManager()) {
+                BlockEntityRenderState managedState =
+                        SpecialBlockEntityManager.extractManagedState(blockEntity, levelRenderState.cameraRenderState, tickDelta, crumblingOverlay, globalBlockEntity);
+
+                if (managedState != null) {
+                    levelRenderState.blockEntityRenderStates.add(managedState);
+                }
             }
+            return;
         }
 
         /* extract the default registered render state */
@@ -91,7 +96,7 @@ public abstract class SodiumWorldRendererMixin {
     }
 
     @Unique
-    private static boolean shouldManage(BlockEntityExt ext, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+    private boolean shouldManage(BlockEntityExt ext, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
         return ext.supportedBlockEntity()                               &&
                 BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF] &&
                 ext.terrainMeshReady()                                  &&
