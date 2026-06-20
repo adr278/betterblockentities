@@ -5,6 +5,8 @@ import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
+import betterblockentities.client.render.immediate.light.ImmediateBlockEntityLight;
+import betterblockentities.client.render.immediate.light.ImmediateLightSubmitNodeCollector;
 import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 
 /* minecraft */
@@ -64,6 +66,13 @@ public class LevelRendererMixin {
             state.breakProgress != null)
         {
             OverlayRenderer.submitCrumblingOverlay(instance, state, poseStack, camera);
+            return;
+        }
+
+        ImmediateBlockEntityLight.Parameters lightParameters = ImmediateBlockEntityLight.createParameters(state);
+        if (lightParameters != null) {
+            lightParameters = lightParameters.withRootPose(poseStack.last().pose());
+            original.call(instance, state, poseStack, new ImmediateLightSubmitNodeCollector(submitNodeCollector, lightParameters), camera);
             return;
         }
 

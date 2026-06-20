@@ -34,6 +34,15 @@
   "bbe.config.storage.main.animation.decoratedpot": "Animar Vaso Decorado",
   "bbe.config.storage.main.animation.decoratedpot.tooltip": "Usado para Ativar ou Desativar as animações de Vaso Decorado",
 
+  "bbe.config.storage.main.lighting.moving.chest" : "Iluminação em Movimento do Baú",
+  "bbe.config.storage.main.lighting.moving.chest.tooltip" : "Move a iluminação e a oclusão de ambiente do baú junto com o modelo animado",
+
+  "bbe.config.storage.main.lighting.moving.shulker" : "Iluminação em Movimento da Caixa de Shulker",
+  "bbe.config.storage.main.lighting.moving.shulker.tooltip" : "Move a iluminação e a oclusão de ambiente da caixa de Shulker junto com o modelo animado",
+
+  "bbe.config.storage.main.lighting.moving.bell" : "Iluminação em Movimento do Sino",
+  "bbe.config.storage.main.lighting.moving.bell.tooltip" : "Move a iluminação e a oclusão de ambiente do sino junto com o modelo animado",
+
   "bbe.config.storage.main.misc.banner_graphics": "Gráficos do Estandarte",
   "bbe.config.storage.main.misc.banner_graphics.tooltip": "Define qual o tipo de passe de renderização os estandartes serão renderizados (Rápido = recorte, Elegante = translúcido)",
 

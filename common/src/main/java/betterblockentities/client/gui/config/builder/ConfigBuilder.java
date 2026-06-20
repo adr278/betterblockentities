@@ -41,6 +41,10 @@ public class ConfigBuilder {
                 new BooleanOption("animation.bell", true),
                 new BooleanOption("animation.decoratedpot", true),
 
+                new BooleanOption("lighting.moving.chest", true),
+                new BooleanOption("lighting.moving.shulker", true),
+                new BooleanOption("lighting.moving.bell", false),
+
                 new IntegerOption("misc.banner_pose", 1),
                 new IntegerOption("misc.banner_graphics", defaultBannerGraphics),
                 new BooleanOption("misc.christmas_chest", false),

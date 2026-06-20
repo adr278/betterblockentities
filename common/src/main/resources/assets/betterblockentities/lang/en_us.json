@@ -52,6 +52,15 @@
   "bbe.config.storage.main.animation.decoratedpot" : "Animate Decorated Pot",
   "bbe.config.storage.main.animation.decoratedpot.tooltip" : "Used to toggle decorated pot animations ON or OFF",
 
+  "bbe.config.storage.main.lighting.moving.chest" : "Chest Moving Lighting",
+  "bbe.config.storage.main.lighting.moving.chest.tooltip" : "Moves chest lighting and ambient occlusion along with the animating model",
+
+  "bbe.config.storage.main.lighting.moving.shulker" : "Shulker Box Moving Lighting",
+  "bbe.config.storage.main.lighting.moving.shulker.tooltip" : "Moves shulker box lighting and ambient occlusion along with the animating model",
+
+  "bbe.config.storage.main.lighting.moving.bell" : "Bell Moving Lighting",
+  "bbe.config.storage.main.lighting.moving.bell.tooltip" : "Moves bell lighting and ambient occlusion along with the animating model",
+
   "bbe.config.storage.main.misc.banner_graphics" : "Banner Graphics",
   "bbe.config.storage.main.misc.banner_graphics.tooltip" : "Decides what renderpass banners should be rendered in, (Fast = cutout), (Fancy = Translucent)",
 

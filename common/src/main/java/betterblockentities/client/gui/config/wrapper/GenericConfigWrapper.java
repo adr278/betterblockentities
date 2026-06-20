@@ -29,6 +29,9 @@ public class GenericConfigWrapper {
         public static boolean animateShulker() {return getGenericBooleanOption("animation.shulker");}
         public static boolean animateBell() {return getGenericBooleanOption("animation.bell");}
         public static boolean animateDecoratedpot() {return getGenericBooleanOption("animation.decoratedpot");}
+        public static boolean movingLightingChest() {return getGenericBooleanOption("lighting.moving.chest");}
+        public static boolean movingLightingShulker() {return getGenericBooleanOption("lighting.moving.shulker");}
+        public static boolean movingLightingBell() {return getGenericBooleanOption("lighting.moving.bell");}
         public static int bannerPose() {return getGenericIntegerOption("misc.banner_pose");}
         public static int bannerGraphics() {return getGenericIntegerOption("misc.banner_graphics");}
         public static boolean useChristmasChestTextures() {return getGenericBooleanOption("misc.christmas_chest");}

@@ -1,11 +1,13 @@
 package betterblockentities.client.gui.config.builder;
 
 /* local */
+import betterblockentities.client.compat.IrisCompat;
 import betterblockentities.client.gui.option.EnumTypes;
 import betterblockentities.client.gui.storage.SodiumConfigStorage;
+import betterblockentities.platform.GlobalScope;
 
 /* sodium */
-import betterblockentities.platform.GlobalScope;
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
@@ -48,11 +50,11 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setTooltip(
                                         Component.translatable("bbe.config.storage.main.misc.shademode.tooltip")
                                 )
-                                .setDefaultValue(EnumTypes.ShadeMode.SODIUM)
+                                .setDefaultValue(EnumTypes.ShadeMode.VANILLA)
                                 .setImpact(OptionImpact.VARIES)
                                 .setBinding(
-                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.shademode", EnumTypes.ShadeMode.map(value)),
-                                        () -> EnumTypes.ShadeMode.map((int)GlobalScope.CONFIG.MAIN.getOption("misc.shademode").getValue())
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.shademode", resolveShadeMode(value)),
+                                        SodiumConfigBuilder::currentShadeMode
                                 )
                                 .setElementNameProvider(e -> new Component[]{
                                         Component.translatable("bbe.config.storage.main.misc.shademode.type.sodium"),
@@ -460,7 +462,86 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setStorageHandler(this.saveMainConfigStorageObject)
                 )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("bbe:lighting.moving.chest"))
+                                .setName(Component.translatable("bbe.config.storage.main.lighting.moving.chest"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.lighting.moving.chest.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.LOW)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("lighting.moving.chest", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("lighting.moving.chest").getValue()
+                                )
+                                .setEnabledProvider(c ->
+                                                movingLightingOptionEnabled(c, Identifier.parse("bbe:optimize.chest")),
+                                        Identifier.parse("bbe:master"),
+                                        Identifier.parse("bbe:misc.shademode"),
+                                        Identifier.parse("bbe:optimize.chest")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("bbe:lighting.moving.shulker"))
+                                .setName(Component.translatable("bbe.config.storage.main.lighting.moving.shulker"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.lighting.moving.shulker.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.LOW)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("lighting.moving.shulker", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("lighting.moving.shulker").getValue()
+                                )
+                                .setEnabledProvider(c ->
+                                                movingLightingOptionEnabled(c, Identifier.parse("bbe:optimize.shulker")),
+                                        Identifier.parse("bbe:master"),
+                                        Identifier.parse("bbe:misc.shademode"),
+                                        Identifier.parse("bbe:optimize.shulker")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("bbe:lighting.moving.bell"))
+                                .setName(Component.translatable("bbe.config.storage.main.lighting.moving.bell"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.lighting.moving.bell.tooltip"))
+                                .setDefaultValue(false)
+                                .setImpact(OptionImpact.LOW)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("lighting.moving.bell", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("lighting.moving.bell").getValue()
+                                )
+                                .setEnabledProvider(c ->
+                                                movingLightingOptionEnabled(c, Identifier.parse("bbe:optimize.bell")),
+                                        Identifier.parse("bbe:master"),
+                                        Identifier.parse("bbe:misc.shademode"),
+                                        Identifier.parse("bbe:optimize.bell")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
         );
+    }
+
+    private static int resolveShadeMode(EnumTypes.ShadeMode shadeMode) {
+        if (IrisCompat.isShaderPackInUse() && shadeMode == EnumTypes.ShadeMode.SODIUM) {
+            return EnumTypes.ShadeMode.VANILLA.ordinal();
+        }
+
+        return EnumTypes.ShadeMode.map(shadeMode);
+    }
+
+    private static EnumTypes.ShadeMode currentShadeMode() {
+        if (IrisCompat.isShaderPackInUse()) {
+            return EnumTypes.ShadeMode.VANILLA;
+        }
+
+        return EnumTypes.ShadeMode.map((int)GlobalScope.CONFIG.MAIN.getOption("misc.shademode").getValue());
+    }
+
+    private static boolean movingLightingOptionEnabled(ConfigState configState, Identifier optimizeOption) {
+        return configState.readBooleanOption(Identifier.parse("bbe:master"))
+                && configState.readBooleanOption(optimizeOption)
+                && configState.readEnumOption(Identifier.parse("bbe:misc.shademode"), EnumTypes.ShadeMode.class) == EnumTypes.ShadeMode.SODIUM;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package betterblockentities.client.gui.config;
 
 /* local */
+import betterblockentities.client.compat.IrisCompat;
 import betterblockentities.client.gui.config.builder.ConfigBuilder;
 import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
 import betterblockentities.client.gui.option.*;
@@ -195,6 +196,9 @@ public class BBEConfig {
             ConfigCache.shulkerAnims = GenericConfigWrapper.MainStorage.animateShulker();
             ConfigCache.bellAnims = GenericConfigWrapper.MainStorage.animateBell();
             ConfigCache.potAnims = GenericConfigWrapper.MainStorage.animateDecoratedpot();
+            ConfigCache.chestMovingLighting = GenericConfigWrapper.MainStorage.movingLightingChest();
+            ConfigCache.shulkerMovingLighting = GenericConfigWrapper.MainStorage.movingLightingShulker();
+            ConfigCache.bellMovingLighting = GenericConfigWrapper.MainStorage.movingLightingBell();
             ConfigCache.signText = GenericConfigWrapper.MainStorage.signText();
             ConfigCache.signTextRenderDistance = GenericConfigWrapper.MainStorage.signTextDistance();
             ConfigCache.optimizeSigns = GenericConfigWrapper.MainStorage.optimizeSign();
@@ -213,6 +217,7 @@ public class BBEConfig {
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
             ConfigCache.optimizeLectern = GenericConfigWrapper.MainStorage.optimizeLectern();
             ConfigCache.shadeMode = GenericConfigWrapper.MainStorage.shadeMode();
+            forceVanillaShadeMode();
         }
         else {
             ConfigCache.optimizeSigns = false;
@@ -225,9 +230,29 @@ public class BBEConfig {
             ConfigCache.optimizeShelves = false;
             ConfigCache.optimizeCampfire = false;
             ConfigCache.optimizeLectern = false;
+            ConfigCache.chestMovingLighting = false;
+            ConfigCache.shulkerMovingLighting = false;
+            ConfigCache.bellMovingLighting = false;
         }
 
         OptEnabledTable.rebuildFromConfig();
+    }
+
+    private static void forceVanillaShadeMode() {
+        if (!IrisCompat.isShaderPackInUse() || ConfigCache.shadeMode != EnumTypes.ShadeMode.SODIUM.ordinal()) {
+            return;
+        }
+
+        int vanillaShadeMode = EnumTypes.ShadeMode.VANILLA.ordinal();
+        ConfigCache.shadeMode = vanillaShadeMode;
+
+        ConfigStorageObject mainStorage = configStorageCollection.getStorage(ConfigStorageIdentifiers.MAIN);
+        if (mainStorage == null) {
+            return;
+        }
+
+        mainStorage.setOption("misc.shademode", vanillaShadeMode);
+        save(mainStorage);
     }
 
     /**
