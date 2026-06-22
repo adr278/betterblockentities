@@ -45,7 +45,6 @@ public class ModelBakery {
     public static void bakeLayerSetupAndAppend(EntityModelSet entityModelSet, ModelLayerLocation layer, PoseStack stack) {
         ModelPart root = entityModelSet.bakeLayer(layer);
         if (root.getAllParts().isEmpty()) {
-            BBE.getLogger().error("Root ModelPart for ModelLayer {} is empty after bake! Skipping", layer.layer());
             return;
         }
 
@@ -106,10 +105,12 @@ public class ModelBakery {
         if (layer == ModelLayers.WALL_BANNER_FLAG || layer == ModelLayers.STANDING_BANNER_FLAG) {
             ModelPart flag = root.getChild("flag");
 
-            float step = -0.45f;
-            float rot = step * ConfigCache.bannerPose;
-            float rotClamped = Math.clamp(rot, -4.05f, -0.45f);
-            flag.xRot = (float)Math.toRadians(rotClamped);
+            float rotDegrees = Math.clamp(-0.45f * ConfigCache.bannerPose, -4.05f, -0.45f);
+            float xRot = (float)Math.toRadians(rotDegrees);
+
+            BBE.GlobalScope.bannerPhase = calculateBannerPhase(xRot);
+
+            flag.xRot = xRot;
         }
         GeometryRegistry.cacheGeometry(layer, root, PlaceHolderSpriteIdentifiers.BANNER, stack);
     }
@@ -129,5 +130,13 @@ public class ModelBakery {
             BBE.getLogger().error("Failed to get EntityModelSet while caching block entity geometry!", e);
             return null;
         }
+    }
+
+    //reverse mojang formula, we need this for overlay rendering
+    private static float calculateBannerPhase(float xRot) {
+        float cosValue = ((xRot / (float) Math.PI) + 0.0125f) / 0.01f;
+        cosValue = Math.clamp(cosValue, -1.0f, 1.0f);
+
+        return (float) (Math.acos(cosValue) / (Math.PI * 2.0));
     }
 }

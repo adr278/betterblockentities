@@ -1,0 +1,7 @@
+accessWidener v1 official
+
+accessible class net/minecraft/client/renderer/feature/FeatureRenderDispatcher$PhaseSubmitGrouper
+accessible class net/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase$FeatureSubmits
+
+accessible field net/minecraft/client/renderer/SubmitNodeStorage submitsPerOrder Lit/unimi/dsi/fastutil/ints/Int2ObjectAVLTreeMap;
+accessible field net/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase submitsByFeature [Lnet/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase$FeatureSubmits;

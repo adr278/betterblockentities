@@ -409,9 +409,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                     builder.createEnumOption(Identifier.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
                             .setName(Component.translatable("bbe.config.storage.main.misc.update_scheduler"))
                             .setTooltip(
-                                    BBE.ModCompact.isSchedulerOptionLimited() ?
-                                            Component.translatable("bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable") :
-                                            Component.translatable("bbe.config.storage.main.misc.update_scheduler.tooltip")
+                                    Component.translatable("bbe.config.storage.main.misc.update_scheduler.tooltip")
                             )
                             .setDefaultValue(EnumTypes.UpdateSchedulerType.FAST)
                             .setImpact(OptionImpact.VARIES)
@@ -424,7 +422,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     Component.translatable("bbe.config.storage.main.misc.update_scheduler.type.smart"),
                             }[e.ordinal()])
                             .setEnabledProvider(c ->
-                                    c.readBooleanOption(Identifier.parse("bbe:master")) && !BBE.ModCompact.isSchedulerOptionLimited(), Identifier.parse("bbe:master")
+                                    c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
                             )
                             .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                             .setStorageHandler(this.saveMainConfigStorageObject)

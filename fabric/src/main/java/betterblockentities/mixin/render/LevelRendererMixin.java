@@ -2,15 +2,21 @@ package betterblockentities.mixin.render;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
+import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
+import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 
 /* minecraft */
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
 /* mojang */
@@ -22,6 +28,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /* java/misc */
@@ -36,18 +44,29 @@ public class LevelRendererMixin {
         BBE.GlobalScope.altRenderDispatcher.prepare(cameraRenderState.pos);
     }
 
-    @Inject(at = @At("HEAD"), method = "submitBlockEntities")
-    private void updateSignRenderState(PoseStack poseStack, LevelRenderState levelRenderState, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
-        BBE.GlobalScope.limitVanillaSignRendering = true;
+    @WrapOperation(method = "submitBlockEntities",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;submit(Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V"
+            )
+    )
+    private void submitBreakingOverlays(BlockEntityRenderDispatcher instance, BlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, Operation<Void> original) {
+        BlockEntityRenderStateExt renderStateExt = (BlockEntityRenderStateExt)state;
+
+        BlockEntity blockEntity = renderStateExt.blockEntity();
+        BlockEntityExt blockEntityExt = (BlockEntityExt)blockEntity;
+
+        if (blockEntityExt.supportedBlockEntity() && blockEntityExt.renderingMode() == RenderingMode.TERRAIN && state.breakProgress != null) {
+            OverlayRenderer.submitCrumblingOverlay(instance, state, poseStack, camera);
+            return;
+        }
+
+        original.call(instance, state, poseStack, submitNodeCollector, camera);
     }
 
-    /*
-     *  give ourselves a lower priority so we can make sure this executes before any other mixins here
-    */
+
     @Inject(method = "submitBlockEntities", at = @At("RETURN"), order = 900)
     private void submitAltRenderers(PoseStack poseStack, LevelRenderState levelRenderState, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
-        BBE.GlobalScope.limitVanillaSignRendering = false;
-
         Vec3 cameraPos = levelRenderState.cameraRenderState.pos;
         double camX = cameraPos.x();
         double camY = cameraPos.y();

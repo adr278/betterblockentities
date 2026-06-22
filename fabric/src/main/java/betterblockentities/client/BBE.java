@@ -1,6 +1,7 @@
 package betterblockentities.client;
 
 /* local */
+import betterblockentities.client.render.immediate.overlay.OverlayNodeStorage;
 import betterblockentities.registration.RegistrationCollection;
 import betterblockentities.render.AltRenderDispatcher;
 import betterblockentities.client.gui.DebugScreen;
@@ -30,9 +31,6 @@ import java.util.List;
 public class BBE implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        getLogger().info("Checking for loaded mods for compact...");
-        ModCompact.checkForLoadedMods();
-
         getLogger().info("Building config cache from user defined config file...");
         BBEConfig.updateConfigCache();
 
@@ -54,49 +52,11 @@ public class BBE implements ClientModInitializer {
 
         /* runtime render data */
         public static Frustum frustum;
+        public static float bannerPhase = 0;
+        public static OverlayNodeStorage overlayNodeStorage = new OverlayNodeStorage();
         public static AltRenderDispatcher altRenderDispatcher;
         public static List<BlockEntityRenderState> altBlockEntityRenderStates = new ArrayList<>();
-        public static boolean limitVanillaSignRendering = false;
     }
-
-
-    public static class ModCompact {
-        private static ImmutableList<String> modList = ImmutableList.of(
-                "entity_model_features",
-                "litematica"
-        );
-
-        private static ImmutableList<String> loadedMods;
-
-        public static void checkForLoadedMods() {
-            ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
-
-            for (String id : modList) {
-                if (isFabricModLoaded(id)) {
-                    builder.add(id);
-                }
-            }
-            loadedMods = builder.build();
-        }
-
-        public static boolean isSchedulerOptionLimited() {
-            boolean schedulerOverride = (boolean)GlobalScope.CONFIG.HIDDEN.getOption("override.forced_updatescheduler").getValue();
-
-            if (!loadedMods.isEmpty() && !schedulerOverride) {
-                return true;
-            }
-            return false;
-        }
-
-        public static boolean isModLoaded(String id) {
-            return loadedMods.contains(id);
-        }
-
-        private static boolean isFabricModLoaded(String id) {
-            return FabricLoader.getInstance().isModLoaded(id);
-        }
-    }
-
 
     /* global logger, used for info logging, error handling, etc... */
     public static Logger getLogger() {

@@ -27,6 +27,7 @@
     "render.immediate.blockentity.shelf.ShelfBlockEntityMixin",
     "render.immediate.blockentity.shulker.ShulkerBoxBlockEntityMixin",
     "render.immediate.blockentity.sign.SignBlockEntityMixin",
+    "render.immediate.blockentity.FeatureRenderDispatcherMixin",
     "render.texture.AtlasManagerMixin",
     "render.texture.MipMapGeneratorAccessor",
     "render.texture.MipMapGeneratorMixin",

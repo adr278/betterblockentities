@@ -53,6 +53,10 @@ dependencies {
     fabricModule("fabric-renderer-api-v1")
 }
 
+loom {
+    accessWidenerPath = file("src/main/resources/betterblockentities.accesswidener")
+}
+
 //per artifact actions
 tasks.withType<Jar>().configureEach {
     //set base-name and our built version string
