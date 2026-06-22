@@ -2,6 +2,7 @@ package betterblockentities.mixin.sodium.render;
 
 /* local */
 import betterblockentities.client.chunk.section.SectionRebuildCallbacks;
+import betterblockentities.mixin.accessors.RenderSectionAccessor;
 
 /* sodium */
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;

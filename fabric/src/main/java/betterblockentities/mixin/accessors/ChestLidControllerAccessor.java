@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity.chest;
+package betterblockentities.mixin.accessors;
 
 import net.minecraft.world.level.block.entity.ChestLidController;
 import org.spongepowered.asm.mixin.Mixin;

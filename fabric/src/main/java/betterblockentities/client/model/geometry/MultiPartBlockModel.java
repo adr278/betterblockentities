@@ -2,10 +2,9 @@ package betterblockentities.client.model.geometry;
 
 /* local */
 import betterblockentities.client.BBE;
-import betterblockentities.mixin.model.modelpart.ModelPartAccessor;
+import betterblockentities.mixin.accessors.ModelPartAccessor;
 
 /* minecraft */
-import com.mojang.blaze3d.platform.Transparency;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
@@ -21,15 +20,16 @@ import net.minecraft.util.RandomSource;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
-import org.jspecify.annotations.NonNull;
+import com.mojang.blaze3d.platform.Transparency;
 
 /* java/misc */
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+import org.jspecify.annotations.NonNull;
 
 public class MultiPartBlockModel implements BlockStateModel {
     private final List<BlockStateModel> models = new ArrayList<>();

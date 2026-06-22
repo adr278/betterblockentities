@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity.shulker;
+package betterblockentities.mixin.render.immediate.blockentity;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
@@ -8,9 +8,9 @@ import betterblockentities.client.render.immediate.blockentity.manager.Instanced
 /* minecraft */
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BellBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTypes;
-import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /* mixin */
@@ -20,8 +20,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ShulkerBoxBlockEntity.class)
-public abstract class ShulkerBoxBlockEntityMixin {
+@Mixin(BellBlockEntity.class)
+public class BellBlockEntityMixin {
     @Unique private final InstancedBlockEntityManager manager = new InstancedBlockEntityManager((BlockEntity)(Object)this);
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -29,20 +29,20 @@ public abstract class ShulkerBoxBlockEntityMixin {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 
-        ext.optKind(InstancedBlockEntityManager.OptKind.SHULKER);
+        ext.optKind(InstancedBlockEntityManager.OptKind.BELL);
 
         ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityTypes.SHULKER_BOX
+            blockEntity.getType() == BlockEntityTypes.BELL
         );
     }
 
-    @Inject(method = "tick", at = @At("TAIL"))
-    private static void onTick(Level level, BlockPos blockPos, BlockState blockState, ShulkerBoxBlockEntity shulkerBoxBlockEntity, CallbackInfo ci) {
-        ShulkerBoxBlockEntityMixin self = (ShulkerBoxBlockEntityMixin)(Object)shulkerBoxBlockEntity;
-        BlockEntityExt ext = (BlockEntityExt)(Object)shulkerBoxBlockEntity;
+    @Inject(method = "clientTick", at = @At("TAIL"))
+    private static void onTick(Level level, BlockPos blockPos, BlockState blockState, BellBlockEntity bellBlockEntity, CallbackInfo ci) {
+        BellBlockEntityMixin self = (BellBlockEntityMixin)(Object)bellBlockEntity;
+        BlockEntityExt ext = (BlockEntityExt)(Object)bellBlockEntity;
 
         if (ext.supportedBlockEntity()) {
-            self.manager.tick(shulkerBoxBlockEntity.getProgress(0.5f) > 0.01f, ConfigCache.shulkerAnims);
+            self.manager.tick(bellBlockEntity.shaking, ConfigCache.bellAnims);
         }
     }
 }

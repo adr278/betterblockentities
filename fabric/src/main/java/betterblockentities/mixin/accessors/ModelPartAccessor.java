@@ -1,4 +1,4 @@
-package betterblockentities.mixin.model.modelpart;
+package betterblockentities.mixin.accessors;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.geom.ModelPart;

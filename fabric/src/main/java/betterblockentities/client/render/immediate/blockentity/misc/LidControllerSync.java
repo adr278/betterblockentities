@@ -5,8 +5,8 @@ import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
-import betterblockentities.mixin.render.immediate.blockentity.chest.ChestBlockEntityAccessor;
-import betterblockentities.mixin.render.immediate.blockentity.chest.ChestLidControllerAccessor;
+import betterblockentities.mixin.accessors.ChestBlockEntityAccessor;
+import betterblockentities.mixin.accessors.ChestLidControllerAccessor;
 
 /* minecraft */
 import net.minecraft.client.multiplayer.ClientLevel;

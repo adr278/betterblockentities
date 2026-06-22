@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity.chest;
+package betterblockentities.mixin.render.immediate.blockentity;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;

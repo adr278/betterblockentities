@@ -1,4 +1,4 @@
-package betterblockentities.mixin.sodium.render;
+package betterblockentities.mixin.accessors;
 
 /* sodium */
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;

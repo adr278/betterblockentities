@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity;
+package betterblockentities.mixin.render;
 
 /* local */
 import betterblockentities.client.BBE;

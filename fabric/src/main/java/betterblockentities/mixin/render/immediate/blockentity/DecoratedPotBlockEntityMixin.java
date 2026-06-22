@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity.decordatedpot;
+package betterblockentities.mixin.render.immediate.blockentity;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;

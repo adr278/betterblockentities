@@ -1,8 +1,7 @@
-package betterblockentities.mixin.sodium.pipeline;
+package betterblockentities.mixin.accessors;
 
 /* minecraft */
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;

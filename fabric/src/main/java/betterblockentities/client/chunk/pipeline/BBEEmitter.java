@@ -3,7 +3,7 @@ package betterblockentities.client.chunk.pipeline;
 /* local */
 import betterblockentities.client.chunk.util.QuadTransform;
 import betterblockentities.client.model.texture.SpriteSelector;
-import betterblockentities.mixin.sodium.pipeline.AbstractBlockRenderContextAccessor;
+import betterblockentities.mixin.accessors.AbstractBlockRenderContextAccessor;
 
 /* minecraft */
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;

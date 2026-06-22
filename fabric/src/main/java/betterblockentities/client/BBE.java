@@ -7,12 +7,10 @@ import betterblockentities.render.AltRenderDispatcher;
 import betterblockentities.client.gui.DebugScreen;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
-import betterblockentities.mixin.gui.DebugScreenEntriesAccessor;
+import betterblockentities.mixin.accessors.DebugScreenEntriesAccessor;
 
 /* fabric */
-import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
 
 /* minecraft */
 import net.minecraft.client.gui.components.debug.DebugEntryCategory;
@@ -24,7 +22,6 @@ import net.minecraft.resources.Identifier;
 /* java/misc */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity.campfire;
+package betterblockentities.mixin.render.immediate.blockentity;
 
 /* local */
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
@@ -7,7 +7,7 @@ import betterblockentities.client.render.immediate.blockentity.manager.Instanced
 /* minecraft */
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTypes;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
+import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 
 /* mixin */
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(CampfireBlockEntity.class)
-public class CampfireBlockEntityMixin {
+@Mixin(ShelfBlockEntity.class)
+public class ShelfBlockEntityMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
@@ -24,10 +24,10 @@ public class CampfireBlockEntityMixin {
 
         ext.terrainMeshReady(true);
         ext.hasSpecialManager(true);
-        ext.optKind(InstancedBlockEntityManager.OptKind.CAMPFIRE);
+        ext.optKind(InstancedBlockEntityManager.OptKind.SHELF);
 
         ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityTypes.CAMPFIRE
+            blockEntity.getType() == BlockEntityTypes.SHELF
         );
     }
 }

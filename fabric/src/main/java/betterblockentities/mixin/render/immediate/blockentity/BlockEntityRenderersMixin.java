@@ -1,8 +1,8 @@
 package betterblockentities.mixin.render.immediate.blockentity;
 
 /* local */
+import betterblockentities.mixin.accessors.BlockEntityRenderersAccessor;
 import betterblockentities.render.AltRenderers;
-import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.renderers.*;
 
 /* minecraft */

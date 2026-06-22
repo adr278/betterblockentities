@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.texture;
+package betterblockentities.mixin.texture;
 
 /* minecraft */
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;

@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity.coppergolem;
+package betterblockentities.mixin.render.immediate.blockentity;
 
 /* local */
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;

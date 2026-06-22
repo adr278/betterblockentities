@@ -1,4 +1,4 @@
-package betterblockentities.mixin.render.immediate.blockentity;
+package betterblockentities.mixin.accessors;
 
 /* minecraft */
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;

@@ -1,6 +1,7 @@
-package betterblockentities.mixin.render.texture;
+package betterblockentities.mixin.texture;
 
 /* minecraft */
+import betterblockentities.mixin.accessors.MipMapGeneratorAccessor;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
 import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.NativeImage;
