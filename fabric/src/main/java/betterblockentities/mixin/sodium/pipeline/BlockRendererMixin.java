@@ -45,7 +45,7 @@ public abstract class BlockRendererMixin {
     @Unique private BBEBlockRenderer bbeBlockRenderer;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void init(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters, CallbackInfo ci) {
+    private void bbe$init(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters, CallbackInfo ci) {
         this.bbeBlockRenderer = new BBEBlockRenderer((BlockRenderer)(Object)this);
     }
     
@@ -56,8 +56,8 @@ public abstract class BlockRendererMixin {
                     target = "net/caffeinemc/mods/sodium/client/services/PlatformModelEmitter.emitModel (Lnet/minecraft/client/renderer/block/dispatch/BlockStateModel;Ljava/util/function/Predicate;Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;Lnet/minecraft/util/RandomSource;Lnet/minecraft/client/renderer/block/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/caffeinemc/mods/sodium/client/services/PlatformModelEmitter$Bufferer;)V"
             )
     )
-    public void emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
-        LevelSlice slice = ((AbstractBlockRenderContextAccessor)(Object)this).getSlice();
+    public void bbe$emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
+        LevelSlice slice = ((AbstractBlockRenderContextAccessor)(Object)this).bbe$getSlice();
         bbeBlockRenderer.emitBlockModel(instance, model, isFaceCulled, emitter, random, level, slice, pos, state, bufferer);
     }
 
@@ -67,7 +67,7 @@ public abstract class BlockRendererMixin {
                     target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/TranslucentGeometryCollector;appendQuad([Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;I)Z"
             )
     )
-    public boolean appendQuad(
+    public boolean bbe$appendQuad(
             TranslucentGeometryCollector instance,
             ChunkVertexEncoder.Vertex[] vertices,
             ModelQuadFacing facing,
@@ -79,11 +79,11 @@ public abstract class BlockRendererMixin {
 
         try {
             if (quad.getTag() == BBEEmitter.NO_QUAD_SPLITTING) {
-                tscExt.setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode.NONE);
+                tscExt.bbe$setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode.NONE);
             }
             return original.call(instance, vertices, facing, packedNormal);
         } finally {
-            tscExt.deferSplittingMode();
+            tscExt.bbe$deferSplittingMode();
         }
     }
 }

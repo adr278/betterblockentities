@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(DebugScreenEntries.class)
 public interface DebugScreenEntriesAccessor {
-    @Invoker
-    static Identifier invokeRegister(Identifier arg, DebugScreenEntry arg2) {
+    @Invoker("register")
+    static Identifier bbe$register(Identifier arg, DebugScreenEntry arg2) {
         throw new AssertionError();
     }
 }

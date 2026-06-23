@@ -25,35 +25,38 @@ import org.jetbrains.annotations.Nullable;
 @Mixin(AbstractBlockRenderContext.class)
 public interface AbstractBlockRenderContextAccessor {
     @Accessor("level")
-    BlockAndTintGetter getLevel();
+    BlockAndTintGetter bbe$getLevel();
 
     @Accessor("random")
-    RandomSource getRandom();
+    RandomSource bbe$getRandom();
 
     @Accessor("state")
-    BlockState getState();
+    BlockState bbe$getState();
+
     @Accessor("state")
-    void setState(BlockState state);
+    void bbe$setState(BlockState state);
 
     @Accessor("pos")
-    BlockPos getPos();
+    BlockPos bbe$getPos();
+
     @Accessor("pos")
-    void setPos(BlockPos pos);
+    void bbe$setPos(BlockPos pos);
 
     @Accessor("slice")
-    LevelSlice getSlice();
+    LevelSlice bbe$getSlice();
+
     @Accessor("slice")
-    void setSlice(LevelSlice slice);
+    void bbe$setSlice(LevelSlice slice);
 
     @Invoker("getForEmitting")
-    MutableQuadViewImpl getEmitterInvoke();
+    MutableQuadViewImpl bbe$getEmitter();
 
     @Invoker("prepareAoInfo")
-    void prepareAoInfoInvoke(boolean modelAo);
+    void bbe$prepareAoInfo(boolean modelAo);
 
     @Invoker("prepareCulling")
-    void prepareCullingInvoke(boolean enableCulling);
+    void bbe$prepareCulling(boolean enableCulling);
 
     @Invoker("isFaceCulled")
-    boolean isFaceCulledInvoke(@Nullable Direction face);
+    boolean bbe$isFaceCulled(@Nullable Direction face);
 }

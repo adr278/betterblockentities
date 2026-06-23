@@ -18,7 +18,7 @@ import java.util.Map;
 @Mixin(BlockEntityRenderers.class)
 public interface BlockEntityRenderersAccessor {
     @Invoker("register")
-    static <T extends BlockEntity, S extends BlockEntityRenderState> void invokeRegister(
+    static <T extends BlockEntity, S extends BlockEntityRenderState> void bbe$register(
             BlockEntityType<? extends T> type,
             BlockEntityRendererProvider<T, S> renderer
     ) {
@@ -26,7 +26,7 @@ public interface BlockEntityRenderersAccessor {
     }
 
     @Accessor("PROVIDERS")
-    static Map<BlockEntityType<?>, BlockEntityRendererProvider<?, ?>> getProviders() {
+    static Map<BlockEntityType<?>, BlockEntityRendererProvider<?, ?>> bbe$getProviders() {
         throw new AssertionError();
     }
 }

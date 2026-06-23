@@ -31,7 +31,7 @@ public class BBE implements ClientModInitializer {
         getLogger().info("Building config cache from user defined config file...");
         BBEConfig.updateConfigCache();
 
-        DebugScreenEntriesAccessor.invokeRegister(GlobalScope.DEBUG_ID, new DebugScreen());
+        DebugScreenEntriesAccessor.bbe$register(GlobalScope.DEBUG_ID, new DebugScreen());
 
         getLogger().info("Collecting API Entrypoint's...");
         RegistrationCollection.collectEntryPoints();

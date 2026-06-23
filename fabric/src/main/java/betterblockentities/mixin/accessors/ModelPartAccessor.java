@@ -12,41 +12,41 @@ import java.util.Map;
 @Mixin(ModelPart.class)
 public interface ModelPartAccessor {
     @Accessor("cubes")
-    List<ModelPart.Cube> getCubes();
+    List<ModelPart.Cube> bbe$getCubes();
 
     @Accessor("children")
-    Map<String, ModelPart> getChildren();
+    Map<String, ModelPart> bbe$getChildren();
 
     @Invoker("visit")
-    void visitInvoke(PoseStack poseStack, ModelPart.Visitor visitor);
+    void bbe$visitInvoke(PoseStack poseStack, ModelPart.Visitor visitor);
 
     @Invoker("translateAndRotate")
-    void translateAndRotateInvoke(PoseStack poseStack);
+    void bbe$translateAndRotateInvoke(PoseStack poseStack);
 
     @Accessor("x")
-    float getX();
+    float bbe$getX();
 
     @Accessor("y")
-    float getY();
+    float bbe$getY();
 
     @Accessor("z")
-    float getZ();
+    float bbe$getZ();
 
     @Accessor("xRot")
-    float getXRot();
+    float bbe$getXRot();
 
     @Accessor("yRot")
-    float getYRot();
+    float bbe$getYRot();
 
     @Accessor("zRot")
-    float getZRot();
+    float bbe$getZRot();
 
     @Accessor("xScale")
-    float getXScale();
+    float bbe$getXScale();
 
     @Accessor("yScale")
-    float getYScale();
+    float bbe$getYScale();
 
     @Accessor("zScale")
-    float getZScale();
+    float bbe$getZScale();
 }

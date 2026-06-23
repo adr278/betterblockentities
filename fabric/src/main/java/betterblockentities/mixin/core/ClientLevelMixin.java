@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientLevel.class)
 public class ClientLevelMixin {
     @Inject(method = "setServerVerifiedBlockState", at = @At("TAIL"))
-    public void syncLidControllers(BlockPos blockPos, BlockState blockState, int i, CallbackInfo ci) {
+    public void bbe$syncLidControllers(BlockPos blockPos, BlockState blockState, int i, CallbackInfo ci) {
         LidControllerSync.sync((ClientLevel)(Object)this, blockPos, blockState);
     }
 }

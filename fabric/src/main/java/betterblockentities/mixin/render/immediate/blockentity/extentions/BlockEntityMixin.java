@@ -19,18 +19,18 @@ public abstract class BlockEntityMixin implements BlockEntityExt {
     @Unique private byte bbeKind = 0;
     @Unique private boolean supportedBlockEntity = false;
 
-    @Override public boolean supportedBlockEntity() { return supportedBlockEntity; }
-    @Override public void supportedBlockEntity(boolean bl) {this.supportedBlockEntity = bl; }
+    @Override public boolean bbe$isSupportedBlockEntity() { return supportedBlockEntity; }
+    @Override public void bbe$setSupportedBlockEntity(boolean bl) {this.supportedBlockEntity = bl; }
 
-    @Override public RenderingMode renderingMode() { return renderingMode; }
-    @Override public void renderingMode(RenderingMode mode) { renderingMode = mode; }
+    @Override public RenderingMode bbe$getRenderingMode() { return renderingMode; }
+    @Override public void bbe$setRenderingMode(RenderingMode mode) { renderingMode = mode; }
 
-    @Override public boolean terrainMeshReady() { return terrainMeshReady; }
-    @Override public void terrainMeshReady(boolean bl) { terrainMeshReady = bl; }
+    @Override public boolean bbe$isTerrainMeshReady() { return terrainMeshReady; }
+    @Override public void bbe$setTerrainMeshReady(boolean bl) { terrainMeshReady = bl; }
 
-    @Override public boolean hasSpecialManager() { return hasSpecialManager; }
-    @Override public void hasSpecialManager(boolean bl) { hasSpecialManager = bl; }
+    @Override public boolean bbe$hasSpecialManager() { return hasSpecialManager; }
+    @Override public void bbe$setSpecialManager(boolean bl) { hasSpecialManager = bl; }
 
-    @Override public byte optKind() { return bbeKind; }
-    @Override public void optKind(byte k) { bbeKind = k; }
+    @Override public byte bbe$getOptKind() { return bbeKind; }
+    @Override public void bbe$setOptKind(byte k) { bbeKind = k; }
 }

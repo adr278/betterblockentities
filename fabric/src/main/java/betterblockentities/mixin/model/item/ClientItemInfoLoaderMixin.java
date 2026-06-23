@@ -39,39 +39,39 @@ public class ClientItemInfoLoaderMixin {
     @Unique private static final Identifier TRAPPED_CHEST_ITEM_ID = Identifier.withDefaultNamespace("trapped_chest");
 
     @Inject(method = "scheduleLoad", at = @At("RETURN"), cancellable = true)
-    private static void rewriteChestItemAssets(ResourceManager resourceManager, Executor executor,
+    private static void bbe$rewriteChestItemAssets(ResourceManager resourceManager, Executor executor,
             CallbackInfoReturnable<CompletableFuture<ClientItemInfoLoader.LoadedClientInfos>> cir
     ) {
-        if (!ShouldOverrideVanilla()) {
+        if (!bbe$shouldOverrideVanilla()) {
             return;
         }
         CompletableFuture<ClientItemInfoLoader.LoadedClientInfos> original = cir.getReturnValue();
-        cir.setReturnValue(original.thenApply(ClientItemInfoLoaderMixin::rewriteChestItems));
+        cir.setReturnValue(original.thenApply(ClientItemInfoLoaderMixin::bbe$rewriteChestItems));
     }
 
     @Unique
-    private static boolean ShouldOverrideVanilla() {
+    private static boolean bbe$shouldOverrideVanilla() {
         return ConfigCache.optimizeChests
                 && !ConfigCache.christmasChests
                 && SpecialDates.isExtendedChristmas();
     }
 
     @Unique
-    private static ClientItemInfoLoader.LoadedClientInfos rewriteChestItems(ClientItemInfoLoader.LoadedClientInfos loaded) {
+    private static ClientItemInfoLoader.LoadedClientInfos bbe$rewriteChestItems(ClientItemInfoLoader.LoadedClientInfos loaded) {
         Map<Identifier, ClientItem> map = new HashMap<>(loaded.contents());
 
-        patchOne(map, CHEST_ITEM_ID, ChestSpecialRenderer.REGULAR.single());
-        patchOne(map, TRAPPED_CHEST_ITEM_ID, ChestSpecialRenderer.TRAPPED.single());
+        bbe$patchOne(map, CHEST_ITEM_ID, ChestSpecialRenderer.REGULAR.single());
+        bbe$patchOne(map, TRAPPED_CHEST_ITEM_ID, ChestSpecialRenderer.TRAPPED.single());
 
         return new ClientItemInfoLoader.LoadedClientInfos(Map.copyOf(map));
     }
 
     @Unique
-    private static void patchOne(Map<Identifier, ClientItem> map, Identifier id, Identifier fallbackTexture) {
+    private static void bbe$patchOne(Map<Identifier, ClientItem> map, Identifier id, Identifier fallbackTexture) {
         ClientItem existing = map.get(id);
         if (existing == null) return;
 
-        ItemModel.Unbaked patchedModel = patchModel(existing.model(), fallbackTexture);
+        ItemModel.Unbaked patchedModel = bbe$patchModel(existing.model(), fallbackTexture);
         if (patchedModel != existing.model()) {
             map.put(id, new ClientItem(patchedModel, existing.properties(), existing.registrySwapper()));
         }
@@ -79,7 +79,7 @@ public class ClientItemInfoLoaderMixin {
 
     @Unique
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private static ItemModel.Unbaked patchModel(ItemModel.Unbaked model, Identifier fallbackTexture) {
+    private static ItemModel.Unbaked bbe$patchModel(ItemModel.Unbaked model, Identifier fallbackTexture) {
         if (model instanceof SpecialModelWrapper.Unbaked(Identifier base, Optional<Transformation> transformation, SpecialModelRenderer.Unbaked special)) {
             if (special instanceof ChestSpecialRenderer.Unbaked(Identifier tex, float openness, ChestType type)) {
                 if (tex.equals(ChestSpecialRenderer.CHRISTMAS.single()) || tex.getPath().contains("Christmas")) {
@@ -97,12 +97,12 @@ public class ClientItemInfoLoaderMixin {
             List<SelectItemModel.SwitchCase> newCases = new ArrayList<>(cases.size());
             for (SelectItemModel.SwitchCase sc : cases) {
                 ItemModel.Unbaked child = sc.model();
-                ItemModel.Unbaked patchedChild = patchModel(child, fallbackTexture);
+                ItemModel.Unbaked patchedChild = bbe$patchModel(child, fallbackTexture);
                 if (patchedChild != child) changed = true;
                 newCases.add(patchedChild == child ? sc : new SelectItemModel.SwitchCase(sc.values(), patchedChild));
             }
 
-            Optional<ItemModel.Unbaked> newFallback = oldFallback.map(fb -> patchModel(fb, fallbackTexture));
+            Optional<ItemModel.Unbaked> newFallback = oldFallback.map(fb -> bbe$patchModel(fb, fallbackTexture));
             if (!oldFallback.equals(newFallback)) changed = true;
 
             if (!changed) return model;

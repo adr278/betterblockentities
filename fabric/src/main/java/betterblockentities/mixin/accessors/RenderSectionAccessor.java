@@ -11,11 +11,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface RenderSectionAccessor {
 
     @Accessor("chunkX")
-    int getChunkX();
+    int bbe$getChunkX();
 
     @Accessor("chunkY")
-    int getChunkY();
+    int bbe$getChunkY();
 
     @Accessor("chunkZ")
-    int getChunkZ();
+    int bbe$getChunkZ();
 }

@@ -18,15 +18,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SignBlockEntity.class)
 public class SignBlockEntityMixin {
     @Inject(method = "<init>(Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    private void bbe$init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)this;
 
-        ext.terrainMeshReady(true);
-        ext.hasSpecialManager(true);
-        ext.optKind(InstancedBlockEntityManager.OptKind.SIGN);
+        ext.bbe$setTerrainMeshReady(true);
+        ext.bbe$setSpecialManager(true);
+        ext.bbe$setOptKind(InstancedBlockEntityManager.OptKind.SIGN);
 
-        ext.supportedBlockEntity(
+        ext.bbe$setSupportedBlockEntity(
                 blockEntity.getType() == BlockEntityTypes.SIGN ||
                 blockEntity.getType() == BlockEntityTypes.HANGING_SIGN
         );

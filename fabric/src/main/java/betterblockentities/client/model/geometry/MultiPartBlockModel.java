@@ -50,7 +50,7 @@ public class MultiPartBlockModel implements BlockStateModel {
             return;
         }
 
-        Map<String, ModelPart> children = modelAcc.getChildren();
+        Map<String, ModelPart> children = modelAcc.bbe$getChildren();
         if (children.isEmpty()) {
             BBE.getLogger().error("Root model part with sprite {} has no children, skipping!", sprite.contents().name());
             return;

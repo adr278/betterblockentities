@@ -19,15 +19,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(CopperGolemStatueBlockEntity.class)
 public class CopperGolemStatueBlockEntityMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    private void bbe$init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 
-        ext.renderingMode(RenderingMode.TERRAIN);
-        ext.terrainMeshReady(true);
-        ext.optKind(InstancedBlockEntityManager.OptKind.CGS);
+        ext.bbe$setRenderingMode(RenderingMode.TERRAIN);
+        ext.bbe$setTerrainMeshReady(true);
+        ext.bbe$setOptKind(InstancedBlockEntityManager.OptKind.CGS);
 
-        ext.supportedBlockEntity(
+        ext.bbe$setSupportedBlockEntity(
             blockEntity.getType() == BlockEntityTypes.COPPER_GOLEM_STATUE
         );
     }

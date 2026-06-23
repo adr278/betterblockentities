@@ -18,15 +18,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ShelfBlockEntity.class)
 public class ShelfBlockEntityMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    private void bbe$init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 
-        ext.terrainMeshReady(true);
-        ext.hasSpecialManager(true);
-        ext.optKind(InstancedBlockEntityManager.OptKind.SHELF);
+        ext.bbe$setTerrainMeshReady(true);
+        ext.bbe$setSpecialManager(true);
+        ext.bbe$setOptKind(InstancedBlockEntityManager.OptKind.SHELF);
 
-        ext.supportedBlockEntity(
+        ext.bbe$setSupportedBlockEntity(
             blockEntity.getType() == BlockEntityTypes.SHELF
         );
     }

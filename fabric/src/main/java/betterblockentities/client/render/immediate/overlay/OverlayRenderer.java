@@ -29,7 +29,7 @@ public final class OverlayRenderer {
 
     public static void submitCrumblingOverlay(BlockEntityRenderDispatcher dispatcher, BlockEntityRenderState state, PoseStack poseStack, CameraRenderState camera) {
         BlockEntityRenderStateExt renderStateExt = (BlockEntityRenderStateExt) state;
-        BlockEntity blockEntity = renderStateExt.blockEntity();
+        BlockEntity blockEntity = renderStateExt.bbe$getBlockEntity();
 
         OverlayNodeStorage.SubmitParameters parameters;
 

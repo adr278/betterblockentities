@@ -19,15 +19,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BannerBlockEntity.class)
 public class BannerBlockEntityMixin {
     @Inject(method = "<init>(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/item/DyeColor;)V", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    private void bbe$init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 
-        ext.renderingMode(RenderingMode.TERRAIN);
-        ext.terrainMeshReady(true);
-        ext.optKind(InstancedBlockEntityManager.OptKind.BANNER);
+        ext.bbe$setRenderingMode(RenderingMode.TERRAIN);
+        ext.bbe$setTerrainMeshReady(true);
+        ext.bbe$setOptKind(InstancedBlockEntityManager.OptKind.BANNER);
 
-        ext.supportedBlockEntity(
+        ext.bbe$setSupportedBlockEntity(
             blockEntity.getType() == BlockEntityTypes.BANNER
         );
     }

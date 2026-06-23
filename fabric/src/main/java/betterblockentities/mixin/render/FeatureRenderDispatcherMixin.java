@@ -28,20 +28,20 @@ public class FeatureRenderDispatcherMixin {
                     target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;begin(Lnet/minecraft/client/renderer/feature/FeatureFrameContext;Lnet/minecraft/client/renderer/SubmitNodeStorage;)Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;"
             )
     )
-    private FeatureRenderDispatcher.PreparedFrame drainOverlayStorage(
+    private FeatureRenderDispatcher.PreparedFrame bbe$drainOverlayStorage(
             FeatureRenderDispatcher.PreparedFrame instance,
             FeatureFrameContext context,
             SubmitNodeStorage submitNodeStorage,
             Operation<FeatureRenderDispatcher.PreparedFrame> original
     ) {
-        this.mergeOverlayStorage(submitNodeStorage, BBE.GlobalScope.overlayNodeStorage);
+        this.bbe$mergeOverlayStorage(submitNodeStorage, BBE.GlobalScope.overlayNodeStorage);
 
         original.call(instance, context, submitNodeStorage);
         return instance;
     }
 
     @Unique
-    private void mergeOverlayStorage(SubmitNodeStorage target, SubmitNodeStorage overlay) {
+    private void bbe$mergeOverlayStorage(SubmitNodeStorage target, SubmitNodeStorage overlay) {
         Map<Integer, SubmitNodeCollection> targetOrders = target.getSubmitsPerOrder();
         Map<Integer, SubmitNodeCollection> overlayOrders = overlay.getSubmitsPerOrder();
 

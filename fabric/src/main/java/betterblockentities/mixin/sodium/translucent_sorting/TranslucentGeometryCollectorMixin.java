@@ -29,28 +29,28 @@ public class TranslucentGeometryCollectorMixin implements TranslucentGeometryCol
                     target = "it/unimi/dsi/fastutil/objects/ReferenceArrayList.add(Ljava/lang/Object;)Z"
             )
     )
-    public boolean appendQuad(ReferenceArrayList<?> instance, Object appendingQuad, Operation<Boolean> original) {
+    public boolean bbe$appendQuad(ReferenceArrayList<?> instance, Object appendingQuad, Operation<Boolean> original) {
         TQuad tsQuad = (TQuad)appendingQuad;
 
-        if (getLastSplitMode() != BBEEmitter.QuadSplittingMode.DEFERRED) {
+        if (this.bbe$getLastSplitMode() != BBEEmitter.QuadSplittingMode.DEFERRED) {
             TQuadExt tQuadExt = (TQuadExt)tsQuad;
-            tQuadExt.setSplittingMode(getLastSplitMode());
+            tQuadExt.bbe$setSplittingMode(this.bbe$getLastSplitMode());
         }
         return original.call(instance, appendingQuad);
     }
 
     @Override
-    public void setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode mode) {
+    public void bbe$setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode mode) {
         this.lastSplittingMode = mode;
     }
 
     @Override
-    public BBEEmitter.QuadSplittingMode getLastSplitMode() {
+    public BBEEmitter.QuadSplittingMode bbe$getLastSplitMode() {
         return this.lastSplittingMode;
     }
 
     @Override
-    public void deferSplittingMode() {
+    public void bbe$deferSplittingMode() {
         this.lastSplittingMode = BBEEmitter.QuadSplittingMode.DEFERRED;
     }
 }

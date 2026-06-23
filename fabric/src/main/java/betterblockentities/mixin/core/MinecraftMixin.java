@@ -47,7 +47,7 @@ public abstract class MinecraftMixin {
                     target = "Lnet/minecraft/server/packs/resources/ReloadableResourceManager;createReload(Ljava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Ljava/util/concurrent/CompletableFuture;Ljava/util/List;)Lnet/minecraft/server/packs/resources/ReloadInstance;"
             )
     )
-    void registerDispatchListener(GameConfig gameConfig, CallbackInfo ci) {
+    void bbe$registerDispatchListener(GameConfig gameConfig, CallbackInfo ci) {
         BBE.GlobalScope.altRenderDispatcher = new AltRenderDispatcher(
                 this.font,
                 this.modelManager.entityModels(),
@@ -67,7 +67,7 @@ public abstract class MinecraftMixin {
                     target = "net/minecraft/client/renderer/GameRenderer.extract(Lnet/minecraft/client/DeltaTracker;Z)V"
             )
     )
-    private void pollManagerQueue(GameRenderer instance, DeltaTracker deltaTracker, boolean advanceGameTime, Operation<Void> original) {
+    private void bbe$pollManagerQueue(GameRenderer instance, DeltaTracker deltaTracker, boolean advanceGameTime, Operation<Void> original) {
         float partialTicks = deltaTracker.getGameTimeDeltaPartialTick(false);
         ManagerTasks.process(partialTicks);
 

@@ -20,11 +20,11 @@ public class BlockEntityRenderStateMixin implements BlockEntityRenderStateExt {
     @Unique private BlockEntity blockEntity;
 
     @Inject(method = "extractBase", at = @At("TAIL"))
-    private static void fillBaseState(BlockEntity blockEntity, BlockEntityRenderState state, ModelFeatureRenderer.CrumblingOverlay breakProgress, CallbackInfo ci) {
+    private static void bbe$fillBaseState(BlockEntity blockEntity, BlockEntityRenderState state, ModelFeatureRenderer.CrumblingOverlay breakProgress, CallbackInfo ci) {
         BlockEntityRenderStateExt renderStateExt = (BlockEntityRenderStateExt)state;
-        renderStateExt.blockEntity(blockEntity);
+        renderStateExt.bbe$setBlockEntity(blockEntity);
     }
 
-    @Override public void blockEntity(BlockEntity blockEntity) { this.blockEntity = blockEntity; }
-    @Override public BlockEntity blockEntity() { return this.blockEntity; }
+    @Override public void bbe$setBlockEntity(BlockEntity blockEntity) { this.blockEntity = blockEntity; }
+    @Override public BlockEntity bbe$getBlockEntity() { return this.blockEntity; }
 }

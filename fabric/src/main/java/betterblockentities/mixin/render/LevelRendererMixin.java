@@ -39,7 +39,7 @@ import org.joml.Vector4f;
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
     @Inject(at = @At("HEAD"), method = "render")
-    private void captureFrustum(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraRenderState, Matrix4fc frustumMatrix, GpuBufferSlice fog, Vector4f clearColor, boolean drawSky, CallbackInfo ci) {
+    private void bbe$captureFrustum(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraRenderState, Matrix4fc frustumMatrix, GpuBufferSlice fog, Vector4f clearColor, boolean drawSky, CallbackInfo ci) {
         BBE.GlobalScope.frustum = cameraRenderState.cullFrustum;
         BBE.GlobalScope.altRenderDispatcher.prepare(cameraRenderState.pos);
     }
@@ -50,13 +50,13 @@ public class LevelRendererMixin {
                     target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;submit(Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V"
             )
     )
-    private void submitBreakingOverlays(BlockEntityRenderDispatcher instance, BlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, Operation<Void> original) {
+    private void bbe$submitBreakingOverlays(BlockEntityRenderDispatcher instance, BlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, Operation<Void> original) {
         BlockEntityRenderStateExt renderStateExt = (BlockEntityRenderStateExt)state;
 
-        BlockEntity blockEntity = renderStateExt.blockEntity();
+        BlockEntity blockEntity = renderStateExt.bbe$getBlockEntity();
         BlockEntityExt blockEntityExt = (BlockEntityExt)blockEntity;
 
-        if (blockEntityExt.supportedBlockEntity() && blockEntityExt.renderingMode() == RenderingMode.TERRAIN && state.breakProgress != null) {
+        if (blockEntityExt.bbe$isSupportedBlockEntity() && blockEntityExt.bbe$getRenderingMode() == RenderingMode.TERRAIN && state.breakProgress != null) {
             OverlayRenderer.submitCrumblingOverlay(instance, state, poseStack, camera);
             return;
         }
@@ -66,7 +66,7 @@ public class LevelRendererMixin {
 
 
     @Inject(method = "submitBlockEntities", at = @At("RETURN"), order = 900)
-    private void submitAltRenderers(PoseStack poseStack, LevelRenderState levelRenderState, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
+    private void bbe$submitAltRenderers(PoseStack poseStack, LevelRenderState levelRenderState, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
         Vec3 cameraPos = levelRenderState.cameraRenderState.pos;
         double camX = cameraPos.x();
         double camY = cameraPos.y();
@@ -85,7 +85,7 @@ public class LevelRendererMixin {
 
 
     @Inject(at = @At("TAIL"), method = "render")
-    private void clearRenderStates(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraRenderState, Matrix4fc frustumMatrix, GpuBufferSlice fog, Vector4f clearColor, boolean drawSky, CallbackInfo ci) {
+    private void bbe$clearRenderStates(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraRenderState, Matrix4fc frustumMatrix, GpuBufferSlice fog, Vector4f clearColor, boolean drawSky, CallbackInfo ci) {
         BBE.GlobalScope.altBlockEntityRenderStates.clear();
         BBE.GlobalScope.altRenderDispatcher.clearStateRendererPairs();
     }

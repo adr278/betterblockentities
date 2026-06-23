@@ -113,7 +113,7 @@ public final class InstancedBlockEntityManager {
      *   FINISHED   -> safe to remove from queue
      */
     public int run(float partialTicks) {
-        if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF] ||
+        if (!BBEConfig.OptEnabledTable.ENABLED[ext.bbe$getOptKind() & 0xFF] ||
             AltRenderers.hasRendererOverride(blockEntity.getType()))
         {
             phase = Phase.IDLE;
@@ -205,10 +205,10 @@ public final class InstancedBlockEntityManager {
      */
     private void enterImmediate() {
         phase = Phase.IMMEDIATE_ACTIVE;
-        ext.terrainMeshReady(false);
+        ext.bbe$setTerrainMeshReady(false);
 
-        if (ext.renderingMode() != RenderingMode.IMMEDIATE) {
-            ext.renderingMode(RenderingMode.IMMEDIATE);
+        if (ext.bbe$getRenderingMode() != RenderingMode.IMMEDIATE) {
+            ext.bbe$setRenderingMode(RenderingMode.IMMEDIATE);
             SectionUpdateDispatcher.queueRebuildAtBlockPos(pos);
         }
     }
@@ -219,16 +219,16 @@ public final class InstancedBlockEntityManager {
     private void requestTerrainFence(float partialTicks) {
         phase = Phase.WAITING_TERRAIN;
 
-        if (ext.renderingMode() != RenderingMode.TERRAIN) {
-            ext.renderingMode(RenderingMode.TERRAIN);
+        if (ext.bbe$getRenderingMode() != RenderingMode.TERRAIN) {
+            ext.bbe$setRenderingMode(RenderingMode.TERRAIN);
         }
 
-        ext.terrainMeshReady(false);
+        ext.bbe$setTerrainMeshReady(false);
 
         SectionUpdateDispatcher.queueRebuildAtBlockPos(pos, () -> {
             /* when fence fires, we must potentially resume immediately */
-            if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]) {
-                ext.terrainMeshReady(true);
+            if (!BBEConfig.OptEnabledTable.ENABLED[ext.bbe$getOptKind() & 0xFF]) {
+                ext.bbe$setTerrainMeshReady(true);
                 phase = Phase.IDLE;
                 return;
             }
@@ -241,7 +241,7 @@ public final class InstancedBlockEntityManager {
             }
 
             /* terrain section finished rebuilding, switch to TERRAIN rendering */
-            ext.terrainMeshReady(true);
+            ext.bbe$setTerrainMeshReady(true);
             phase = Phase.IDLE;
         });
     }

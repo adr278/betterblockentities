@@ -7,20 +7,20 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ChestLidController.class)
 public interface ChestLidControllerAccessor {
     @Accessor("shouldBeOpen")
-    boolean getOpen();
+    boolean bbe$getOpen();
 
     @Accessor("shouldBeOpen")
-    void setOpen(boolean value);
+    void bbe$setOpen(boolean value);
 
     @Accessor("openness")
-    float getProgress();
+    float bbe$getProgress();
 
     @Accessor("openness")
-    void setProgress(float value);
+    void bbe$setProgress(float value);
 
     @Accessor("oOpenness")
-    float getLastProgress();
+    float bbe$getLastProgress();
 
     @Accessor("oOpenness")
-    void setLastProgress(float value);
+    void bbe$setLastProgress(float value);
 }

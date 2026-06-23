@@ -3,18 +3,18 @@ package betterblockentities.client.render.immediate.blockentity.extentions;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
 
 public interface BlockEntityExt {
-    boolean supportedBlockEntity();
-    void supportedBlockEntity(boolean bl);
+    boolean bbe$isSupportedBlockEntity();
+    void bbe$setSupportedBlockEntity(boolean bl);
 
-    RenderingMode renderingMode();
-    void renderingMode(RenderingMode mode);
+    RenderingMode bbe$getRenderingMode();
+    void bbe$setRenderingMode(RenderingMode mode);
 
-    boolean terrainMeshReady();
-    void terrainMeshReady(boolean b);
+    boolean bbe$isTerrainMeshReady();
+    void bbe$setTerrainMeshReady(boolean b);
 
-    boolean hasSpecialManager();
-    void hasSpecialManager(boolean bl);
+    boolean bbe$hasSpecialManager();
+    void bbe$setSpecialManager(boolean bl);
 
-    byte optKind();
-    void optKind(byte k);
+    byte bbe$getOptKind();
+    void bbe$setOptKind(byte k);
 }

@@ -23,23 +23,23 @@ public class DecoratedPotBlockEntityMixin {
     @Unique private final InstancedBlockEntityManager manager = new InstancedBlockEntityManager((BlockEntity)(Object)this);
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    private void bbe$init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 
-        ext.optKind(InstancedBlockEntityManager.OptKind.POT);
+        ext.bbe$setOptKind(InstancedBlockEntityManager.OptKind.POT);
 
-        ext.supportedBlockEntity(
+        ext.bbe$setSupportedBlockEntity(
             blockEntity.getType() == BlockEntityTypes.DECORATED_POT
         );
     }
 
     @Inject(method = "triggerEvent", at = @At(value = "RETURN", shift = At.Shift.BEFORE, ordinal = 0))
-    private void onBlockEvent(int type, int data, CallbackInfoReturnable<Boolean> cir) {
+    private void bbe$onBlockEvent(int type, int data, CallbackInfoReturnable<Boolean> cir) {
         DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)decoratedPotBlockEntity;
 
-        if (ext.supportedBlockEntity() && decoratedPotBlockEntity.lastWobbleStyle != null) {
+        if (ext.bbe$isSupportedBlockEntity() && decoratedPotBlockEntity.lastWobbleStyle != null) {
             manager.trigger(decoratedPotBlockEntity.wobbleStartedAtTick, decoratedPotBlockEntity.lastWobbleStyle.duration, ConfigCache.potAnims);
         }
     }

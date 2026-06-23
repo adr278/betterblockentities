@@ -26,7 +26,7 @@ public class InnerPartitionBSPNodeMixin {
                     target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/bsp_tree/InnerPartitionBSPNode;splitCandidate(Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/bsp_tree/BSPWorkspace;Lit/unimi/dsi/fastutil/ints/IntArrayList;ILnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/quad/FullTQuad;Lorg/joml/Vector3fc;FLit/unimi/dsi/fastutil/ints/IntArrayList;Lit/unimi/dsi/fastutil/ints/IntArrayList;)V"
             )
     )
-    private static void skipSplitForTaggedQuads(
+    private static void bbe$skipSplitForTaggedQuads(
             @Coerce Object workspace,
             IntArrayList splittingGroup,
             int candidateIndex, FullTQuad insideQuad,
@@ -37,7 +37,7 @@ public class InnerPartitionBSPNodeMixin {
             Operation<Void> original
     ) {
         TQuadExt tQuadExt = (TQuadExt)insideQuad;
-        if (tQuadExt.getSplittingMode() == BBEEmitter.QuadSplittingMode.NONE) {
+        if (tQuadExt.bbe$getSplittingMode() == BBEEmitter.QuadSplittingMode.NONE) {
             splittingGroup.add(candidateIndex);
             return;
         }

@@ -75,7 +75,7 @@ public class BBEBlockRenderer  {
 
         /* skip if the declared BlockEntityType is not supported (could be a modded block entity) */
         final BlockEntityExt ext = (BlockEntityExt)blockEntity;
-        if (!ext.supportedBlockEntity()) {
+        if (!ext.bbe$isSupportedBlockEntity()) {
             return;
         }
 
@@ -367,7 +367,7 @@ public class BBEBlockRenderer  {
     }
 
     public static boolean shouldRender(BlockEntityExt ext) {
-        return ext.renderingMode() == RenderingMode.TERRAIN;
+        return ext.bbe$getRenderingMode() == RenderingMode.TERRAIN;
     }
 
     private void clearParts() {

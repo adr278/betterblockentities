@@ -25,13 +25,13 @@ public abstract class EnderChestBlockEntityMixin {
     @Unique private final InstancedBlockEntityManager manager = new InstancedBlockEntityManager((BlockEntity)(Object)this);
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    private void bbe$init(CallbackInfo ci) {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 
-        ext.optKind(InstancedBlockEntityManager.OptKind.CHEST);
+        ext.bbe$setOptKind(InstancedBlockEntityManager.OptKind.CHEST);
 
-        ext.supportedBlockEntity(
+        ext.bbe$setSupportedBlockEntity(
                 blockEntity.getType() == BlockEntityTypes.CHEST         ||
                 blockEntity.getType() == BlockEntityTypes.TRAPPED_CHEST ||
                 blockEntity.getType() == BlockEntityTypes.ENDER_CHEST
@@ -39,11 +39,11 @@ public abstract class EnderChestBlockEntityMixin {
     }
 
     @Inject(method = "lidAnimateTick", at = @At("TAIL"))
-    private static void onTick(Level level, BlockPos blockPos, BlockState blockState, EnderChestBlockEntity enderChestBlockEntity, CallbackInfo ci) {
+    private static void bbe$onTick(Level level, BlockPos blockPos, BlockState blockState, EnderChestBlockEntity enderChestBlockEntity, CallbackInfo ci) {
         EnderChestBlockEntityMixin self = (EnderChestBlockEntityMixin)(Object)enderChestBlockEntity;
         BlockEntityExt ext = (BlockEntityExt)(Object)enderChestBlockEntity;
 
-        if (ext.supportedBlockEntity()) {
+        if (ext.bbe$isSupportedBlockEntity()) {
             self.manager.tick(enderChestBlockEntity.getOpenNess(0.5f) > 0.01f, ConfigCache.chestAnims);
         }
     }

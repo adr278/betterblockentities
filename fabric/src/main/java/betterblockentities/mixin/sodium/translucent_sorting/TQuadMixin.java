@@ -16,12 +16,12 @@ public class TQuadMixin implements TQuadExt {
     @Unique private BBEEmitter.QuadSplittingMode splittingMode;
 
     @Override
-    public void setSplittingMode(BBEEmitter.QuadSplittingMode mode) {
+    public void bbe$setSplittingMode(BBEEmitter.QuadSplittingMode mode) {
         this.splittingMode = mode;
     }
 
     @Override
-    public BBEEmitter.QuadSplittingMode getSplittingMode() {
+    public BBEEmitter.QuadSplittingMode bbe$getSplittingMode() {
         return this.splittingMode;
     }
 }

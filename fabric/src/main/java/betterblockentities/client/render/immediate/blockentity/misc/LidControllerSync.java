@@ -36,25 +36,25 @@ public class LidControllerSync {
         }
 
         /* sync over the lid controller from the animating half. this also auto schedules a manager for us */
-        ChestLidController src = ((ChestBlockEntityAccessor)opposite).getLidController();
-        ChestLidController dst = ((ChestBlockEntityAccessor)blockEntity).getLidController();
+        ChestLidController src = ((ChestBlockEntityAccessor)opposite).bbe$getLidController();
+        ChestLidController dst = ((ChestBlockEntityAccessor)blockEntity).bbe$getLidController();
 
         ChestLidControllerAccessor accSrc = (ChestLidControllerAccessor)src;
         ChestLidControllerAccessor accDst = (ChestLidControllerAccessor)dst;
 
-        accDst.setOpen(accSrc.getOpen());
-        accDst.setProgress(accSrc.getProgress());
-        accDst.setLastProgress(accSrc.getLastProgress());
+        accDst.bbe$setOpen(accSrc.bbe$getOpen());
+        accDst.bbe$setProgress(accSrc.bbe$getProgress());
+        accDst.bbe$setLastProgress(accSrc.bbe$getLastProgress());
 
         /* sketchy, force a triggerEvent to wake up the block entity ticker (lithium workaround) */
         clientLevel.blockEvent(blockPos, blockState.getBlock(), 1, 0);
 
         /* remove this block entity from terrain and switch to immediate rendering */
         BlockEntityExt oppositeExt = (BlockEntityExt)opposite;
-        if (oppositeExt.renderingMode() == RenderingMode.IMMEDIATE) {
+        if (oppositeExt.bbe$getRenderingMode() == RenderingMode.IMMEDIATE) {
             BlockEntityExt blockEntityExt = (BlockEntityExt)blockEntity;
-            blockEntityExt.terrainMeshReady(false);
-            blockEntityExt.renderingMode(RenderingMode.IMMEDIATE);
+            blockEntityExt.bbe$setTerrainMeshReady(false);
+            blockEntityExt.bbe$setRenderingMode(RenderingMode.IMMEDIATE);
             SectionUpdateDispatcher.queueRebuildAtBlockPos(blockPos);
         }
     }

@@ -73,9 +73,9 @@ public class BBEEmitter {
     }
 
     public void buffer(BlockStateModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> sodiumEmitterConsumer) {
-        final MutableQuadViewImpl sodiumEmitter = sodiumContext.getEmitterInvoke();
+        final MutableQuadViewImpl sodiumEmitter = this.sodiumContext.bbe$getEmitter();
 
-        sodiumContext.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        this.sodiumContext.bbe$prepareAoInfo(part.useAmbientOcclusion());
 
         for (int i = 0; i <= MAX_FACE_INDEX; ++i) {
             Direction cullFace = ModelHelper.faceFromIndex(i);
@@ -86,7 +86,7 @@ public class BBEEmitter {
             List<BakedQuad> quads = part.getQuads(cullFace);
 
             AmbientOcclusionMode sodiumAO = PlatformBlockAccess.getInstance().usesAmbientOcclusion(
-                    part, sodiumContext.getState(), this.renderType, sodiumContext.getSlice(), sodiumContext.getPos()
+                    part, sodiumContext.bbe$getState(), this.renderType, sodiumContext.bbe$getSlice(), sodiumContext.bbe$getPos()
             );
 
             for (int j = 0, count = quads.size(); j < count; ++j) {

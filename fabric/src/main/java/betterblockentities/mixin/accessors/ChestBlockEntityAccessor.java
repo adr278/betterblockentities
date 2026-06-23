@@ -8,5 +8,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ChestBlockEntity.class)
 public interface ChestBlockEntityAccessor {
     @Accessor("chestLidController")
-    ChestLidController getLidController();
+    ChestLidController bbe$getLidController();
 }
