@@ -12,6 +12,7 @@
     "render.LevelRendererMixin",
     "accessors.BlockEntityRenderersAccessor",
     "render.immediate.blockentity.BlockEntityRenderersMixin",
+    "render.immediate.blockentity.ChestRendererMixin",
     "render.immediate.blockentity.BannerBlockEntityMixin",
     "render.immediate.blockentity.BellBlockEntityMixin",
     "render.immediate.blockentity.CampfireBlockEntityMixin",

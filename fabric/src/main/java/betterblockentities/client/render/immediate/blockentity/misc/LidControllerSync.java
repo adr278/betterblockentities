@@ -21,19 +21,19 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class LidControllerSync {
     public static void sync(ClientLevel clientLevel, BlockPos blockPos, BlockState blockState) {
-        if (!ConfigCache.optimizeChests || !ConfigCache.chestAnims || !clientLevel.isClientSide())
-            return;
+        if (!ConfigCache.optimizeChests || !clientLevel.isClientSide()) return;
 
         final Block block = blockState.getBlock();
-        if (!(block instanceof ChestBlock))
-            return;
+        if (!(block instanceof ChestBlock)) return;
 
         BlockEntity blockEntity = tryGetBlockEntity(clientLevel, blockPos);
         ChestBlockEntity opposite = BlockVisibilityChecker.getOtherChestHalf(clientLevel, blockPos);
 
-        if (blockEntity == null || opposite == null || !(opposite.getOpenNess(0.5f) > 0f)) {
-            return;
-        }
+        if (blockEntity == null || opposite == null) return;
+
+        syncRenderingModes(blockEntity, opposite);
+
+        if (!ConfigCache.chestAnims || !(opposite.getOpenNess(0.5f) > 0f)) return;
 
         /* sync over the lid controller from the animating half. this also auto schedules a manager for us */
         ChestLidController src = ((ChestBlockEntityAccessor)opposite).bbe$getLidController();
@@ -49,13 +49,29 @@ public class LidControllerSync {
         /* sketchy, force a triggerEvent to wake up the block entity ticker (lithium workaround) */
         clientLevel.blockEvent(blockPos, blockState.getBlock(), 1, 0);
 
-        /* remove this block entity from terrain and switch to immediate rendering */
+    }
+
+    /** Keeps added half chest on the immediate render path if the original half is immediate. */
+    private static void syncRenderingModes(BlockEntity blockEntity, ChestBlockEntity opposite) {
+        BlockEntityExt blockEntityExt = (BlockEntityExt)blockEntity;
         BlockEntityExt oppositeExt = (BlockEntityExt)opposite;
-        if (oppositeExt.bbe$getRenderingMode() == RenderingMode.IMMEDIATE) {
-            BlockEntityExt blockEntityExt = (BlockEntityExt)blockEntity;
-            blockEntityExt.bbe$setTerrainMeshReady(false);
-            blockEntityExt.bbe$setRenderingMode(RenderingMode.IMMEDIATE);
-            SectionUpdateDispatcher.queueRebuildAtBlockPos(blockPos);
+
+        if (blockEntityExt.bbe$getRenderingMode() != RenderingMode.IMMEDIATE && oppositeExt.bbe$getRenderingMode() != RenderingMode.IMMEDIATE) {
+            return;
+        }
+
+        setImmediate(blockEntity, blockEntityExt);
+        setImmediate(opposite, oppositeExt);
+    }
+
+    private static void setImmediate(BlockEntity blockEntity, BlockEntityExt ext) {
+        boolean requiresRebuild = ext.bbe$getRenderingMode() != RenderingMode.IMMEDIATE || ext.bbe$isTerrainMeshReady();
+
+        ext.bbe$setTerrainMeshReady(false);
+        ext.bbe$setRenderingMode(RenderingMode.IMMEDIATE);
+
+        if (requiresRebuild) {
+            SectionUpdateDispatcher.queueRebuildAtBlockPos(blockEntity.getBlockPos());
         }
     }
 
