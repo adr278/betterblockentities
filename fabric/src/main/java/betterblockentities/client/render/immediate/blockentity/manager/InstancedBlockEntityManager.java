@@ -16,15 +16,12 @@ import betterblockentities.client.tasks.ManagerTasks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.*;
 
-import java.util.Optional;
-
 public final class InstancedBlockEntityManager {
     private enum Phase {
         IDLE,               //manager is inactive. nothing scheduled or required
         IMMEDIATE_ACTIVE,   //blockEntity must currently render using the BER path (animating, duration task, visible under SMART scheduler)
-        WAITING_TERRAIN }   //we requested a terrain section rebuild and are waiting for the fence callback
-
-    private boolean queued = false;
+        WAITING_TERRAIN     //we requested a terrain section rebuild and are waiting for the fence callback
+    }
 
     /* bound context */
     private final BlockEntity blockEntity;
@@ -46,21 +43,9 @@ public final class InstancedBlockEntityManager {
         this.pos = blockEntity.getBlockPos();
     }
 
-    /**
-     * Attempts to mark this manager as queued. Prevents duplicate queue entries.
-     */
-    public boolean tryMarkQueued() {
-        if (queued) return false;
-        queued = true;
-        return true;
-    }
+    public BlockEntity getBlockEntity() { return blockEntity; }
 
-    /**
-     * Called by ManagerTasks after this manager is dequeued.
-     */
-    public void clearQueued() {
-        queued = false;
-    }
+    public boolean isIdle() { return phase == Phase.IDLE; }
 
     public boolean isAnimating() { return animating; }
 
@@ -103,7 +88,6 @@ public final class InstancedBlockEntityManager {
         this.durationTaskStart = 0;
         this.duration = 0;
         this.phase = Phase.IDLE;
-        this.queued = false;
     }
 
     /**
@@ -196,7 +180,6 @@ public final class InstancedBlockEntityManager {
 
         float duration = ((now - durationTaskStart) + partialTicks) / this.duration;
 
-        //return ((now - durationTaskStart) + partialTicks) <= duration;
         return duration >= 0.0F && duration <= 1.0F;
     }
 
@@ -230,6 +213,7 @@ public final class InstancedBlockEntityManager {
             if (!BBEConfig.OptEnabledTable.ENABLED[ext.bbe$getOptKind() & 0xFF]) {
                 ext.bbe$setTerrainMeshReady(true);
                 phase = Phase.IDLE;
+                ManagerTasks.clearActive(this);
                 return;
             }
 
@@ -243,6 +227,7 @@ public final class InstancedBlockEntityManager {
             /* terrain section finished rebuilding, switch to TERRAIN rendering */
             ext.bbe$setTerrainMeshReady(true);
             phase = Phase.IDLE;
+            ManagerTasks.clearActive(this);
         });
     }
 
