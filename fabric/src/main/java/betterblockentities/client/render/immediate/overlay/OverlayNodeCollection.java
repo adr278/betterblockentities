@@ -30,7 +30,7 @@ public class OverlayNodeCollection extends SubmitNodeCollection {
             int outlineColor,
             ModelFeatureRenderer.CrumblingOverlay crumblingOverlay
     ) {
-        if (crumblingOverlay != null) {
+        if (crumblingOverlay != null && renderType.affectsCrumbling()) {
             PoseStack.Pose pose = poseStack.last().copy();
             OverlayNodeStorage.SubmitParameters parameters = this.stack.last();
 
