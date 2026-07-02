@@ -20,14 +20,15 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "betterblockentities.client.BBE"
+      "betterblockentities.client.BBEFabric"
     ],
     "sodium:config_api_user": [
       "betterblockentities.client.gui.config.builder.SodiumConfigBuilder"
     ]
   },
   "mixins": [
-    "betterblockentities.mixins.json"
+    "betterblockentities-common.mixins.json",
+    "betterblockentities-fabric.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.7",

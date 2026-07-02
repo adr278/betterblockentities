@@ -1,0 +1,74 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "LGPLv3"
+
+########### metadata #############
+[[mods]]
+modId = "betterblockentities"
+
+version = "${version}"
+displayName = "BBE"
+
+logoFile = "assets/betterblockentities/icon.png"
+
+authors = "Ceeden"
+credits = "Ceeden"
+
+description = '''
+Optimize and customize block entity rendering with a more modern approach.
+'''
+
+########### api entrypoints #############
+[modproperties.betterblockentities]
+"sodium:config_api_user" = "betterblockentities.client.gui.config.builder.SodiumConfigBuilder"
+
+########### depends #############
+[[dependencies.betterblockentities]]
+modId = "minecraft"
+type = "required"
+versionRange = "1.21.1"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.betterblockentities]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.82,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.betterblockentities]]
+modId = "sodium"
+type = "required"
+versionRange = "[0.8.12-alpha.4,)"
+ordering = "NONE"
+side = "CLIENT"
+
+########### break clauses #############
+[[dependencies.betterblockentities]]
+modId = "vanillin"
+type = "incompatible"
+versionRange = "[0,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.betterblockentities]]
+modId = "enhancedblockentities"
+type = "incompatible"
+versionRange = "[0,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.betterblockentities]]
+modId = "betterbeds"
+type = "incompatible"
+versionRange = "[0,)"
+ordering = "NONE"
+side = "CLIENT"
+
+########### mixin #############
+[[mixins]]
+config = "betterblockentities-common.mixins.json"
+
+[[mixins]]
+config = "betterblockentities-neoforge.mixins.json"
