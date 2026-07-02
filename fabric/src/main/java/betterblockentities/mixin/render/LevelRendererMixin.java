@@ -2,6 +2,7 @@ package betterblockentities.mixin.render;
 
 /* local */
 import betterblockentities.client.BBE;
+import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
@@ -56,7 +57,12 @@ public class LevelRendererMixin {
         BlockEntity blockEntity = renderStateExt.bbe$getBlockEntity();
         BlockEntityExt blockEntityExt = (BlockEntityExt)blockEntity;
 
-        if (blockEntityExt.bbe$isSupportedBlockEntity() && blockEntityExt.bbe$getRenderingMode() == RenderingMode.TERRAIN && state.breakProgress != null) {
+        if (blockEntityExt.bbe$isSupportedBlockEntity() &&
+            BBEConfig.OptEnabledTable.ENABLED[blockEntityExt.bbe$getOptKind() & 0xFF] &&
+            blockEntityExt.bbe$getRenderingMode() == RenderingMode.TERRAIN &&
+            blockEntityExt.bbe$isTerrainMeshReady() &&
+            state.breakProgress != null)
+        {
             OverlayRenderer.submitCrumblingOverlay(instance, state, poseStack, camera);
             return;
         }
