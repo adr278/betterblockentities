@@ -4,6 +4,7 @@ package betterblockentities.mixin.render.immediate.blockentity.bell;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
+import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.core.BlockPos;
@@ -32,7 +33,7 @@ public class BellBlockEntityMixin {
         ext.optKind(InstancedBlockEntityManager.OptKind.BELL);
 
         ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.BELL
+                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.BELL)
         );
     }
 

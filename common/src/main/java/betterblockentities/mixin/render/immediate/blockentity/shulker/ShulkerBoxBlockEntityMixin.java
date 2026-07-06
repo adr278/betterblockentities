@@ -6,6 +6,7 @@ import betterblockentities.client.render.immediate.blockentity.extentions.BlockE
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 
 /* minecraft */
+import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,7 +33,7 @@ public abstract class ShulkerBoxBlockEntityMixin {
         ext.optKind(InstancedBlockEntityManager.OptKind.SHULKER);
 
         ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.SHULKER_BOX
+                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.SHULKER_BOX)
         );
     }
 

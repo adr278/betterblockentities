@@ -2,6 +2,7 @@ package betterblockentities.mixin.render.immediate.block;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 import betterblockentities.render.AltRenderers;
 
 /* minecraft */
@@ -20,12 +21,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ChestBlock.class)
 public abstract class ChestBlockMixin {
     @Inject(method = "getRenderShape", at = @At("HEAD"), cancellable = true)
-    private void forceModelRenderShape(final BlockState state, final CallbackInfoReturnable<RenderShape> cir) {
+    private void forceModelRenderShape(final BlockState blockState, final CallbackInfoReturnable<RenderShape> cir) {
         if (!ConfigCache.masterOptimize || !ConfigCache.optimizeChests) {
             return;
         }
 
-        final BlockEntityType<?> type = state.is(Blocks.TRAPPED_CHEST) ? BlockEntityType.TRAPPED_CHEST : BlockEntityType.CHEST;
+        if (!VanillaBlockSupport.isVanillaChestBlock(blockState)) {
+            return;
+        }
+
+        final BlockEntityType<?> type = blockState.is(Blocks.TRAPPED_CHEST) ? BlockEntityType.TRAPPED_CHEST : BlockEntityType.CHEST;
 
         if (!AltRenderers.hasRendererOverride(type)) {
             cir.setReturnValue(RenderShape.MODEL);

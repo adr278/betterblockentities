@@ -438,8 +438,10 @@ public final class BBEBlockRenderer {
             return;
         }
 
+        boolean standing = state.getBlock() instanceof StandingSignBlock;
+
         this.poseStack.setIdentity();
-        if (state.getBlock() instanceof StandingSignBlock) {
+        if (standing) {
             final float angle = RotationSegment.convertToDegrees(state.getValue(BlockStateProperties.ROTATION_16));
             this.poseStack.translate(0.5F, 0.5F, 0.5F);
             this.poseStack.mulPose(Axis.YP.rotationDegrees(-angle));
@@ -460,8 +462,23 @@ public final class BBEBlockRenderer {
         this.emitter.setSprite(sprite);
         this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
 
-        List<BakedModel> merged = new ArrayList<>(pairs.values());
-        this.emitter.emit(merged, randomSupplier);
+        List<BakedModel> merged = new ArrayList<>();
+
+        BakedModel sign = pairs.get("sign");
+        if (sign != null) {
+            merged.add(sign);
+        }
+
+        if (standing) {
+            BakedModel stick = pairs.get("stick");
+            if (stick != null) {
+                merged.add(stick);
+            }
+        }
+
+        if (!merged.isEmpty()) {
+            this.emitter.emit(merged, randomSupplier);
+        }
     }
 
     private void emitHangingSign(final BlockState state, final WoodType woodType, final Supplier<RandomSource> randomSupplier) {

@@ -4,6 +4,7 @@ package betterblockentities.mixin.render.immediate.blockentity.bed;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
+import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.world.level.block.entity.BedBlockEntity;
@@ -12,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 
 /* mixin */
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,7 +30,7 @@ public class BedBlockEntityMixin {
         initialize();
     }
 
-    private void initialize() {
+    @Unique private void initialize() {
         BlockEntity blockEntity = (BlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)blockEntity;
 
@@ -37,7 +39,7 @@ public class BedBlockEntityMixin {
         ext.optKind(InstancedBlockEntityManager.OptKind.BED);
 
         ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.BED
+                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.BED)
         );
     }
 }

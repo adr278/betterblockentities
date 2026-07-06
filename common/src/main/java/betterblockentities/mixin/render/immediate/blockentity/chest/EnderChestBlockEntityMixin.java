@@ -4,6 +4,7 @@ package betterblockentities.mixin.render.immediate.blockentity.chest;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
+import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.core.BlockPos;
@@ -32,9 +33,7 @@ public abstract class EnderChestBlockEntityMixin {
         ext.optKind(InstancedBlockEntityManager.OptKind.CHEST);
 
         ext.supportedBlockEntity(
-                blockEntity.getType() == BlockEntityType.CHEST         ||
-                blockEntity.getType() == BlockEntityType.TRAPPED_CHEST ||
-                blockEntity.getType() == BlockEntityType.ENDER_CHEST
+                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.ENDER_CHEST)
         );
     }
 

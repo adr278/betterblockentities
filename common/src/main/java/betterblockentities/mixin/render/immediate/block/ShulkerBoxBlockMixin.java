@@ -2,6 +2,7 @@ package betterblockentities.mixin.render.immediate.block;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 import betterblockentities.render.AltRenderers;
 
 /* minecraft */
@@ -19,8 +20,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ShulkerBoxBlock.class)
 public abstract class ShulkerBoxBlockMixin {
     @Inject(method = "getRenderShape", at = @At("HEAD"), cancellable = true)
-    private void forceModelRenderShape(final BlockState state, final CallbackInfoReturnable<RenderShape> cir) {
+    private void forceModelRenderShape(final BlockState blockState, final CallbackInfoReturnable<RenderShape> cir) {
         if (!ConfigCache.masterOptimize || !ConfigCache.optimizeShulker) {
+            return;
+        }
+
+        if (!VanillaBlockSupport.isVanillaShulkerBoxBlock(blockState)) {
             return;
         }
 
