@@ -31,6 +31,7 @@ public class ConfigBuilder {
                 new BooleanOption("optimize.copper_golem_statue", true),
                 new BooleanOption("optimize.shelf", true),
                 new BooleanOption("optimize.campfire", true),
+                new BooleanOption("optimize.lectern", true),
 
                 new BooleanOption("animation.chest", true),
                 new BooleanOption("animation.shulker", true),

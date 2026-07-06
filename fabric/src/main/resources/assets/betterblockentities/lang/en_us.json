@@ -31,6 +31,9 @@
   "bbe.config.storage.main.optimize.campfire" : "Optimize Campfire",
   "bbe.config.storage.main.optimize.campfire.tooltip" : "Used to toggle campfire optimizations ON or OFF",
 
+  "bbe.config.storage.main.optimize.lectern" : "Optimize Lectern",
+  "bbe.config.storage.main.optimize.lectern.tooltip" : "Used to toggle lectern optimizations ON or OFF",
+
   "bbe.config.storage.main.animation.chest" : "Animate Chest",
   "bbe.config.storage.main.animation.chest.tooltip" : "Used to toggle chest animations ON or OFF",
 

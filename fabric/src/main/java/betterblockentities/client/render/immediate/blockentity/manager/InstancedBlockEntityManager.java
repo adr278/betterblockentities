@@ -252,5 +252,6 @@ public final class InstancedBlockEntityManager {
         public static final byte CGS    = 7;
         public static final byte SHELF  = 8;
         public static final byte CAMPFIRE  = 9;
+        public static final byte LECTERN = 10;
     }
 }

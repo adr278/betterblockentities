@@ -179,7 +179,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     () -> (int) BBE.GlobalScope.CONFIG.MAIN.getOption("misc.sign_text_distance").getValue()
                             )
                             .setRange(new Range(1, 64, 1))
-                            .setValueFormatter(ControlValueFormatterImpls.number())
+                            .setValueFormatter((v) -> Component.literal(v + " blocks"))
                             .setEnabledProvider(c ->
                                     c.readBooleanOption(Identifier.parse("bbe:master")) &&
                                     c.readBooleanOption(Identifier.parse("bbe:optimize.sign")) &&
@@ -395,6 +395,25 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(
                                         value -> BBE.GlobalScope.CONFIG.MAIN.setOption("optimize.campfire", value),
                                         () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.campfire").getValue()
+                                )
+                                .setEnabledProvider(c ->
+                                        c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")
+                                )
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+        );
+
+        BBEPage.addOptionGroup(builder.createOptionGroup()
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("bbe:optimize.lectern"))
+                                .setName(Component.translatable("bbe.config.storage.main.optimize.lectern"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.lectern.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.HIGH)
+                                .setBinding(
+                                        value -> BBE.GlobalScope.CONFIG.MAIN.setOption("optimize.lectern", value),
+                                        () -> (boolean) BBE.GlobalScope.CONFIG.MAIN.getOption("optimize.lectern").getValue()
                                 )
                                 .setEnabledProvider(c ->
                                         c.readBooleanOption(Identifier.parse("bbe:master")), Identifier.parse("bbe:master")

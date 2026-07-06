@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -41,6 +42,15 @@ public final class SpecialBlockEntityManager {
         else if (blockEntity instanceof ShelfBlockEntity shelfBlockEntity) {
             return ShelfManager.extractShelfState(
                     shelfBlockEntity,
+                    cameraRenderState,
+                    partialTicks,
+                    breakProgress,
+                    isGloballyRendered
+            );
+        }
+        else if (blockEntity instanceof LecternBlockEntity lecternBlockEntity) {
+            return LecternManager.extractLecternState(
+                    lecternBlockEntity,
                     cameraRenderState,
                     partialTicks,
                     breakProgress,
@@ -98,6 +108,26 @@ public final class SpecialBlockEntityManager {
                             isGloballyRendered
                     );
                 }
+            }
+            return null;
+        }
+    }
+
+    private static class LecternManager {
+        private static @Nullable BlockEntityRenderState extractLecternState(
+                LecternBlockEntity blockEntity,
+                CameraRenderState cameraRenderState,
+                float partialTicks,
+                ModelFeatureRenderer.CrumblingOverlay breakProgress,
+                boolean isGloballyRendered
+        ) {
+            if (blockEntity.hasBook()) {
+                return Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(
+                        blockEntity,
+                        partialTicks,
+                        breakProgress,
+                        isGloballyRendered
+                );
             }
             return null;
         }
