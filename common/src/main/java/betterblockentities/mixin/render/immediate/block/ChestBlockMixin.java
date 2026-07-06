@@ -3,6 +3,7 @@ package betterblockentities.mixin.render.immediate.block;
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
+import betterblockentities.platform.GlobalScope;
 import betterblockentities.render.AltRenderers;
 
 /* minecraft */
@@ -23,6 +24,10 @@ public abstract class ChestBlockMixin {
     @Inject(method = "getRenderShape", at = @At("HEAD"), cancellable = true)
     private void forceModelRenderShape(final BlockState blockState, final CallbackInfoReturnable<RenderShape> cir) {
         if (!ConfigCache.masterOptimize || !ConfigCache.optimizeChests) {
+            return;
+        }
+
+        if (GlobalScope.isRenderingMinecartDisplay) {
             return;
         }
 

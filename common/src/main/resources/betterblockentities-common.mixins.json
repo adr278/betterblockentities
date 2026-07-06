@@ -7,6 +7,7 @@
     "core.MinecraftMixin",
     "model.modelpart.ModelPartAccessor",
     "model.modelpart.ModelPartCubeAccessor",
+    "render.entity.MinecartRendererMixin",
     "render.LevelRendererMixin",
     "render.immediate.block.BaseEntityBlockMixin",
     "render.immediate.block.BedBlockMixin",

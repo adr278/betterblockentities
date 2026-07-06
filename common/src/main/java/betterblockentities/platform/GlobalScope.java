@@ -33,6 +33,7 @@ public class GlobalScope {
     public static AltRenderDispatcher altRenderDispatcher;
     public static boolean limitVanillaSignRendering = false;
     public static boolean isItemInvoked = false;
+    public static boolean isRenderingMinecartDisplay = false;
 
     public static class ModCompact {
         private static ImmutableList<String> modList = ImmutableList.of(
