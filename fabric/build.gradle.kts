@@ -49,6 +49,8 @@ sourceSets.apply {
 }
 
 loom {
+    accessWidenerPath = file("src/main/resources/betterblockentities-fabric.accesswidener")
+
     mods {
         create("betterblockentities") {
             sourceSet(sourceSets["main"])
