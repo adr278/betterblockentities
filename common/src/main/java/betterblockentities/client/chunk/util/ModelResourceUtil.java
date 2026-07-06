@@ -2,6 +2,7 @@ package betterblockentities.client.chunk.util;
 
 /* minecraft */
 import betterblockentities.platform.GlobalScope;
+import net.minecraft.core.Holder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -10,7 +11,9 @@ import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.Material;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
@@ -36,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ModelResourceUtil {
     private static final Map<BlendMode, RenderMaterial> MATERIALS = buildMaterials();
     private static final Set<Material> MISSING_MATERIAL_SPRITES = ConcurrentHashMap.newKeySet();
+    private static final Set<ResourceLocation> MISSING_TEXTURE_SPRITES = ConcurrentHashMap.newKeySet();
 
     public static ModelLayerLocation getChestLayer(final BlockState state) {
         if (state.hasProperty(ChestBlock.TYPE)) {
@@ -92,11 +96,17 @@ public final class ModelResourceUtil {
         return Sheets.DECORATED_POT_SIDE;
     }
 
+    public static TextureAtlasSprite spriteForBannerPattern(final Holder<BannerPattern> pattern) {
+        try {
+            return spriteForTexture(pattern.value().assetId().withPrefix("entity/banner/"));
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     public static TextureAtlasSprite spriteForMaterial(final Material material) {
         try {
-            final TextureAtlasSprite sprite = Minecraft.getInstance()
-                    .getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-                    .apply(material.texture());
+            final TextureAtlasSprite sprite = spriteForTexture(material.texture());
             if (sprite.contents().name().equals(MissingTextureAtlasSprite.getLocation()) && MISSING_MATERIAL_SPRITES.add(material)) {
                 GlobalScope.LOGGER.warn(
                         "Missing material sprite for texture {} from atlas {}",
@@ -108,6 +118,16 @@ public final class ModelResourceUtil {
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    public static TextureAtlasSprite spriteForTexture(final ResourceLocation texture) {
+        final TextureAtlasSprite sprite = Minecraft.getInstance()
+                .getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+                .apply(texture);
+        if (sprite.contents().name().equals(MissingTextureAtlasSprite.getLocation()) && MISSING_TEXTURE_SPRITES.add(texture)) {
+            GlobalScope.LOGGER.warn("Missing sprite for texture {} from atlas {}", texture, TextureAtlas.LOCATION_BLOCKS);
+        }
+        return sprite;
     }
 
     public static RenderMaterial toMaterial(final BlendMode blendMode) {

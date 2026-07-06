@@ -413,8 +413,7 @@ public final class BBEBlockRenderer {
         final List<BannerPatternLayers.Layer> layers = banner.getPatterns().layers();
         for (int i = 0; i < 16 && i < layers.size(); i++) {
             final BannerPatternLayers.Layer layer = layers.get(i);
-            final Material patternMaterial = Sheets.getBannerMaterial(layer.pattern());
-            final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(patternMaterial);
+            final TextureAtlasSprite sprite = ModelResourceUtil.spriteForBannerPattern(layer.pattern());
             if (sprite == null) {
                 continue;
             }
