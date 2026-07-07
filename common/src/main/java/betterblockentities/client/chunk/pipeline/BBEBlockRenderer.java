@@ -15,7 +15,6 @@ import betterblockentities.render.AltRenderers;
 import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
 
 /* minecraft */
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BellRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
@@ -135,7 +134,7 @@ public final class BBEBlockRenderer {
         }
 
         final ChestType type = state.hasProperty(ChestBlock.TYPE) ? state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
-        final Material material = Sheets.chooseMaterial(blockEntity, type, ConfigCache.christmasChests);
+        final Material material = ModelResourceUtil.getChestMaterial(blockEntity, type, ConfigCache.christmasChests);
         final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(material);
         if (sprite == null) {
             return;
@@ -197,7 +196,7 @@ public final class BBEBlockRenderer {
         List<BakedModel> merged = new ArrayList<>(pairs.values());
 
         final DyeColor color = block.getColor();
-        final Material material = color == null ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION : Sheets.SHULKER_TEXTURE_LOCATION.get(color.getId());
+        final Material material = ModelResourceUtil.getShulkerMaterial(state, color);
         final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(material);
         if (sprite == null) {
             return;
@@ -231,7 +230,7 @@ public final class BBEBlockRenderer {
 
         List<BakedModel> merged = new ArrayList<>(pairs.values());
 
-        final Material material = Sheets.BED_TEXTURES[bedBlock.getColor().getId()];
+        final Material material = ModelResourceUtil.getBedMaterial(state, bedBlock.getColor());
         final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(material);
         if (sprite == null) {
             return;
@@ -312,7 +311,7 @@ public final class BBEBlockRenderer {
         this.emitter.setMaterial(ModelResourceUtil.toMaterial(BlendMode.DEFAULT));
         this.emitter.setTransform(transform);
 
-        final TextureAtlasSprite baseSprite = ModelResourceUtil.spriteForMaterial(Sheets.DECORATED_POT_BASE);
+        final TextureAtlasSprite baseSprite = ModelResourceUtil.spriteForMaterial(ModelResourceUtil.getDecoratedPotBaseMaterial());
 
         if (baseSprite != null) {
             this.emitter.setSprite(baseSprite);
@@ -392,7 +391,7 @@ public final class BBEBlockRenderer {
                 ? BlendMode.CUTOUT
                 : BlendMode.TRANSLUCENT;
         final TextureAtlasSprite solidFlagSprite = ModelResourceUtil.spriteForMaterial(ModelBakery.BANNER_BASE);
-        final TextureAtlasSprite basePatternSprite = ModelResourceUtil.spriteForMaterial(Sheets.BANNER_BASE);
+        final TextureAtlasSprite basePatternSprite = ModelResourceUtil.spriteForMaterial(ModelResourceUtil.getBannerBaseMaterial(true));
         if (solidFlagSprite == null || basePatternSprite == null) {
             return;
         }
@@ -452,7 +451,7 @@ public final class BBEBlockRenderer {
         }
         this.poseStack.scale(0.6666667F, -0.6666667F, -0.6666667F);
 
-        final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(Sheets.getSignMaterial(woodType));
+        final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(ModelResourceUtil.getSignMaterial(woodType));
         if (sprite == null) {
             return;
         }
@@ -491,7 +490,7 @@ public final class BBEBlockRenderer {
             return;
         }
 
-        final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(Sheets.getHangingSignMaterial(woodType));
+        final TextureAtlasSprite sprite = ModelResourceUtil.spriteForMaterial(ModelResourceUtil.getHangingSignMaterial(woodType));
         if (sprite == null) {
             return;
         }

@@ -2,6 +2,7 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.chunk.util.ModelResourceUtil;
 import betterblockentities.client.model.overrides.ChestModelOverride;
 import betterblockentities.client.render.immediate.blockentity.misc.CrumblingOverlayConsumer;
 
@@ -11,7 +12,6 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BrightnessCombiner;
@@ -144,7 +144,7 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         openness = 1.0F - openness * openness * openness;
 
         final int packedLight = combineResult.apply(new BrightnessCombiner<>()).applyAsInt(light);
-        final Material material = Sheets.chooseMaterial(blockEntity, chestType, this.xmasTextures);
+        final Material material = ModelResourceUtil.getChestMaterial(blockEntity, chestType, this.xmasTextures);
         final VertexConsumer consumer = material.buffer(vertexConsumers, RenderType::entityCutout);
 
         if (isDouble) {

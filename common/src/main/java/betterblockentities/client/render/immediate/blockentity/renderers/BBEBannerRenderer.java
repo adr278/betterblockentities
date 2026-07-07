@@ -3,13 +3,13 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.gui.option.EnumTypes;
+import betterblockentities.client.chunk.util.ModelResourceUtil;
 
 /* minecraft */
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.resources.model.Material;
@@ -140,13 +140,13 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity>
                 light,
                 overlay,
                 flag,
-                banner ? Sheets.BANNER_BASE : Sheets.SHIELD_BASE,
+                ModelResourceUtil.getBannerBaseMaterial(banner),
                 baseColor
         );
 
         for (int i = 0; i < MAX_PATTERNS && i < patternLayers.layers().size(); i++) {
             final Layer layer = patternLayers.layers().get(i);
-            final Material material = banner ? Sheets.getBannerMaterial(layer.pattern()) : Sheets.getShieldMaterial(layer.pattern());
+            final Material material = ModelResourceUtil.getBannerPatternMaterial(layer.pattern(), banner);
             renderPatternLayer(poseStack, vertexConsumers, light, overlay, flag, material, layer.color());
         }
     }
