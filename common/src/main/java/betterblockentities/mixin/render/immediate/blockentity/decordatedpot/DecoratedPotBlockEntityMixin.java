@@ -4,7 +4,6 @@ package betterblockentities.mixin.render.immediate.blockentity.decordatedpot;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
-import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -30,9 +29,7 @@ public class DecoratedPotBlockEntityMixin {
 
         ext.optKind(InstancedBlockEntityManager.OptKind.POT);
 
-        ext.supportedBlockEntity(
-                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.DECORATED_POT)
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.DECORATED_POT);
     }
 
     @Inject(method = "triggerEvent", at = @At(value = "RETURN", shift = At.Shift.BEFORE, ordinal = 0))

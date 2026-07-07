@@ -3,7 +3,6 @@ package betterblockentities.mixin.render.immediate.blockentity.sign;
 /* local */
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
-import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -28,9 +27,8 @@ public class SignBlockEntityMixin {
         ext.optKind(InstancedBlockEntityManager.OptKind.SIGN);
 
         ext.supportedBlockEntity(
-                VanillaBlockSupport.isVanillaBlock(blockEntity.getBlockState())
-                        && (blockEntity.getType() == BlockEntityType.SIGN
-                        || blockEntity.getType() == BlockEntityType.HANGING_SIGN)
+                blockEntity.getType() == BlockEntityType.SIGN
+                        || blockEntity.getType() == BlockEntityType.HANGING_SIGN
         );
     }
 }

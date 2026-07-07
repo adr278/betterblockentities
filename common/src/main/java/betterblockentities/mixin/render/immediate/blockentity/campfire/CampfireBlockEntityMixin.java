@@ -3,7 +3,6 @@ package betterblockentities.mixin.render.immediate.blockentity.campfire;
 /* local */
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
-import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -27,8 +26,6 @@ public class CampfireBlockEntityMixin {
         ext.hasSpecialManager(true);
         ext.optKind(InstancedBlockEntityManager.OptKind.CAMPFIRE);
 
-        ext.supportedBlockEntity(
-                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.CAMPFIRE)
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.CAMPFIRE);
     }
 }

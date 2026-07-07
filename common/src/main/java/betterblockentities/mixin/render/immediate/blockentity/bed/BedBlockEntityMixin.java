@@ -4,7 +4,6 @@ package betterblockentities.mixin.render.immediate.blockentity.bed;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
-import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.world.level.block.entity.BedBlockEntity;
@@ -38,8 +37,6 @@ public class BedBlockEntityMixin {
         ext.terrainMeshReady(true);
         ext.optKind(InstancedBlockEntityManager.OptKind.BED);
 
-        ext.supportedBlockEntity(
-                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.BED)
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.BED);
     }
 }

@@ -4,7 +4,6 @@ package betterblockentities.mixin.render.immediate.blockentity.banner;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
-import betterblockentities.client.render.immediate.util.VanillaBlockSupport;
 
 /* minecraft */
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
@@ -28,8 +27,6 @@ public class BannerBlockEntityMixin {
         ext.terrainMeshReady(true);
         ext.optKind(InstancedBlockEntityManager.OptKind.BANNER);
 
-        ext.supportedBlockEntity(
-                VanillaBlockSupport.isVanillaBlockEntity(blockEntity, BlockEntityType.BANNER)
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.BANNER);
     }
 }
