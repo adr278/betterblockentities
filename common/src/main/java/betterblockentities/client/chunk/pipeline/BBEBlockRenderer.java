@@ -548,7 +548,7 @@ public final class BBEBlockRenderer {
         }
     }
 
-    private static BlockEntity tryGetBlockEntity(final LevelSlice slice, final BlockPos pos) {
+    public static BlockEntity tryGetBlockEntity(final LevelSlice slice, final BlockPos pos) {
         try {
             return slice.getBlockEntity(pos);
         } catch (RuntimeException ignored) {

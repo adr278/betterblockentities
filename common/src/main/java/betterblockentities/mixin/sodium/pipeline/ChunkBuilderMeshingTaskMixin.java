@@ -1,6 +1,7 @@
 package betterblockentities.mixin.sodium.pipeline;
 
 /* local */
+import betterblockentities.client.chunk.pipeline.BBEBlockRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 
 /* minecraft */
@@ -42,7 +43,11 @@ public abstract class ChunkBuilderMeshingTaskMixin {
             return renderShape;
         }
 
-        final BlockEntity blockEntity = slice.getBlockEntity(blockPos);
-        return blockEntity instanceof BlockEntityExt ext && ext.supportedBlockEntity() ? RenderShape.MODEL : renderShape;
+        final BlockEntity blockEntity = BBEBlockRenderer.tryGetBlockEntity(slice, blockPos);
+        if (!(blockEntity instanceof BlockEntityExt ext) || !ext.supportedBlockEntity()) {
+            return RenderShape.INVISIBLE;
+        }
+
+        return RenderShape.MODEL;
     }
 }
