@@ -35,8 +35,9 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class BBEEmitter {
-    /* quad tag, forcing quad splitting off */
-    public static int NO_QUAD_SPLITTING = "BBE-TS-QUAD-NO-SPLIT".hashCode();
+    public static final int NO_QUAD_SPLITTING = 1 << 0; //0b0001 = 1
+    public static final int IMMEDIATE_SHADING = 1 << 1; //0b0010 = 2
+    public static final int SUPPORTED_FLAGS = NO_QUAD_SPLITTING | IMMEDIATE_SHADING;
 
     public static final int MAX_FACE_INDEX = 6;
     public static final int QUAD_VERTICES = 4;
@@ -54,12 +55,12 @@ public class BBEEmitter {
     private Quaternionf rotation;
     private Transformation b3dtransformation;
     private AmbientOcclusionMode aoMode;
-    private QuadSplittingMode quadSplittingMode;
     private SodiumShadeMode shadeMode;
     private float xRot = 0;
     private float yRot = 0;
     private float zRot = 0;
     private int color = -1;
+    private int flags;
 
     public BBEEmitter(BlockRenderer sodiumBlockRenderer) {
         this.sodiumContext = (AbstractBlockRenderContextAccessor)sodiumBlockRenderer;
@@ -102,7 +103,7 @@ public class BBEEmitter {
                 this.applySprite(sodiumEmitter);
                 this.applyTransformation(sodiumEmitter);
                 this.applyColor(sodiumEmitter);
-                this.applyQuadSplittingMode(sodiumEmitter);
+                this.applyFlags(sodiumEmitter);
 
                 sodiumEmitterConsumer.accept(sodiumEmitter);
             }
@@ -179,10 +180,8 @@ public class BBEEmitter {
         }
     }
 
-    public void applyQuadSplittingMode(MutableQuadViewImpl sodiumEmitter) {
-        if (this.quadSplittingMode == QuadSplittingMode.NONE) {
-            sodiumEmitter.setTag(NO_QUAD_SPLITTING);
-        }
+    public void applyFlags(MutableQuadViewImpl sodiumEmitter) {
+        sodiumEmitter.setTag(this.flags);
     }
 
     public void setRenderType(ChunkSectionLayer layer) {
@@ -208,7 +207,9 @@ public class BBEEmitter {
     }
 
     public void setSprite(TextureAtlasSprite sprite) {
-        this.sprite = sprite;
+        if (this.sprite != null) {
+            this.sprite = sprite;
+        }
     }
 
     public void setSprite(SpriteId identifier) {
@@ -225,8 +226,12 @@ public class BBEEmitter {
         this.shadeMode = mode;
     }
 
-    public void setSplittingMode(QuadSplittingMode mode) {
-        this.quadSplittingMode = mode;
+    public void setFlag(int flag) {
+        if ((flag & ~SUPPORTED_FLAGS) != 0) {
+            throw new IllegalArgumentException("Unsupported emitter flag: " + flag);
+        }
+
+        this.flags |= flag;
     }
 
     public void clear() {
@@ -235,17 +240,11 @@ public class BBEEmitter {
         this.rotation = null;
         this.b3dtransformation = null;
         this.aoMode = null;
-        this.quadSplittingMode = null;
         this.shadeMode = null;
         this.xRot = 0;
         this.yRot = 0;
         this.zRot = 0;
         this.color = -1;
-    }
-
-    /* NONE = No splitting, DEFERRED = leave it to sodium to decide */
-    public enum QuadSplittingMode {
-        NONE,
-        DEFERRED
+        this.flags = 0;
     }
 }

@@ -5,6 +5,7 @@ import betterblockentities.client.chunk.pipeline.BBEEmitter;
 import betterblockentities.client.chunk.translucent_sorting.TQuadExt;
 
 /* sodium */
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
 
 /* java/misc */
@@ -37,7 +38,7 @@ public class InnerPartitionBSPNodeMixin {
             Operation<Void> original
     ) {
         TQuadExt tQuadExt = (TQuadExt)insideQuad;
-        if (tQuadExt.bbe$getSplittingMode() == BBEEmitter.QuadSplittingMode.NONE) {
+        if (tQuadExt.bbe$getSplittingMode() == QuadSplittingMode.OFF) {
             splittingGroup.add(candidateIndex);
             return;
         }

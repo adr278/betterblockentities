@@ -1,6 +1,7 @@
 package betterblockentities.mixin.accessors;
 
 /* minecraft */
+import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -59,4 +60,7 @@ public interface AbstractBlockRenderContextAccessor {
 
     @Invoker("isFaceCulled")
     boolean bbe$isFaceCulled(@Nullable Direction face);
+
+    @Accessor("quadLightData")
+    QuadLightData bbe$quadLightData();
 }
