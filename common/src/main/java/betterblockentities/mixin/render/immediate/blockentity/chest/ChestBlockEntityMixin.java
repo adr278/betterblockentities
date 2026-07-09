@@ -4,6 +4,7 @@ package betterblockentities.mixin.render.immediate.blockentity.chest;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
+import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
 
 /* minecraft */
 import net.minecraft.core.BlockPos;
@@ -32,19 +33,25 @@ public abstract class ChestBlockEntityMixin implements BlockEntityExt {
         ext.optKind(InstancedBlockEntityManager.OptKind.CHEST);
 
         ext.supportedBlockEntity(
-                blockEntity.getType() == BlockEntityType.CHEST         ||
-                blockEntity.getType() == BlockEntityType.TRAPPED_CHEST ||
-                blockEntity.getType() == BlockEntityType.ENDER_CHEST
+                blockEntity.getType() == BlockEntityType.CHEST
+                        || blockEntity.getType() == BlockEntityType.TRAPPED_CHEST
         );
     }
 
     @Inject(method = "lidAnimateTick", at = @At("TAIL"))
-    private static void onTick(Level level, BlockPos pos, BlockState state, ChestBlockEntity chestBlockEntity, CallbackInfo ci) {
+    private static void onTick(Level level, BlockPos blockPos, BlockState blockState, ChestBlockEntity chestBlockEntity, CallbackInfo ci) {
         ChestBlockEntityMixin self = (ChestBlockEntityMixin)(Object)chestBlockEntity;
         BlockEntityExt ext = (BlockEntityExt)(Object)chestBlockEntity;
 
         if (ext.supportedBlockEntity()) {
-            self.manager.tick(chestBlockEntity.getOpenNess(0.5f) > 0.01f, ConfigCache.chestAnims);
+            self.manager.tick(isAnimating(chestBlockEntity, level, blockPos), ConfigCache.chestAnims);
         }
+    }
+
+    @Unique private static boolean isAnimating(ChestBlockEntity chestBlockEntity, Level level, BlockPos pos) {
+        if (chestBlockEntity.getOpenNess(0.5f) > 0.01f) return true;
+
+        ChestBlockEntity opposite = BlockVisibilityChecker.getOtherChestHalf(level, pos);
+        return opposite != null && opposite.getOpenNess(0.5f) > 0.01f;
     }
 }

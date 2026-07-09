@@ -29,13 +29,11 @@ public class DecoratedPotBlockEntityMixin {
 
         ext.optKind(InstancedBlockEntityManager.OptKind.POT);
 
-        ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.DECORATED_POT
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.DECORATED_POT);
     }
 
     @Inject(method = "triggerEvent", at = @At(value = "RETURN", shift = At.Shift.BEFORE, ordinal = 0))
-    private void onBlockEvent(int type, int data, CallbackInfoReturnable<Boolean> cir) {
+    private void onBlockEvent(int i, int j, CallbackInfoReturnable<Boolean> cir) {
         DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)(Object)this;
         BlockEntityExt ext = (BlockEntityExt)(Object)decoratedPotBlockEntity;
 

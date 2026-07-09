@@ -30,6 +30,7 @@
     "betterblockentities-common.mixins.json",
     "betterblockentities-fabric.mixins.json"
   ],
+  "accessWidener": "betterblockentities-fabric.accesswidener",
   "depends": {
     "fabricloader": ">=0.16.7",
     "minecraft": ["1.21.1","1.21"],

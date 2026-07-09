@@ -2,6 +2,7 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
+import betterblockentities.client.chunk.util.ModelResourceUtil;
 
 /* minecraft */
 import net.minecraft.client.model.ShulkerModel;
@@ -9,7 +10,6 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
@@ -36,17 +36,21 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
             final int light,
             final int overlay
     ) {
-        Direction direction = Direction.UP;
+        BlockState blockState;
         if (blockEntity.hasLevel()) {
             assert blockEntity.getLevel() != null;
-            final BlockState state = blockEntity.getLevel().getBlockState(blockEntity.getBlockPos());
-            if (state.getBlock() instanceof ShulkerBoxBlock) {
-                direction = state.getValue(ShulkerBoxBlock.FACING);
-            }
+            blockState = blockEntity.getLevel().getBlockState(blockEntity.getBlockPos());
+        } else {
+            blockState = blockEntity.getBlockState();
+        }
+
+        Direction direction = Direction.UP;
+        if (blockState.getBlock() instanceof ShulkerBoxBlock) {
+            direction = blockState.getValue(ShulkerBoxBlock.FACING);
         }
 
         final DyeColor color = blockEntity.getColor();
-        final var material = color == null ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION : Sheets.SHULKER_TEXTURE_LOCATION.get(color.getId());
+        final var material = ModelResourceUtil.getShulkerMaterial(blockState, color);
 
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.5F, 0.5F);

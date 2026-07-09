@@ -1,11 +1,13 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
+/* local */
+import betterblockentities.client.chunk.util.ModelResourceUtil;
+
 /* minecraft */
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BrightnessCombiner;
@@ -35,7 +37,7 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity> {
     }
 
     @Override public void render(final BedBlockEntity blockEntity, final float partialTick, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final int light, final int overlay) {
-        final Material material = Sheets.BED_TEXTURES[blockEntity.getColor().getId()];
+        final Material material = ModelResourceUtil.getBedMaterial(blockEntity.getBlockState(), blockEntity.getColor());
         final Level level = blockEntity.getLevel();
 
         if (level != null) {

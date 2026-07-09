@@ -5,7 +5,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
@@ -90,8 +89,8 @@ public final class GeometryRegistry {
         public static final ResourceLocation BED_HEAD = ResourceLocation.withDefaultNamespace("entity/bed/bed_head");
         public static final ResourceLocation BED_FOOT = ResourceLocation.withDefaultNamespace("entity/bed/bed_foot");
         public static final ResourceLocation BANNER = ResourceLocation.withDefaultNamespace("entity/banner_base");
-        public static final ResourceLocation SIGN = Sheets.getSignMaterial(WoodType.OAK).texture();
-        public static final ResourceLocation HANGING_SIGN = Sheets.getHangingSignMaterial(WoodType.OAK).texture();
+        public static final ResourceLocation SIGN = ResourceLocation.withDefaultNamespace("entity/signs/oak");
+        public static final ResourceLocation HANGING_SIGN = ResourceLocation.withDefaultNamespace("entity/signs/hanging/oak");
         public static final ResourceLocation COPPER_GOLEM_STATUE = ResourceLocation.withDefaultNamespace("entity/copper_golem/copper_golem");
 
         public static final ResourceLocation[] ALL = {

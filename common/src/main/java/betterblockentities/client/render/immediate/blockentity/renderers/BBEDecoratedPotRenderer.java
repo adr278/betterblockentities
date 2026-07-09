@@ -1,28 +1,25 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
+/* local */
+import betterblockentities.client.chunk.util.ModelResourceUtil;
+
 /* minecraft */
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity.WobbleStyle;
-import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
 import net.minecraft.world.level.block.entity.PotDecorations;
 
 /* mojang */
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-
-/* java/misc */
-import java.util.Optional;
 
 public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPotBlockEntity> {
     private final ModelPart neck;
@@ -79,16 +76,16 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
             }
         }
 
-        final var baseConsumer = Sheets.DECORATED_POT_BASE.buffer(vertexConsumers, RenderType::entitySolid);
+        final var baseConsumer = ModelResourceUtil.getDecoratedPotBaseMaterial().buffer(vertexConsumers, RenderType::entitySolid);
         this.neck.render(poseStack, baseConsumer, light, overlay);
         this.top.render(poseStack, baseConsumer, light, overlay);
         this.bottom.render(poseStack, baseConsumer, light, overlay);
 
         final PotDecorations decorations = blockEntity.getDecorations();
-        renderSide(this.frontSide, poseStack, vertexConsumers, light, overlay, getSideMaterial(decorations.front()));
-        renderSide(this.backSide, poseStack, vertexConsumers, light, overlay, getSideMaterial(decorations.back()));
-        renderSide(this.leftSide, poseStack, vertexConsumers, light, overlay, getSideMaterial(decorations.left()));
-        renderSide(this.rightSide, poseStack, vertexConsumers, light, overlay, getSideMaterial(decorations.right()));
+        renderSide(this.frontSide, poseStack, vertexConsumers, light, overlay, ModelResourceUtil.getPotSideMaterial(decorations.front()));
+        renderSide(this.backSide, poseStack, vertexConsumers, light, overlay, ModelResourceUtil.getPotSideMaterial(decorations.back()));
+        renderSide(this.leftSide, poseStack, vertexConsumers, light, overlay, ModelResourceUtil.getPotSideMaterial(decorations.left()));
+        renderSide(this.rightSide, poseStack, vertexConsumers, light, overlay, ModelResourceUtil.getPotSideMaterial(decorations.right()));
 
         poseStack.popPose();
     }
@@ -102,16 +99,5 @@ public class BBEDecoratedPotRenderer implements BlockEntityRenderer<DecoratedPot
             final Material material
     ) {
         side.render(poseStack, material.buffer(vertexConsumers, RenderType::entitySolid), light, overlay);
-    }
-
-    private static Material getSideMaterial(final Optional<Item> decorationItem) {
-        if (decorationItem.isPresent()) {
-            final Material material = Sheets.getDecoratedPotMaterial(DecoratedPotPatterns.getPatternFromItem(decorationItem.get()));
-            if (material != null) {
-                return material;
-            }
-        }
-
-        return Sheets.DECORATED_POT_SIDE;
     }
 }

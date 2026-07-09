@@ -31,11 +31,7 @@ public abstract class EnderChestBlockEntityMixin {
 
         ext.optKind(InstancedBlockEntityManager.OptKind.CHEST);
 
-        ext.supportedBlockEntity(
-                blockEntity.getType() == BlockEntityType.CHEST         ||
-                blockEntity.getType() == BlockEntityType.TRAPPED_CHEST ||
-                blockEntity.getType() == BlockEntityType.ENDER_CHEST
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.ENDER_CHEST);
     }
 
     @Inject(method = "lidAnimateTick", at = @At("TAIL"))

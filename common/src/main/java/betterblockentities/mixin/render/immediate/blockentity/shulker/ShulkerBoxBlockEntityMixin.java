@@ -31,9 +31,7 @@ public abstract class ShulkerBoxBlockEntityMixin {
 
         ext.optKind(InstancedBlockEntityManager.OptKind.SHULKER);
 
-        ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.SHULKER_BOX
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.SHULKER_BOX);
     }
 
     @Inject(method = "tick", at = @At("TAIL"))

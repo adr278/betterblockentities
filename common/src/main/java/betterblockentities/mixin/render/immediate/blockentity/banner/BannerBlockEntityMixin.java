@@ -27,8 +27,6 @@ public class BannerBlockEntityMixin {
         ext.terrainMeshReady(true);
         ext.optKind(InstancedBlockEntityManager.OptKind.BANNER);
 
-        ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.BANNER
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.BANNER);
     }
 }

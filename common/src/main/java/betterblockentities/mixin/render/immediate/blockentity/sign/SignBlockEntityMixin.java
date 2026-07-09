@@ -27,8 +27,8 @@ public class SignBlockEntityMixin {
         ext.optKind(InstancedBlockEntityManager.OptKind.SIGN);
 
         ext.supportedBlockEntity(
-                blockEntity.getType() == BlockEntityType.SIGN ||
-                blockEntity.getType() == BlockEntityType.HANGING_SIGN
+                blockEntity.getType() == BlockEntityType.SIGN
+                        || blockEntity.getType() == BlockEntityType.HANGING_SIGN
         );
     }
 }

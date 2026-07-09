@@ -31,9 +31,7 @@ public class BellBlockEntityMixin {
 
         ext.optKind(InstancedBlockEntityManager.OptKind.BELL);
 
-        ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.BELL
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.BELL);
     }
 
     @Inject(method = "clientTick", at = @At("TAIL"))

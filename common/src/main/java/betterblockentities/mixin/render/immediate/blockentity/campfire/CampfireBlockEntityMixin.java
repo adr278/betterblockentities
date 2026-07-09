@@ -26,8 +26,6 @@ public class CampfireBlockEntityMixin {
         ext.hasSpecialManager(true);
         ext.optKind(InstancedBlockEntityManager.OptKind.CAMPFIRE);
 
-        ext.supportedBlockEntity(
-            blockEntity.getType() == BlockEntityType.CAMPFIRE
-        );
+        ext.supportedBlockEntity(blockEntity.getType() == BlockEntityType.CAMPFIRE);
     }
 }
