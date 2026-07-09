@@ -4,7 +4,6 @@ package betterblockentities.mixin.model.item;
 import betterblockentities.client.gui.config.ConfigCache;
 
 /* minecraft */
-import com.mojang.math.Transformation;
 import net.minecraft.client.renderer.item.ClientItem;
 import net.minecraft.client.renderer.item.ItemModel;
 import net.minecraft.client.renderer.item.SelectItemModel;
@@ -13,11 +12,14 @@ import net.minecraft.client.renderer.special.ChestSpecialRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.resources.model.ClientItemInfoLoader;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.SpecialDates;
 
+/* mojang */
+import com.mojang.math.Transformation;
+
 /* mixin */
-import net.minecraft.world.level.block.state.properties.ChestType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,5 +1,6 @@
 package betterblockentities.client.model.texture;
 
+/* minecraft */
 import net.minecraft.resources.Identifier;
 
 public final class PlaceHolderSpriteIdentifiers {

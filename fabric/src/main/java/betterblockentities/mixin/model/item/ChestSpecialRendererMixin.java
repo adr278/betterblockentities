@@ -4,7 +4,6 @@ package betterblockentities.mixin.model.item;
 import betterblockentities.client.gui.config.ConfigCache;
 
 /* minecraft */
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.object.chest.ChestModel;
 import net.minecraft.client.renderer.MultiblockChestResources;
@@ -16,6 +15,9 @@ import net.minecraft.client.resources.model.sprite.SpriteGetter;
 import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.SpecialDates;
+
+/* mojang */
+import com.mojang.blaze3d.vertex.PoseStack;
 
 /* mixin */
 import org.spongepowered.asm.mixin.Final;

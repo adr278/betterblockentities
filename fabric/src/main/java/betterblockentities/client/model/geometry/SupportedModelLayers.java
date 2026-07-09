@@ -1,5 +1,6 @@
 package betterblockentities.client.model.geometry;
 
+/* minecraft */
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 

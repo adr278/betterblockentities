@@ -2,8 +2,12 @@ package betterblockentities.mixin.texture;
 
 /* minecraft */
 import betterblockentities.mixin.accessors.MipMapGeneratorAccessor;
+
+/* minecraft */
 import net.minecraft.client.renderer.texture.MipmapGenerator;
 import net.minecraft.resources.Identifier;
+
+/* mojang */
 import com.mojang.blaze3d.platform.NativeImage;
 
 /* mixin */

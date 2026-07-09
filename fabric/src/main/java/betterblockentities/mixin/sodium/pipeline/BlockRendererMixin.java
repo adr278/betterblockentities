@@ -8,23 +8,11 @@ import betterblockentities.client.chunk.util.QuadLighter;
 import betterblockentities.mixin.accessors.AbstractBlockRenderContextAccessor;
 
 /* minecraft */
-import com.mojang.blaze3d.vulkan.VulkanGpuBuffer;
-import net.caffeinemc.mods.sodium.api.util.NormI8;
-import net.caffeinemc.mods.sodium.client.model.light.LightMode;
-import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
-import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
-import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
-import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.ARGB;
-import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 
 /* sodium */
@@ -37,9 +25,13 @@ import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.caffeinemc.mods.sodium.client.model.light.LightMode;
+import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 
 /* mixin */
-import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

@@ -1,15 +1,13 @@
 package betterblockentities.client.model.geometry;
 
 /* local */
-
-/* local */
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
-        import net.minecraft.util.RandomSource;
-        import net.minecraft.world.level.block.*;
-        import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.ChestType;
 

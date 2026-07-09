@@ -6,7 +6,6 @@ import betterblockentities.client.gui.option.EnumTypes;
 import betterblockentities.client.gui.storage.SodiumConfigStorage;
 
 /* sodium */
-import betterblockentities.client.model.geometry.ModelBakery;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
@@ -14,11 +13,13 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
-import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 
 /* minecraft */
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+
+/* java/misc */
+import java.util.Locale;
 
 public class SodiumConfigBuilder implements ConfigEntryPoint {
     private final SodiumConfigStorage bbeSodiumConfigStorage = new SodiumConfigStorage();
@@ -409,7 +410,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setValueFormatter(v -> {
                                     float degrees = Math.clamp(-0.45f * v, -4.05f, -0.45f);
                                     float absDegrees = Math.abs(degrees);
-                                    return Component.literal(String.format(java.util.Locale.ROOT, "%.2f deg", absDegrees));
+                                    return Component.literal(String.format(Locale.ROOT, "%.2f deg", absDegrees));
                                 })
                                 .setEnabledProvider(c ->
                                                 c.readBooleanOption(Identifier.parse("bbe:master")) &&

@@ -1,5 +1,6 @@
 package betterblockentities.client.render.immediate.blockentity.extentions;
 
+/* local */
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
 
 public interface BlockEntityExt {

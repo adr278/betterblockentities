@@ -1,10 +1,7 @@
 package betterblockentities.client.chunk.util;
 
 /* minecraft */
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.data.AtlasIds;
-import net.minecraft.resources.Identifier;
 
 /* sodium */
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;

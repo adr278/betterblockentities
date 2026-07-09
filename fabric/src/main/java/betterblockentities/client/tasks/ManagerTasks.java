@@ -1,8 +1,12 @@
 package betterblockentities.client.tasks;
 
+/* local */
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
+
+/* minecraft */
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+/* java/misc */
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;

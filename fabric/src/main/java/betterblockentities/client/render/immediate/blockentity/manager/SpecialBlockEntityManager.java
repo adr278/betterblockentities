@@ -1,6 +1,9 @@
 package betterblockentities.client.render.immediate.blockentity.manager;
 
+/* local */
 import betterblockentities.client.gui.config.ConfigCache;
+
+/* minecraft */
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.blockentity.state.SignRenderState;
@@ -10,11 +13,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+
+/* java/misc */
 import org.jspecify.annotations.Nullable;
 
 /**

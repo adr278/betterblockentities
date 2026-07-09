@@ -1,7 +1,6 @@
 package betterblockentities.mixin.accessors;
 
 /* minecraft */
-import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
 
 /* mixin */
 import org.spongepowered.asm.mixin.Mixin;

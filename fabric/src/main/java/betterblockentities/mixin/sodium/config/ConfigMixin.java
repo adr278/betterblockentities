@@ -1,7 +1,12 @@
 package betterblockentities.mixin.sodium.config;
 
+/* local */
 import betterblockentities.client.gui.config.BBEConfig;
+
+/* sodium */
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
+
+/* mixin */
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

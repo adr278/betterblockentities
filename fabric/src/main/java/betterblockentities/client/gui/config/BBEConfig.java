@@ -1,15 +1,12 @@
 package betterblockentities.client.gui.config;
 
 /* local */
-import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.builder.ConfigBuilder;
 import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
 import betterblockentities.client.gui.option.*;
 import betterblockentities.client.gui.storage.ConfigStorageCollection;
 import betterblockentities.client.gui.storage.ConfigStorageObject;
 import betterblockentities.client.gui.storage.ConfigStorageIdentifiers;
-
-/* minecraft */
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 
 /* gson */

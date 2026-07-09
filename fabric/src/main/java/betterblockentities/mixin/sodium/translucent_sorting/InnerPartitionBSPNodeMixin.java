@@ -1,7 +1,6 @@
 package betterblockentities.mixin.sodium.translucent_sorting;
 
 /* local */
-import betterblockentities.client.chunk.pipeline.BBEEmitter;
 import betterblockentities.client.chunk.translucent_sorting.TQuadExt;
 
 /* sodium */

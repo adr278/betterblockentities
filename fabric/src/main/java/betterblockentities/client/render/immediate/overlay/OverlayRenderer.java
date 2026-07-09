@@ -2,10 +2,7 @@ package betterblockentities.client.render.immediate.overlay;
 
 /* local */
 import betterblockentities.client.BBE;
-import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
-import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
 
 /* minecraft */
 import net.minecraft.client.model.Model;

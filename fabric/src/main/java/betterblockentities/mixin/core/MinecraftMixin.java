@@ -6,8 +6,6 @@ import betterblockentities.client.BBE;
 import betterblockentities.client.tasks.ManagerTasks;
 
 /* minecraft */
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.main.GameConfig;
@@ -19,7 +17,6 @@ import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
-import net.minecraft.world.level.Level;
 import net.minecraft.client.Minecraft;
 
 /* mixin */
@@ -29,6 +26,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {

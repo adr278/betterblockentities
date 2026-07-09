@@ -16,7 +16,6 @@ import betterblockentities.client.tasks.ResourceTasks;
 import betterblockentities.render.AltRenderers;
 
 /* minecraft */
-import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
@@ -39,6 +38,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRend
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 
 /* java/misc */
 import java.util.*;
