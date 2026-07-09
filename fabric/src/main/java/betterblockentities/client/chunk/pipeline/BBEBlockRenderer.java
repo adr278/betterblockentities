@@ -81,6 +81,10 @@ public class BBEBlockRenderer  {
 
         final Block block = state.getBlock();
 
+        if (ConfigCache.shadeMode == EnumTypes.ShadeMode.VANILLA.ordinal()) {
+            this.emitter.setFlag(BBEEmitter.IMMEDIATE_SHADING);
+        }
+
         if (block instanceof ChestBlock || block instanceof EnderChestBlock) {
             if (ConfigCache.optimizeChests && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
                 emitChest(isFaceCulled, random, state, this.emitter, blockEntity);
@@ -116,6 +120,8 @@ public class BBEBlockRenderer  {
                 emitCopperGolemStatue(isFaceCulled, random, state, this.emitter);
             }
         }
+
+        this.emitter.clear();
     }
 
     private void emitChest(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter, BlockEntity blockEntity) {

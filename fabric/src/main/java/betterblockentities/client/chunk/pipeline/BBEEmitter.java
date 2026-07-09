@@ -207,7 +207,7 @@ public class BBEEmitter {
     }
 
     public void setSprite(TextureAtlasSprite sprite) {
-        if (this.sprite != null) {
+        if (sprite != null) {
             this.sprite = sprite;
         }
     }

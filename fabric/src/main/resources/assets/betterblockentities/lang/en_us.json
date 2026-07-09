@@ -1,8 +1,14 @@
 {
-  "bbe.config.sodium.pagetext" : "BBE Config",
+  "bbe.config.sodium.pagetext.general" : "General",
+  "bbe.config.sodium.pagetext.optimizations" : "Optimizations",
+  "bbe.config.sodium.pagetext.animations" : "Animations",
+  "bbe.config.sodium.pagetext.advanced" : "Advanced",
 
   "bbe.config.storage.main.optimize.master" : "Enable BBE",
   "bbe.config.storage.main.optimize.master.tooltip" : "Used to toggle BBE and all of its optimizations ON or OFF",
+
+  "bbe.config.storage.main.misc.shademode" : "Shade Mode",
+  "bbe.config.storage.main.misc.shademode.tooltip" : "Choose what shading method to use for BBE optimized block entities. While Sodium might look better because it applies ambient occlusion and lightmaps per corner instead of per face, it might cause a distinct difference when block entities are transitioning between vanilla and sodium rendering",
 
   "bbe.config.storage.main.optimize.chest" : "Optimize Chest",
   "bbe.config.storage.main.optimize.chest.tooltip" : "Used to toggle chest optimizations ON or OFF",
@@ -73,6 +79,9 @@
 
   "bbe.config.storage.main.misc.banner_graphics.type.fast" : "Fast",
   "bbe.config.storage.main.misc.banner_graphics.type.fancy" : "Fancy",
+
+  "bbe.config.storage.main.misc.shademode.type.sodium" : "Sodium",
+  "bbe.config.storage.main.misc.shademode.type.vanilla" : "Vanilla",
 
   "bbe.config.storage.main.misc.banner_pose" : "Banner Pose",
   "bbe.config.storage.main.misc.banner_pose.tooltip" : "Rotates the banner canvas/flag to a preset position"

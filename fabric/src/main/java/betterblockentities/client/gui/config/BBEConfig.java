@@ -215,6 +215,7 @@ public class BBEConfig {
             ConfigCache.optimizeShelves = GenericConfigWrapper.MainStorage.optimizeShelf();
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
             ConfigCache.optimizeLectern = GenericConfigWrapper.MainStorage.optimizeLectern();
+            ConfigCache.shadeMode = GenericConfigWrapper.MainStorage.shadeMode();
         }
         else {
             ConfigCache.optimizeSigns = false;

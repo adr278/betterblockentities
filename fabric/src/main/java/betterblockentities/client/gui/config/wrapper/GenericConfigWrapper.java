@@ -35,6 +35,7 @@ public class GenericConfigWrapper {
         public static boolean signText() {return getGenericBooleanOption("misc.sign_text");}
         public static boolean signTextCulling() {return getGenericBooleanOption("misc.sign_text_culling");}
         public static int updateScheduler() {return getGenericIntegerOption("misc.update_scheduler");}
+        public static int shadeMode() {return getGenericIntegerOption("misc.shademode");}
     }
 
     public static class HiddenStorage {
