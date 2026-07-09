@@ -44,7 +44,7 @@ public abstract class ChunkBuilderMeshingTaskMixin {
         }
 
         final BlockEntity blockEntity = BBEBlockRenderer.tryGetBlockEntity(slice, blockPos);
-        if (!(blockEntity instanceof BlockEntityExt ext) || !ext.supportedBlockEntity()) {
+        if (blockentity == null || !(blockEntity instanceof BlockEntityExt ext) || !ext.supportedBlockEntity()) {
             return RenderShape.INVISIBLE;
         }
 
