@@ -19,7 +19,7 @@ import java.util.function.BiConsumer;
 public class AtlasManagerMixin {
     /* skips checking all entity textures for duplicate atlas entries */
     @Redirect(method = "updateSpriteMaps", at = @At(value = "INVOKE", target = "Ljava/util/Map;forEach(Ljava/util/function/BiConsumer;)V"))
-    private void cancelForEach(Map<SpriteId, TextureAtlasSprite> instance, BiConsumer<SpriteId, TextureAtlasSprite> consumer) {
+    private void bbe$cancelForEntityTextures(Map<SpriteId, TextureAtlasSprite> instance, BiConsumer<SpriteId, TextureAtlasSprite> consumer) {
         instance.forEach((material, sprite) -> {
             Identifier tex = material.texture();
             if (tex != null && tex.getPath().startsWith("entity/")) return;

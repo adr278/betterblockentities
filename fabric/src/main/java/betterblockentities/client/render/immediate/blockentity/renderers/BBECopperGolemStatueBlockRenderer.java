@@ -1,7 +1,7 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
@@ -61,8 +61,6 @@ public class BBECopperGolemStatueBlockRenderer implements BlockEntityRenderer<Co
         state.oxidationState = blockState.getBlock() instanceof CopperGolemStatueBlock copperGolemStatueBlock
                 ? copperGolemStatueBlock.getWeatheringState()
                 : WeatheringCopper.WeatherState.UNAFFECTED;
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     public void submit(CopperGolemStatueRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
@@ -72,7 +70,7 @@ public class BBECopperGolemStatueBlockRenderer implements BlockEntityRenderer<Co
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, Unit.INSTANCE, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.bbe$getBlockEntity(), poseStack, model, Unit.INSTANCE, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
         if (!managed) {
             submitNodeCollector.submitModel(
                     model,

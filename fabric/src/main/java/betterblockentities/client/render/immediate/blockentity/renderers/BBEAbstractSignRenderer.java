@@ -3,9 +3,9 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.manager.SpecialBlockEntityManager;
-import betterblockentities.mixin.render.immediate.blockentity.BlockEntityRenderStateAccessor;
+import betterblockentities.mixin.accessors.BlockEntityRenderStateAccessor;
 
 /* minecraft */
 import net.minecraft.client.Minecraft;
@@ -39,7 +39,6 @@ import net.minecraft.world.phys.Vec3;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /* mixin */
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -61,7 +60,7 @@ public abstract class BBEAbstractSignRenderer<S extends SignRenderState> impleme
     protected abstract SpriteId getSignSprite(WoodType type);
 
     public void submit(S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
-        final BlockState bs = ((BlockEntityRenderStateAccessor)state).getBlockState();
+        final BlockState bs = ((BlockEntityRenderStateAccessor)state).bbe$getBlockState();
         final SignBlock signBlock = (SignBlock)bs.getBlock();
 
         if (!BBE.GlobalScope.limitVanillaSignRendering) {

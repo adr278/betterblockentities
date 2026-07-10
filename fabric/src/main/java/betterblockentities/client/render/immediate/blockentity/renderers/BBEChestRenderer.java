@@ -2,8 +2,7 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.model.overrides.ChestModelOverride;
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
@@ -50,13 +49,11 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
     private final boolean xmasTextures;
 
     private final MultiblockChestResources<ChestModel> models;
-    private final MultiblockChestResources<ChestModel> bbeModels;
 
     public BBEChestRenderer(final BlockEntityRendererProvider.Context context) {
         this.sprites = context.sprites();
         this.xmasTextures = ConfigCache.christmasChests || xmasTextures();
         this.models = LAYERS.map((layer) -> new ChestModel(context.bakeLayer(layer)));
-        this.bbeModels = LAYERS.map((layer) -> new ChestModelOverride(context.bakeLayer(layer)));
     }
 
     public static boolean xmasTextures() {
@@ -86,8 +83,6 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         if (state.type != ChestType.SINGLE) {
             state.lightCoords = combineResult.apply(new BrightnessCombiner<>()).applyAsInt(state.lightCoords);
         }
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     public void submit(ChestRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
@@ -101,9 +96,8 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
         ChestModel model = this.models.select(state.type);
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, open, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.bbe$getBlockEntity(), poseStack, model, open, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
         if (!managed) {
-            model = this.bbeModels.select(state.type);
             submitNodeCollector.submitModel(model, open, poseStack, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, spriteId, this.sprites, 0, state.breakProgress);
         }
 

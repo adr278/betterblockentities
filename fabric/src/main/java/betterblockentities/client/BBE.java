@@ -6,7 +6,7 @@ import betterblockentities.render.AltRenderDispatcher;
 import betterblockentities.client.gui.DebugScreen;
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.gui.config.wrapper.GenericConfigWrapper;
-import betterblockentities.mixin.gui.DebugScreenEntriesAccessor;
+import betterblockentities.mixin.accessors.DebugScreenEntriesAccessor;
 
 /* fabric */
 import com.google.common.collect.ImmutableList;
@@ -36,7 +36,7 @@ public class BBE implements ClientModInitializer {
         getLogger().info("Building config cache from user defined config file...");
         BBEConfig.updateConfigCache();
 
-        DebugScreenEntriesAccessor.invokeRegister(GlobalScope.DEBUG_ID, new DebugScreen());
+        DebugScreenEntriesAccessor.bbe$register(GlobalScope.DEBUG_ID, new DebugScreen());
 
         getLogger().info("Collecting API Entrypoint's...");
         RegistrationCollection.collectEntryPoints();

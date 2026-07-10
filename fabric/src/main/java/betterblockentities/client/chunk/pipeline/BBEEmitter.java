@@ -2,7 +2,8 @@ package betterblockentities.client.chunk.pipeline;
 
 /* local */
 import betterblockentities.client.chunk.util.QuadTransform;
-import betterblockentities.mixin.sodium.pipeline.AbstractBlockRenderContextAccessor;
+import betterblockentities.client.model.texture.SpriteSelector;
+import betterblockentities.mixin.accessors.AbstractBlockRenderContextAccessor;
 
 /* minecraft */
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
@@ -34,8 +35,9 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class BBEEmitter {
-    /* quad tag, forcing quad splitting off */
-    public static int NO_QUAD_SPLITTING = "BBE-TS-QUAD-NO-SPLIT".hashCode();
+    public static final int NO_QUAD_SPLITTING = 1 << 0; //0b0001 = 1
+    public static final int IMMEDIATE_SHADING = 1 << 1; //0b0010 = 2
+    public static final int SUPPORTED_FLAGS = NO_QUAD_SPLITTING | IMMEDIATE_SHADING;
 
     public static final int MAX_FACE_INDEX = 6;
     public static final int QUAD_VERTICES = 4;
@@ -48,17 +50,17 @@ public class BBEEmitter {
     private final AbstractBlockRenderContextAccessor sodiumContext;
 
     /* quad render data */
-    private SpriteId material;
     private ChunkSectionLayer renderType;
     private TextureAtlasSprite sprite;
     private Quaternionf rotation;
     private Transformation b3dtransformation;
     private AmbientOcclusionMode aoMode;
-    private QuadSplittingMode quadSplittingMode;
+    private SodiumShadeMode shadeMode;
     private float xRot = 0;
     private float yRot = 0;
     private float zRot = 0;
     private int color = -1;
+    private int flags;
 
     public BBEEmitter(BlockRenderer sodiumBlockRenderer) {
         this.sodiumContext = (AbstractBlockRenderContextAccessor)sodiumBlockRenderer;
@@ -72,9 +74,9 @@ public class BBEEmitter {
     }
 
     public void buffer(BlockStateModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> sodiumEmitterConsumer) {
-        final MutableQuadViewImpl sodiumEmitter = sodiumContext.getEmitterInvoke();
+        final MutableQuadViewImpl sodiumEmitter = this.sodiumContext.bbe$getEmitter();
 
-        sodiumContext.prepareAoInfoInvoke(part.useAmbientOcclusion());
+        this.sodiumContext.bbe$prepareAoInfo(part.useAmbientOcclusion());
 
         for (int i = 0; i <= MAX_FACE_INDEX; ++i) {
             Direction cullFace = ModelHelper.faceFromIndex(i);
@@ -85,7 +87,7 @@ public class BBEEmitter {
             List<BakedQuad> quads = part.getQuads(cullFace);
 
             AmbientOcclusionMode sodiumAO = PlatformBlockAccess.getInstance().usesAmbientOcclusion(
-                    part, sodiumContext.getState(), this.renderType, sodiumContext.getSlice(), sodiumContext.getPos()
+                    part, sodiumContext.bbe$getState(), this.renderType, sodiumContext.bbe$getSlice(), sodiumContext.bbe$getPos()
             );
 
             for (int j = 0, count = quads.size(); j < count; ++j) {
@@ -93,15 +95,15 @@ public class BBEEmitter {
 
                 sodiumEmitter.fromBakedQuad(quad);
                 sodiumEmitter.setCullFace(cullFace);
-                sodiumEmitter.setShadeMode(SodiumShadeMode.ENHANCED);
 
                 /* modify sodium emitter data */
-                applyAmbientOcclusionMode(sodiumEmitter, sodiumAO);
-                applyRenderType(sodiumEmitter);
-                applySprite(sodiumEmitter);
-                applyTransformation(sodiumEmitter);
-                applyColor(sodiumEmitter);
-                applyQuadSplittingMode(sodiumEmitter);
+                this.applyShadeMode(sodiumEmitter);
+                this.applyAmbientOcclusionMode(sodiumEmitter, sodiumAO);
+                this.applyRenderType(sodiumEmitter);
+                this.applySprite(sodiumEmitter);
+                this.applyTransformation(sodiumEmitter);
+                this.applyColor(sodiumEmitter);
+                this.applyFlags(sodiumEmitter);
 
                 sodiumEmitterConsumer.accept(sodiumEmitter);
             }
@@ -116,10 +118,6 @@ public class BBEEmitter {
     }
 
     private void applySprite(MutableQuadViewImpl sodiumEmitter) {
-        if (this.material != null) {
-            this.sprite = QuadTransform.getBlockSprite(this.material.texture());
-        }
-
         if (this.sprite != null) {
             QuadTransform.remapSprite(this.sprite, sodiumEmitter);
         }
@@ -173,14 +171,17 @@ public class BBEEmitter {
         }
     }
 
-    public void applyQuadSplittingMode(MutableQuadViewImpl sodiumEmitter) {
-        if (this.quadSplittingMode == QuadSplittingMode.NONE) {
-            sodiumEmitter.setTag(NO_QUAD_SPLITTING);
+    private void applyShadeMode(MutableQuadViewImpl sodiumEmitter) {
+        if (this.shadeMode == null) {
+            sodiumEmitter.setShadeMode(SodiumShadeMode.ENHANCED);
+        }
+        else {
+            sodiumEmitter.setShadeMode(this.shadeMode);
         }
     }
 
-    public void setMaterial(SpriteId material) {
-        this.material = material;
+    public void applyFlags(MutableQuadViewImpl sodiumEmitter) {
+        sodiumEmitter.setTag(this.flags);
     }
 
     public void setRenderType(ChunkSectionLayer layer) {
@@ -206,34 +207,44 @@ public class BBEEmitter {
     }
 
     public void setSprite(TextureAtlasSprite sprite) {
-        this.sprite = sprite;
+        if (sprite != null) {
+            this.sprite = sprite;
+        }
+    }
+
+    public void setSprite(SpriteId identifier) {
+        if (identifier != null) {
+            this.sprite = SpriteSelector.getBlockSprite(identifier.texture());
+        }
     }
 
     public void setAmbientOcclusionMode(AmbientOcclusionMode mode) {
         this.aoMode = mode;
     }
 
-    public void setSplittingMode(QuadSplittingMode mode) {
-        this.quadSplittingMode = mode;
+    public void setShadeMode(SodiumShadeMode mode) {
+        this.shadeMode = mode;
+    }
+
+    public void setFlag(int flag) {
+        if ((flag & ~SUPPORTED_FLAGS) != 0) {
+            throw new IllegalArgumentException("Unsupported emitter flag: " + flag);
+        }
+
+        this.flags |= flag;
     }
 
     public void clear() {
-        this.material = null;
         this.renderType = null;
         this.sprite = null;
         this.rotation = null;
         this.b3dtransformation = null;
         this.aoMode = null;
-        this.quadSplittingMode = null;
+        this.shadeMode = null;
         this.xRot = 0;
         this.yRot = 0;
         this.zRot = 0;
         this.color = -1;
-    }
-
-    /* NONE = No splitting, DEFERRED = leave it to sodium to decide */
-    public enum QuadSplittingMode {
-        NONE,
-        DEFERRED
+        this.flags = 0;
     }
 }

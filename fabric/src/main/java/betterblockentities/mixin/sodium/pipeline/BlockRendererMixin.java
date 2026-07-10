@@ -6,12 +6,19 @@ import betterblockentities.client.chunk.pipeline.BBEBlockRenderer;
 /* minecraft */
 import betterblockentities.client.chunk.pipeline.BBEEmitter;
 import betterblockentities.client.chunk.translucent_sorting.TranslucentGeometryCollectorExt;
+import betterblockentities.client.chunk.util.QuadLighter;
+import betterblockentities.mixin.accessors.AbstractBlockRenderContextAccessor;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.caffeinemc.mods.sodium.client.model.light.LightMode;
+import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
@@ -42,10 +49,17 @@ import java.util.function.Predicate;
 public abstract class BlockRendererMixin {
     /* make sodium own this so it lives and dies alongside Sodium's BlockRenderer */
     @Unique private BBEBlockRenderer bbeBlockRenderer;
+    @Unique private QuadLighter bbeQuadLighter;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void init(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters, CallbackInfo ci) {
+    private void bbe$init(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters, CallbackInfo ci) {
         this.bbeBlockRenderer = new BBEBlockRenderer((BlockRenderer)(Object)this);
+        this.bbeQuadLighter = new QuadLighter();
+    }
+
+    @Inject(method = "prepare", at = @At("TAIL"))
+    private void bbe$prepare(ChunkBuildBuffers buffers, LevelSlice level, TranslucentGeometryCollector collector, CallbackInfo ci) {
+        this.bbeQuadLighter.prepare(level);
     }
     
     @Redirect(
@@ -55,9 +69,30 @@ public abstract class BlockRendererMixin {
                     target = "net/caffeinemc/mods/sodium/client/services/PlatformModelEmitter.emitModel (Lnet/minecraft/client/renderer/block/dispatch/BlockStateModel;Ljava/util/function/Predicate;Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;Lnet/minecraft/util/RandomSource;Lnet/minecraft/client/renderer/block/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/caffeinemc/mods/sodium/client/services/PlatformModelEmitter$Bufferer;)V"
             )
     )
-    public void emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
-        LevelSlice slice = ((AbstractBlockRenderContextAccessor)(Object)this).getSlice();
+    public void bbe$emitModel(PlatformModelEmitter instance, BlockStateModel model, Predicate<Direction> isFaceCulled, MutableQuadViewImpl emitter, RandomSource random, BlockAndTintGetter level, BlockPos pos, BlockState state, PlatformModelEmitter.Bufferer bufferer) {
+        LevelSlice slice = ((AbstractBlockRenderContextAccessor)(Object)this).bbe$getSlice();
         bbeBlockRenderer.emitBlockModel(instance, model, isFaceCulled, emitter, random, level, slice, pos, state, bufferer);
+    }
+
+    @WrapOperation(method = "processQuad",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/pipeline/BlockRenderer;shadeQuad(Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;Lnet/caffeinemc/mods/sodium/client/model/light/LightMode;ZLnet/caffeinemc/mods/sodium/client/render/model/SodiumShadeMode;)V"
+            )
+    )
+    private void bbe$shadeQuad(BlockRenderer instance, MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, SodiumShadeMode sodiumShadeMode, Operation<Void> original) {
+        if ((quad.getTag() & BBEEmitter.IMMEDIATE_SHADING) == 0) {
+            original.call(instance, quad, lightMode, emissive, sodiumShadeMode);
+            return;
+        }
+
+        AbstractBlockRenderContextAccessor acc = (AbstractBlockRenderContextAccessor)(Object)this;
+
+        BlockPos pos = acc.bbe$getPos();
+        BlockState state = acc.bbe$getState();
+        QuadLightData quadLightData = acc.bbe$quadLightData();
+
+        this.bbeQuadLighter.shadeEntityQuad(pos, state, emissive, quad, quadLightData);
     }
 
     @WrapOperation(method = "bufferQuad",
@@ -66,7 +101,7 @@ public abstract class BlockRendererMixin {
                     target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/TranslucentGeometryCollector;appendQuad([Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;I)Z"
             )
     )
-    public boolean appendQuad(
+    public boolean bbe$appendQuad(
             TranslucentGeometryCollector instance,
             ChunkVertexEncoder.Vertex[] vertices,
             ModelQuadFacing facing,
@@ -78,11 +113,11 @@ public abstract class BlockRendererMixin {
 
         try {
             if (quad.getTag() == BBEEmitter.NO_QUAD_SPLITTING) {
-                tscExt.setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode.NONE);
+                tscExt.bbe$setIncomingQuadSplitMode(QuadSplittingMode.OFF);
             }
             return original.call(instance, vertices, facing, packedNormal);
         } finally {
-            tscExt.deferSplittingMode();
+            tscExt.bbe$deferSplittingMode();
         }
     }
 }

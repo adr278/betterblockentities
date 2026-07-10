@@ -2,7 +2,7 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
@@ -43,8 +43,6 @@ public class BBEBellRenderer implements BlockEntityRenderer<BellBlockEntity, Bel
         state.ticks = blockEntity.ticks + partialTicks;
 
         state.shakeDirection = ConfigCache.bellAnims ? blockEntity.shaking ? blockEntity.clickDirection : null : null;
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     public void submit(BellRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
@@ -53,7 +51,7 @@ public class BBEBellRenderer implements BlockEntityRenderer<BellBlockEntity, Bel
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, modelState, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.bbe$getBlockEntity(), poseStack, model, modelState, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
         if (!managed) {
             submitNodeCollector.submitModel(
                     this.model, modelState, poseStack, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, BELL_TEXTURE, this.sprites, 0, state.breakProgress

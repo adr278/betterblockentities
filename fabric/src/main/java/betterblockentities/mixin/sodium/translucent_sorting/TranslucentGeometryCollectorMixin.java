@@ -6,6 +6,7 @@ import betterblockentities.client.chunk.translucent_sorting.TQuadExt;
 import betterblockentities.client.chunk.translucent_sorting.TranslucentGeometryCollectorExt;
 
 /* sodium */
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 
@@ -21,7 +22,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 
 @Mixin(TranslucentGeometryCollector.class)
 public class TranslucentGeometryCollectorMixin implements TranslucentGeometryCollectorExt {
-    @Unique private BBEEmitter.QuadSplittingMode lastSplittingMode;
+    @Unique private QuadSplittingMode lastSplittingMode;
 
     @WrapOperation(method = "appendQuad",
             at = @At(
@@ -29,28 +30,28 @@ public class TranslucentGeometryCollectorMixin implements TranslucentGeometryCol
                     target = "it/unimi/dsi/fastutil/objects/ReferenceArrayList.add(Ljava/lang/Object;)Z"
             )
     )
-    public boolean appendQuad(ReferenceArrayList<?> instance, Object appendingQuad, Operation<Boolean> original) {
+    public boolean bbe$appendQuad(ReferenceArrayList<?> instance, Object appendingQuad, Operation<Boolean> original) {
         TQuad tsQuad = (TQuad)appendingQuad;
 
-        if (getLastSplitMode() != BBEEmitter.QuadSplittingMode.DEFERRED) {
+        if (this.bbe$getLastSplitMode() == QuadSplittingMode.OFF) {
             TQuadExt tQuadExt = (TQuadExt)tsQuad;
-            tQuadExt.setSplittingMode(getLastSplitMode());
+            tQuadExt.bbe$setSplittingMode(QuadSplittingMode.OFF);
         }
         return original.call(instance, appendingQuad);
     }
 
     @Override
-    public void setIncomingQuadSplitMode(BBEEmitter.QuadSplittingMode mode) {
+    public void bbe$setIncomingQuadSplitMode(QuadSplittingMode mode) {
         this.lastSplittingMode = mode;
     }
 
     @Override
-    public BBEEmitter.QuadSplittingMode getLastSplitMode() {
+    public QuadSplittingMode bbe$getLastSplitMode() {
         return this.lastSplittingMode;
     }
 
     @Override
-    public void deferSplittingMode() {
-        this.lastSplittingMode = BBEEmitter.QuadSplittingMode.DEFERRED;
+    public void bbe$deferSplittingMode() {
+        this.lastSplittingMode = QuadSplittingMode.SAFE;
     }
 }

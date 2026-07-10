@@ -1,7 +1,12 @@
 package betterblockentities.client.tasks;
 
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -12,34 +17,67 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public final class ManagerTasks {
     private ManagerTasks() {}
 
-    public static final ConcurrentLinkedQueue<InstancedBlockEntityManager> WORK_QUEUE = new ConcurrentLinkedQueue<>();
+    public static final Queue<Long> WORK_QUEUE = new ArrayDeque<>();
+    private static final Map<Long, Entry> ACTIVE_MANAGERS = new HashMap<>();
 
     public static final int FINISHED = 0;
     public static final int PROCESSING = 1;
 
     public static void schedule(InstancedBlockEntityManager mgr) {
-        if (mgr.tryMarkQueued()) {
-            WORK_QUEUE.add(mgr);
+        long key = getBlockPosKey(mgr);
+        Entry entry = ACTIVE_MANAGERS.computeIfAbsent(key, ignored -> new Entry());
+
+        entry.manager = mgr;
+        if (!entry.queued) {
+            entry.queued = true;
+            WORK_QUEUE.add(key);
         }
     }
 
-    public static void process() {
+    public static void process(float partialTicks) {
         int budget = 256;
         while (budget-- > 0) {
-            InstancedBlockEntityManager mgr = WORK_QUEUE.poll();
-            if (mgr == null) break;
+            Long key = WORK_QUEUE.poll();
+            if (key == null) break;
 
-            mgr.clearQueued();
+            Entry entry = ACTIVE_MANAGERS.get(key);
+            if (entry == null) {
+                continue;
+            }
 
-            int state = mgr.run();
+            entry.queued = false;
+
+            InstancedBlockEntityManager mgr = entry.manager;
+            int state = mgr.run(partialTicks);
             if (state == PROCESSING) {
                 if (mgr.isValid()) {
                     schedule(mgr);
                 } else {
                     mgr.forceKill();
+                    clearActive(mgr);
                 }
+            } else if (mgr.isIdle()) {
+                clearActive(mgr);
             }
         }
+    }
+
+    public static void clearActive(InstancedBlockEntityManager mgr) {
+        long key = getBlockPosKey(mgr);
+        Entry entry = ACTIVE_MANAGERS.get(key);
+        if (entry != null && entry.manager == mgr) {
+            ACTIVE_MANAGERS.remove(key);
+        }
+    }
+
+    private static long getBlockPosKey(InstancedBlockEntityManager mgr) {
+        BlockEntity blockEntity = mgr.getBlockEntity();
+        return blockEntity.getBlockPos().asLong();
+    }
+
+    private static final class Entry {
+        private InstancedBlockEntityManager manager;
+        private boolean queued;
     }
 }
 

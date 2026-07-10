@@ -2,8 +2,7 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.gui.option.EnumTypes;
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
@@ -18,7 +17,6 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.ShulkerBoxRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
@@ -63,8 +61,6 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
         state.color = blockEntity.getColor();
 
         state.progress = ConfigCache.shulkerAnims ? blockEntity.getProgress(partialTicks) : 0;
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     public void submit(ShulkerBoxRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
@@ -112,7 +108,7 @@ public class BBEShulkerBoxRenderer implements BlockEntityRenderer<ShulkerBoxBloc
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, progress, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.bbe$getBlockEntity(), poseStack, model, progress, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
         if (!managed) {
             submitNodeCollector.submitModel(this.model, progress, poseStack, lightCoords, overlayCoords, -1, sprite, this.sprites, outlineColor, breakProgress);
         }

@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ReloadableResourceManager.class)
 public abstract class ReloadableResourceManagerMixin {
     @Inject(method = "createReload", at = @At("RETURN"))
-    private void schedulePostReloadTasks(CallbackInfoReturnable<ReloadInstance> cir) {
+    private void bbe$schedulePostReloadTasks(CallbackInfoReturnable<ReloadInstance> cir) {
         ReloadInstance reload = cir.getReturnValue();
         TaskScheduler.scheduleOnReload(reload, () -> {
             if (ResourceTasks.populateGeometryRegistry() == ResourceTasks.FAILED) {

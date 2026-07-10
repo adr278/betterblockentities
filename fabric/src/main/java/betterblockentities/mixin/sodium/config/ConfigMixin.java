@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Config.class)
 public class ConfigMixin {
     @Inject(method = "applyAllOptions", at = @At("RETURN"))
-    public void applyAllOptions(CallbackInfo ci) {
+    public void bbe$applyAllOptions(CallbackInfo ci) {
         BBEConfig.updateConfigCache();
     }
 }

@@ -24,6 +24,7 @@ public class GenericConfigWrapper {
         public static boolean optimizeCopperGolemStatue() {return getGenericBooleanOption("optimize.copper_golem_statue");}
         public static boolean optimizeShelf() {return getGenericBooleanOption("optimize.shelf");}
         public static boolean optimizeCampfire() {return getGenericBooleanOption("optimize.campfire");}
+        public static boolean optimizeLectern() {return getGenericBooleanOption("optimize.lectern");}
         public static boolean animateChest() {return getGenericBooleanOption("animation.chest");}
         public static boolean animateShulker() {return getGenericBooleanOption("animation.shulker");}
         public static boolean animateBell() {return getGenericBooleanOption("animation.bell");}
@@ -35,6 +36,7 @@ public class GenericConfigWrapper {
         public static boolean signText() {return getGenericBooleanOption("misc.sign_text");}
         public static boolean signTextCulling() {return getGenericBooleanOption("misc.sign_text_culling");}
         public static int updateScheduler() {return getGenericIntegerOption("misc.update_scheduler");}
+        public static int shadeMode() {return getGenericIntegerOption("misc.shademode");}
     }
 
     public static class HiddenStorage {

@@ -182,14 +182,6 @@ public class QuadTransform {
         mQuad.cachedSprite(newSprite);
     }
 
-    /* TODO: Refactor this */
-    public static TextureAtlasSprite getBlockSprite(Identifier id) {
-        var atlas = Minecraft.getInstance()
-                .getAtlasManager()
-                .getAtlasOrThrow(AtlasIds.BLOCKS);
-        return atlas.getSprite(id);
-    }
-
     private QuadTransform() {
         throw new IllegalStateException("Instancing of this class is not allowed!");
     }

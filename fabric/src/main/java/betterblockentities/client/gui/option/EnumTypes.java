@@ -25,4 +25,14 @@ public class EnumTypes {
             return (type == FAST) ? 0 : 1;
         }
     }
+
+    public enum ShadeMode {
+        SODIUM, VANILLA;
+        public static ShadeMode map(int value) {
+            return (value == 0) ? ShadeMode.SODIUM : ShadeMode.VANILLA;
+        }
+        public static int map(ShadeMode type) {
+            return (type == SODIUM) ? 0 : 1;
+        }
+    }
 }

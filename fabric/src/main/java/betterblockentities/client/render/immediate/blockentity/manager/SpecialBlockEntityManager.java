@@ -60,6 +60,10 @@ public final class SpecialBlockEntityManager {
             }
             return false;
         }
+        else if (blockEntity instanceof LecternBlockEntity lectern) {
+            return lectern.hasBook();
+        }
+
         return true;
     }
 

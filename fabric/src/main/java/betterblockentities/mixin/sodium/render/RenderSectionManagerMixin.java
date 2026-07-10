@@ -4,6 +4,7 @@ package betterblockentities.mixin.sodium.render;
 import betterblockentities.client.chunk.section.SectionRebuildCallbacks;
 
 /* sodium */
+import betterblockentities.mixin.accessors.RenderSectionAccessor;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
@@ -16,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(RenderSectionManager.class)
 public class RenderSectionManagerMixin {
     @Redirect(method = "processChunkBuilds", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/BuilderTaskOutput;destroy()V"))
-    private void callback(BuilderTaskOutput out) {
+    private void bbe$callback(BuilderTaskOutput out) {
         out.destroy();
 
         if (SectionRebuildCallbacks.isEmpty()) return;
@@ -24,7 +25,7 @@ public class RenderSectionManagerMixin {
         RenderSection section = out.section;
         RenderSectionAccessor accessor = (RenderSectionAccessor) section;
 
-        long key = SectionRebuildCallbacks.keyFromSectionPos(accessor.getChunkX(), accessor.getChunkY(), accessor.getChunkZ());
+        long key = SectionRebuildCallbacks.keyFromSectionPos(accessor.bbe$getChunkX(), accessor.bbe$getChunkY(), accessor.bbe$getChunkZ());
         SectionRebuildCallbacks.fireIfWaiting(key);
     }
 }

@@ -1,7 +1,7 @@
 package betterblockentities.mixin.render.immediate;
 
 /* local */
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 
 /* minecraft */
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -33,7 +33,7 @@ public class ModelFeatureRendererMixin {
     @Shadow @Final private PoseStack poseStack;
 
     @Redirect(method = "renderTranslucent", at = @At(value = "INVOKE", target = "Ljava/util/List;sort(Ljava/util/Comparator;)V"))
-    private void fastTranslucentSort(List<SubmitNodeStorage.TranslucentModelSubmit<?>> list, Comparator<?> comparator) {
+    private void bbe$fastTranslucentSort(List<SubmitNodeStorage.TranslucentModelSubmit<?>> list, Comparator<?> comparator) {
         int size = list.size();
         if (size < 2)
             return;
@@ -61,7 +61,7 @@ public class ModelFeatureRendererMixin {
     }
 
     @Inject(method = "renderSolid", at = @At("TAIL"))
-    public void addRenderers(SubmitNodeCollection submitNodeCollection, MultiBufferSource.BufferSource bufferSource, OutlineBufferSource outlineBufferSource, MultiBufferSource.BufferSource crumblingBufferSource, CallbackInfo ci) {
+    public void bbe$addRenderers(SubmitNodeCollection submitNodeCollection, MultiBufferSource.BufferSource bufferSource, OutlineBufferSource outlineBufferSource, MultiBufferSource.BufferSource crumblingBufferSource, CallbackInfo ci) {
         OverlayRenderer.renderCrumblingOverlays(crumblingBufferSource, this.poseStack);
     }
 }

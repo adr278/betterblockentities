@@ -20,9 +20,8 @@ public final class InstancedBlockEntityManager {
     private enum Phase {
         IDLE,               //manager is inactive. nothing scheduled or required
         IMMEDIATE_ACTIVE,   //blockEntity must currently render using the BER path (animating, duration task, visible under SMART scheduler)
-        WAITING_TERRAIN }   //we requested a terrain section rebuild and are waiting for the fence callback
-
-    private boolean queued = false;
+        WAITING_TERRAIN     //we requested a terrain section rebuild and are waiting for the fence callback
+    }
 
     /* bound context */
     private final BlockEntity blockEntity;
@@ -44,21 +43,9 @@ public final class InstancedBlockEntityManager {
         this.pos = blockEntity.getBlockPos();
     }
 
-    /**
-     * Attempts to mark this manager as queued. Prevents duplicate queue entries.
-     */
-    public boolean tryMarkQueued() {
-        if (queued) return false;
-        queued = true;
-        return true;
-    }
+    public BlockEntity getBlockEntity() { return blockEntity; }
 
-    /**
-     * Called by ManagerTasks after this manager is dequeued.
-     */
-    public void clearQueued() {
-        queued = false;
-    }
+    public boolean isIdle() { return phase == Phase.IDLE; }
 
     public boolean isAnimating() { return animating; }
 
@@ -101,7 +88,6 @@ public final class InstancedBlockEntityManager {
         this.durationTaskStart = 0;
         this.duration = 0;
         this.phase = Phase.IDLE;
-        this.queued = false;
     }
 
     /**
@@ -110,9 +96,9 @@ public final class InstancedBlockEntityManager {
      *   PROCESSING -> keep scheduled
      *   FINISHED   -> safe to remove from queue
      */
-    public int run() {
-        if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF] ||
-            AltRenderers.hasRendererOverride(blockEntity.getType()))
+    public int run(float partialTicks) {
+        if (!BBEConfig.OptEnabledTable.ENABLED[ext.bbe$getOptKind() & 0xFF] ||
+                AltRenderers.hasRendererOverride(blockEntity.getType()))
         {
             phase = Phase.IDLE;
             return ManagerTasks.FINISHED;
@@ -120,7 +106,7 @@ public final class InstancedBlockEntityManager {
 
         switch (phase) {
             case IDLE -> {
-                if (shouldBeImmediate()) {
+                if (shouldBeImmediate(partialTicks)) {
                     enterImmediate();
                     return ManagerTasks.PROCESSING;
                 }
@@ -129,10 +115,10 @@ public final class InstancedBlockEntityManager {
 
             case IMMEDIATE_ACTIVE -> {
                 /* stay in IMMEDIATE while conditions remain true */
-                if (shouldBeImmediate()) {
+                if (shouldBeImmediate(partialTicks)) {
                     return ManagerTasks.PROCESSING;
                 }
-                requestTerrainFence();
+                requestTerrainFence(partialTicks);
                 return ManagerTasks.PROCESSING;
             }
 
@@ -178,9 +164,9 @@ public final class InstancedBlockEntityManager {
     /**
      * Determines whether the BE must remain in IMMEDIATE mode.
      */
-    private boolean shouldBeImmediate() {
+    private boolean shouldBeImmediate(float partialTicks) {
         if (animating) return true;
-        if (durationTask && isDurationStillRunning()) return true;
+        if (durationTask && isDurationStillRunning(partialTicks)) return true;
         if (isSmartSchedulerEnabled() && isVisibleInFov()) return true;
         return false;
     }
@@ -188,10 +174,13 @@ public final class InstancedBlockEntityManager {
     /**
      * Checks duration task expiration
      */
-    private boolean isDurationStillRunning() {
+    private boolean isDurationStillRunning(float partialTicks) {
         if (blockEntity.getLevel() == null) return false;
         float now = blockEntity.getLevel().getGameTime();
-        return (now - durationTaskStart) <= duration;
+
+        float duration = ((now - durationTaskStart) + partialTicks) / this.duration;
+
+        return duration >= 0.0F && duration <= 1.0F;
     }
 
     /**
@@ -199,10 +188,10 @@ public final class InstancedBlockEntityManager {
      */
     private void enterImmediate() {
         phase = Phase.IMMEDIATE_ACTIVE;
-        ext.terrainMeshReady(false);
+        ext.bbe$setTerrainMeshReady(false);
 
-        if (ext.renderingMode() != RenderingMode.IMMEDIATE) {
-            ext.renderingMode(RenderingMode.IMMEDIATE);
+        if (ext.bbe$getRenderingMode() != RenderingMode.IMMEDIATE) {
+            ext.bbe$setRenderingMode(RenderingMode.IMMEDIATE);
             SectionUpdateDispatcher.queueRebuildAtBlockPos(pos);
         }
     }
@@ -210,33 +199,35 @@ public final class InstancedBlockEntityManager {
     /**
      * Requests chunk rebuild and waits for upload fence before allowing BER cancellation.
      */
-    private void requestTerrainFence() {
+    private void requestTerrainFence(float partialTicks) {
         phase = Phase.WAITING_TERRAIN;
 
-        if (ext.renderingMode() != RenderingMode.TERRAIN) {
-            ext.renderingMode(RenderingMode.TERRAIN);
+        if (ext.bbe$getRenderingMode() != RenderingMode.TERRAIN) {
+            ext.bbe$setRenderingMode(RenderingMode.TERRAIN);
         }
 
-        ext.terrainMeshReady(false);
+        ext.bbe$setTerrainMeshReady(false);
 
         SectionUpdateDispatcher.queueRebuildAtBlockPos(pos, () -> {
             /* when fence fires, we must potentially resume immediately */
-            if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]) {
-                ext.terrainMeshReady(true);
+            if (!BBEConfig.OptEnabledTable.ENABLED[ext.bbe$getOptKind() & 0xFF]) {
+                ext.bbe$setTerrainMeshReady(true);
                 phase = Phase.IDLE;
+                ManagerTasks.clearActive(this);
                 return;
             }
 
             /* animation resumed during rebuild */
-            if (shouldBeImmediate()) {
+            if (shouldBeImmediate(partialTicks)) {
                 enterImmediate();
                 ManagerTasks.schedule(this);
                 return;
             }
 
             /* terrain section finished rebuilding, switch to TERRAIN rendering */
-            ext.terrainMeshReady(true);
+            ext.bbe$setTerrainMeshReady(true);
             phase = Phase.IDLE;
+            ManagerTasks.clearActive(this);
         });
     }
 
@@ -262,5 +253,6 @@ public final class InstancedBlockEntityManager {
         public static final byte CGS    = 8;
         public static final byte SHELF  = 9;
         public static final byte CAMPFIRE  = 10;
+        public static final byte LECTERN  = 11;
     }
 }

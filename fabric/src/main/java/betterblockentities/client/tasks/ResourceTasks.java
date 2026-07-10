@@ -3,7 +3,7 @@ package betterblockentities.client.tasks;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.model.geometry.GeometryRegistry;
-import betterblockentities.client.model.geometry.ModelGenerator;
+import betterblockentities.client.model.geometry.ModelBakery;
 
 /**
  * Tasks to be executed after resource reload, these tasks should be scheduled with
@@ -19,7 +19,7 @@ public class ResourceTasks {
                 BBE.getLogger().info("Clearing geometry registry!");
                 GeometryRegistry.clearCache();
             }
-            if (ModelGenerator.generateAppend() == COMPLETE) {
+            if (ModelBakery.generateAppend() == COMPLETE) {
                 BBE.getLogger().info("Geometry registry populated! Task successfully completed");
                 return COMPLETE;
             }

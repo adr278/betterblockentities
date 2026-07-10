@@ -2,7 +2,7 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
@@ -19,7 +19,6 @@ import net.minecraft.client.renderer.blockentity.WallAndGroundTransformations;
 import net.minecraft.client.renderer.blockentity.state.BannerRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
@@ -42,7 +41,6 @@ import com.mojang.math.Axis;
 import com.mojang.math.Transformation;
 
 /* java/misc */
-import java.util.function.Consumer;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
@@ -91,8 +89,6 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
         BlockPos blockPos = blockEntity.getBlockPos();
         
         state.phase = ((float)Math.floorMod(blockPos.getX() * 7 + blockPos.getY() * 9 + blockPos.getZ() * 13 + gameTime, 100L) + partialTicks) / 100.0F;
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     private BannerModel bannerModel(final BannerBlock.AttachmentType type) {
@@ -150,7 +146,7 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, Unit.INSTANCE, lightCoords, overlayCoords, outlineColor, breakProgress);
+        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.bbe$getBlockEntity(), poseStack, model, Unit.INSTANCE, lightCoords, overlayCoords, outlineColor, breakProgress);
         if (!managed) {
             collector.submitModel(model, Unit.INSTANCE, poseStack, lightCoords, overlayCoords, -1, sprite, sprites, outlineColor, breakProgress);
         }
@@ -160,7 +156,7 @@ public class BBEBannerRenderer implements BlockEntityRenderer<BannerBlockEntity,
         float rotClamped = Math.clamp(rot, -4.05f, -0.45f);
         flagModel.root().getChild("flag").xRot = (float)Math.toRadians(rotClamped);
 
-        boolean managed2 = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, flagModel, null, lightCoords, overlayCoords, outlineColor, breakProgress);
+        boolean managed2 = OverlayRenderer.manageCrumblingOverlay(stateExt.bbe$getBlockEntity(), poseStack, flagModel, null, lightCoords, overlayCoords, outlineColor, breakProgress);
         if (!managed2) {
             collector.submitModel(flagModel, phase, poseStack, lightCoords, overlayCoords, -1, sprite, sprites, outlineColor, breakProgress);
         }

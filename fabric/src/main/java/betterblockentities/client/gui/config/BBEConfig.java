@@ -215,6 +215,8 @@ public class BBEConfig {
             ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();
             ConfigCache.optimizeShelves = GenericConfigWrapper.MainStorage.optimizeShelf();
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
+            ConfigCache.optimizeLectern = GenericConfigWrapper.MainStorage.optimizeLectern();
+            ConfigCache.shadeMode = GenericConfigWrapper.MainStorage.shadeMode();
         }
         else {
             ConfigCache.optimizeSigns = false;
@@ -251,6 +253,7 @@ public class BBEConfig {
             ENABLED[InstancedBlockEntityManager.OptKind.CGS]     = ConfigCache.optimizeCopperGolemStatue;
             ENABLED[InstancedBlockEntityManager.OptKind.SHELF]     = ConfigCache.optimizeShelves;
             ENABLED[InstancedBlockEntityManager.OptKind.CAMPFIRE]     = ConfigCache.optimizeCampfire;
+            ENABLED[InstancedBlockEntityManager.OptKind.LECTERN]     = ConfigCache.optimizeLectern;
 
             ENABLED[InstancedBlockEntityManager.OptKind.NONE] = false;
         }

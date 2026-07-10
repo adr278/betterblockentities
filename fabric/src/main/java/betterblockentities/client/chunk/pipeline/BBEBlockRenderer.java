@@ -3,12 +3,12 @@ package betterblockentities.client.chunk.pipeline;
 /* local */
 import betterblockentities.client.BBE;
 import betterblockentities.client.chunk.section.SectionUpdateDispatcher;
-import betterblockentities.client.chunk.util.ModelResourceUtil;
+import betterblockentities.client.model.geometry.ModelResourceUtil;
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.gui.option.EnumTypes;
 import betterblockentities.client.model.geometry.GeometryRegistry;
-import betterblockentities.client.model.MaterialSelector;
-import betterblockentities.client.model.MultiPartBlockModel;
+import betterblockentities.client.model.geometry.MultiPartBlockModel;
+import betterblockentities.client.model.texture.SpriteSelector;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.misc.RenderingMode;
 import betterblockentities.client.render.immediate.blockentity.renderers.*;
@@ -17,12 +17,13 @@ import betterblockentities.client.tasks.ResourceTasks;
 import betterblockentities.render.AltRenderers;
 
 /* minecraft */
+import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
-import net.minecraft.client.renderer.blockentity.state.ChestRenderState;
+import net.minecraft.client.renderer.blockentity.*;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.sprite.SpriteId;
@@ -34,7 +35,6 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.WoodType;
 
 /* sodium */
@@ -78,11 +78,15 @@ public class BBEBlockRenderer  {
 
         /* skip if the declared BlockEntityType is not supported (could be a modded block entity) */
         final BlockEntityExt ext = (BlockEntityExt)blockEntity;
-        if (!ext.supportedBlockEntity()) {
+        if (!ext.bbe$isSupportedBlockEntity()) {
             return;
         }
 
         final Block block = state.getBlock();
+
+        if (ConfigCache.shadeMode == EnumTypes.ShadeMode.VANILLA.ordinal()) {
+            this.emitter.setFlag(BBEEmitter.IMMEDIATE_SHADING);
+        }
 
         if (block instanceof ChestBlock || block instanceof EnderChestBlock) {
             if (ConfigCache.optimizeChests && !AltRenderers.hasRendererOverride(blockEntity.getType())) {
@@ -137,9 +141,15 @@ public class BBEBlockRenderer  {
                 emitCopperGolemStatue(isFaceCulled, random, state, this.emitter);
             }
         }
+
+        this.emitter.clear();
     }
 
     private void emitChest(Predicate<Direction> isFaceCulled, RandomSource random, BlockState state, BBEEmitter emitter, BlockEntity blockEntity) {
+        if (!shouldRender((BlockEntityExt)blockEntity)) {
+            return;
+        }
+
         final ModelLayerLocation layer = ModelResourceUtil.getChestLayer(state);
         final Map<String, BlockStateModel> pairs = tryGetPairs(layer);
 
@@ -147,17 +157,14 @@ public class BBEBlockRenderer  {
             return;
         }
 
-        ModelResourceUtil.collectSplitModelParts(blockEntity, PRIMARY_MODEL_PARTS, pairs, random);
+        ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
 
-        final boolean christmas = ConfigCache.christmasChests;
-        ChestRenderState.ChestMaterialType chestMat = MaterialSelector.getChestMaterial(blockEntity, christmas);
-        final ChestType type = state.hasProperty(ChestBlock.TYPE) ? state.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
-        final SpriteId material = Sheets.chooseSprite(chestMat, type);
+        TextureAtlasSprite sprite = SpriteSelector.getChestSprite(state, blockEntity, ConfigCache.christmasChests);
 
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
 
-        emitter.setMaterial(material);
-        emitter.setTransformation(BBEChestRenderer.modelTransformation(facing));
+        emitter.setSprite(sprite);
+        emitter.setTransformation(ChestRenderer.modelTransformation(facing));
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
@@ -179,14 +186,13 @@ public class BBEBlockRenderer  {
 
         ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
 
-        DyeColor color = ((ShulkerBoxBlock) state.getBlock()).getColor();
-        SpriteId shulkerMaterial = (color == null) ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION : Sheets.getShulkerBoxSprite(color);
+        TextureAtlasSprite sprite = SpriteSelector.getShulkerBoxSprite((ShulkerBoxBlock)state.getBlock());
 
         Direction facing = state.getValue(BlockStateProperties.FACING);
 
-        emitter.setMaterial(shulkerMaterial);
+        emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.CUTOUT);
-        emitter.setTransformation(BBEShulkerBoxRenderer.modelTransform(facing));
+        emitter.setTransformation(ShulkerBoxRenderer.modelTransform(facing));
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
         clearParts();
@@ -203,12 +209,11 @@ public class BBEBlockRenderer  {
 
         ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
 
-        WoodType woodType = ((SignBlock) state.getBlock()).type();
-        SpriteId signMaterial = Sheets.getSignSprite(woodType);
+        TextureAtlasSprite sprite = SpriteSelector.getSignSprite(state);
 
         final boolean isWallSign = !state.hasProperty(BlockStateProperties.ROTATION_16);
 
-        emitter.setMaterial(signMaterial);
+        emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
 
         if (isWallSign) {
@@ -243,10 +248,9 @@ public class BBEBlockRenderer  {
 
         ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
 
-        WoodType woodType = ((SignBlock) state.getBlock()).type();
-        SpriteId signMaterial = Sheets.getHangingSignSprite(woodType);
+        TextureAtlasSprite sprite = SpriteSelector.getHangingSignSprite(state);
 
-        emitter.setMaterial(signMaterial);
+        emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.CUTOUT);
 
         /* invert chains to fix backface culling issue, this is shit but hey >) */
@@ -301,9 +305,7 @@ public class BBEBlockRenderer  {
             ModelResourceUtil.collectSingleModelParts(PRIMARY_MODEL_PARTS, model, random);
         });
 
-        SpriteId bellBodyMaterial = BBEBellRenderer.BELL_TEXTURE;
-
-        emitter.setMaterial(bellBodyMaterial);
+        emitter.setSprite(BellRenderer.BELL_TEXTURE);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
@@ -321,12 +323,11 @@ public class BBEBlockRenderer  {
 
         ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
 
-        DyeColor color = ((BedBlock) state.getBlock()).getColor();
-        SpriteId bedMaterial = Sheets.getBedSprite(color);
+        TextureAtlasSprite sprite = SpriteSelector.getBedSprite(state);
 
         Direction facing = state.getValue(BedBlock.FACING);
 
-        emitter.setMaterial(bedMaterial);
+        emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.setTransformation(BBEBedRenderer.modelTransform(facing));
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
@@ -355,10 +356,10 @@ public class BBEBlockRenderer  {
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
 
         emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.setTransformation(BBEDecoratedPotRenderer.modelTransformation(facing));
+        emitter.setTransformation(DecoratedPotRenderer.modelTransformation(facing));
 
         /* emit the base (top and bottom) */
-        emitter.setMaterial(Sheets.DECORATED_POT_BASE);
+        emitter.setSprite(Sheets.DECORATED_POT_BASE);
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
         DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)blockEntity;
@@ -370,16 +371,16 @@ public class BBEBlockRenderer  {
 
             ModelResourceUtil.collectSingleModelParts(SECONDARY_MODEL_PARTS, model, random);
 
-            SpriteId sideMaterial = switch (modelName) {
-                case "back"  -> MaterialSelector.getDPSideMaterial(decorations.back());
-                case "front" -> MaterialSelector.getDPSideMaterial(decorations.front());
-                case "left"  -> MaterialSelector.getDPSideMaterial(decorations.left());
-                case "right" -> MaterialSelector.getDPSideMaterial(decorations.right());
-                default      -> MaterialSelector.getDPSideMaterial(Optional.empty());
+            TextureAtlasSprite sideMaterial = switch (modelName) {
+                case "back"  -> SpriteSelector.getDecoratedPotSideSprite(decorations.back());
+                case "front" -> SpriteSelector.getDecoratedPotSideSprite(decorations.front());
+                case "left"  -> SpriteSelector.getDecoratedPotSideSprite(decorations.left());
+                case "right" -> SpriteSelector.getDecoratedPotSideSprite(decorations.right());
+                default      -> SpriteSelector.getDecoratedPotSideSprite(Optional.empty());
             };
 
             /* emit sides (patterns) */
-            emitter.setMaterial(sideMaterial);
+            emitter.setSprite(sideMaterial);
             emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
             clearParts();
@@ -414,34 +415,36 @@ public class BBEBlockRenderer  {
 
         if (isWallBanner) {
             Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-            emitter.setTransformation(BBEBannerRenderer.TRANSFORMATIONS.wallTransformation(facing));
+            emitter.setTransformation(BannerRenderer.TRANSFORMATIONS.wallTransformation(facing));
         }
         else {
             int rotationSegment = state.getValue(BlockStateProperties.ROTATION_16);
-            emitter.setTransformation(BBEBannerRenderer.TRANSFORMATIONS.freeTransformations(rotationSegment));
+            emitter.setTransformation(BannerRenderer.TRANSFORMATIONS.freeTransformations(rotationSegment));
         }
 
         /* emit pole */
-        emitter.setMaterial(Sheets.BANNER_BASE);
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
+        emitter.setSprite(Sheets.BANNER_BASE);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
-        final int fancy = EnumTypes.BannerGraphicsType.FANCY.ordinal();
-        final ChunkSectionLayer rt = (ConfigCache.bannerGraphics == fancy) ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT;
+        int fancy = EnumTypes.BannerGraphicsType.FANCY.ordinal();
+        ChunkSectionLayer rt = (ConfigCache.bannerGraphics == fancy)
+                ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT;
 
         /* emit base canvas */
         emitter.setRenderType(rt);
         emitter.setColor(bannerBlockEntity.getBaseColor().getTextureDiffuseColor());
-        emitter.setSplittingMode(BBEEmitter.QuadSplittingMode.NONE);
+        emitter.setFlag(BBEEmitter.NO_QUAD_SPLITTING);
 
         emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
         /* emit banner layers */
         for (BannerPatternLayers.Layer layer : bannerBlockEntity.getPatterns().layers()) {
-            SpriteId layerMaterial = MaterialSelector.getBannerMaterial(layer.pattern());
+            TextureAtlasSprite sprite = SpriteSelector.getBannerPatternSprite(layer.pattern());
             DyeColor layerColor = layer.color();
 
-            emitter.setMaterial(layerMaterial);
+            emitter.setSprite(sprite);
             emitter.setColor(layerColor.getTextureDiffuseColor());
             emitter.emit(SECONDARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
         }
@@ -461,13 +464,14 @@ public class BBEBlockRenderer  {
         ModelResourceUtil.collectMultiModelParts(PRIMARY_MODEL_PARTS, pairs.values(), random);
 
         CopperGolemStatueBlock cgsBlock = (CopperGolemStatueBlock)state.getBlock();
-        TextureAtlasSprite sprite = ModelResourceUtil.getCGSSprite(cgsBlock);
+
+        TextureAtlasSprite sprite = SpriteSelector.getCopperGolemStatueSprite(cgsBlock);
 
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
 
         emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
-        emitter.setTransformation(BBECopperGolemStatueBlockRenderer.modelTransformation(facing));
+        emitter.setTransformation(CopperGolemStatueBlockRenderer.modelTransformation(facing));
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
 
         clearParts();
@@ -503,7 +507,7 @@ public class BBEBlockRenderer  {
     }
 
     public static boolean shouldRender(BlockEntityExt ext) {
-        return ext.renderingMode() == RenderingMode.TERRAIN;
+        return ext.bbe$getRenderingMode() == RenderingMode.TERRAIN;
     }
 
     private void clearParts() {

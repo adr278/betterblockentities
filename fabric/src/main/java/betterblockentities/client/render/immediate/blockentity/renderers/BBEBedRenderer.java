@@ -1,7 +1,7 @@
 package betterblockentities.client.render.immediate.blockentity.renderers;
 
 /* local */
-import betterblockentities.client.render.immediate.OverlayRenderer;
+import betterblockentities.client.render.immediate.overlay.OverlayRenderer;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityRenderStateExt;
 
 /* minecraft */
@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.blockentity.BrightnessCombiner;
 import net.minecraft.client.renderer.blockentity.state.BedRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
@@ -39,9 +38,8 @@ import com.mojang.math.Transformation;
 
 /* java/misc */
 import java.util.Map;
-import java.util.function.Consumer;
+
 import org.joml.Matrix4f;
-import org.joml.Vector3fc;
 
 public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRenderState> {
     private static final Map<Direction, Transformation> TRANSFORMATIONS = Util.makeEnumMap(Direction.class, BBEBedRenderer::createModelTransform);
@@ -81,8 +79,6 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
             );
             state.lightCoords = combineResult.apply(new BrightnessCombiner<>()).get(state.lightCoords);
         }
-
-        ((BlockEntityRenderStateExt)state).blockEntity(blockEntity);
     }
 
     public void submit(BedRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
@@ -110,7 +106,7 @@ public class BBEBedRenderer implements BlockEntityRenderer<BedBlockEntity, BedRe
 
         BlockEntityRenderStateExt stateExt = (BlockEntityRenderStateExt)state;
 
-        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.blockEntity(), poseStack, model, Unit.INSTANCE, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
+        boolean managed = OverlayRenderer.manageCrumblingOverlay(stateExt.bbe$getBlockEntity(), poseStack, model, Unit.INSTANCE, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, state.breakProgress);
         if (!managed) {
             submitNodeCollector.submitModel(model, Unit.INSTANCE, poseStack, lightCoords, overlayCoords, -1, sprite, this.sprites, outlineColor, breakProgress);
         }
