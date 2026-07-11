@@ -3,6 +3,7 @@ package betterblockentities.mixin.render.immediate.blockentity.chest;
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
+import betterblockentities.client.render.immediate.blockentity.extentions.ChestBlockEntityExt;
 import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 import betterblockentities.client.render.immediate.util.BlockVisibilityChecker;
 
@@ -22,8 +23,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChestBlockEntity.class)
-public abstract class ChestBlockEntityMixin implements BlockEntityExt {
+public abstract class ChestBlockEntityMixin implements BlockEntityExt, ChestBlockEntityExt {
     @Unique private final InstancedBlockEntityManager manager = new InstancedBlockEntityManager((BlockEntity)(Object)this);
+
+    @Override public InstancedBlockEntityManager bbeManager() {
+        return this.manager;
+    }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
     private void init(CallbackInfo ci) {
@@ -40,11 +45,16 @@ public abstract class ChestBlockEntityMixin implements BlockEntityExt {
 
     @Inject(method = "lidAnimateTick", at = @At("TAIL"))
     private static void onTick(Level level, BlockPos blockPos, BlockState blockState, ChestBlockEntity chestBlockEntity, CallbackInfo ci) {
-        ChestBlockEntityMixin self = (ChestBlockEntityMixin)(Object)chestBlockEntity;
         BlockEntityExt ext = (BlockEntityExt)(Object)chestBlockEntity;
 
         if (ext.supportedBlockEntity()) {
-            self.manager.tick(isAnimating(chestBlockEntity, level, blockPos), ConfigCache.chestAnims);
+            boolean animating = isAnimating(chestBlockEntity, level, blockPos);
+            ((ChestBlockEntityExt) chestBlockEntity).bbeManager().tick(animating, ConfigCache.chestAnims);
+
+            ChestBlockEntity opposite = BlockVisibilityChecker.getOtherChestHalf(level, blockPos);
+            if (opposite instanceof ChestBlockEntityExt oppositeExt) {
+                oppositeExt.bbeManager().tick(animating, ConfigCache.chestAnims);
+            }
         }
     }
 
