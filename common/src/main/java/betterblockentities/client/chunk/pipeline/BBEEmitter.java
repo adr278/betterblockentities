@@ -40,8 +40,10 @@ public final class BBEEmitter {
         this.material = material;
     }
 
-    public void setSprite(final TextureAtlasSprite sprite) {
-        this.sprite = sprite;
+    public void setSprite(TextureAtlasSprite sprite) {
+        if (sprite != null) {
+            this.sprite = sprite;
+        }
     }
 
     public void setTransform(final Matrix4f transform) {

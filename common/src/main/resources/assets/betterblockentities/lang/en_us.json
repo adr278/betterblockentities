@@ -1,5 +1,8 @@
 {
-  "bbe.config.sodium.pagetext" : "BBE Config",
+  "bbe.config.sodium.pagetext.general" : "General",
+  "bbe.config.sodium.pagetext.optimizations" : "Optimizations",
+  "bbe.config.sodium.pagetext.animations" : "Animations",
+  "bbe.config.sodium.pagetext.advanced" : "Advanced",
 
   "bbe.config.storage.main.optimize.master" : "Enable BBE",
   "bbe.config.storage.main.optimize.master.tooltip" : "Used to toggle BBE and all of its optimizations ON or OFF",

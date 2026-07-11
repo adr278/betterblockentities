@@ -11,406 +11,262 @@ import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
+import net.caffeinemc.mods.sodium.api.config.structure.BooleanOptionBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
-import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 
 /* minecraft */
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class SodiumConfigBuilder implements ConfigEntryPoint {
+    private static final ResourceLocation MASTER = ResourceLocation.parse("bbe:master");
+
     private final SodiumConfigStorage bbeSodiumConfigStorage = new SodiumConfigStorage();
     private final StorageEventHandler saveMainConfigStorageObject = bbeSodiumConfigStorage::save;
 
-    @Override
-    public void registerConfigLate(ConfigBuilder builder) {
-        OptionPageBuilder BBEPage = builder.createOptionPage().setName(Component.translatable("bbe.config.sodium.pagetext"));
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:master"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.master"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.master.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                value -> GlobalScope.CONFIG.MAIN.setOption("optimize.master", value),
-                                () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.master").getValue()
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            ));
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.chest"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.chest"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.chest.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("optimize.chest", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.chest").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                   builder.createBooleanOption(ResourceLocation.parse("bbe:animation.chest"))
-                            .setName(Component.translatable("bbe.config.storage.main.animation.chest"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.animation.chest.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.LOW)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("animation.chest", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("animation.chest").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.chest")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.chest")
-                            )
-                           .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                           .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:misc.christmas_chest"))
-                            .setName(Component.translatable("bbe.config.storage.main.misc.christmas_chest"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.christmas_chest.tooltip"))
-                            .setDefaultValue(false)
-                            .setImpact(OptionImpact.LOW)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("misc.christmas_chest", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("misc.christmas_chest").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.chest")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.chest")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.shulker"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.shulker"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.shulker.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("optimize.shulker", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.shulker").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:animation.shulker"))
-                            .setName(Component.translatable("bbe.config.storage.main.animation.shulker"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.animation.shulker.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.LOW)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("animation.shulker", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("animation.shulker").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.shulker")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.shulker")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.sign"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.sign"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.sign.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("optimize.sign", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.sign").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:misc.sign_text"))
-                            .setName(Component.translatable("bbe.config.storage.main.misc.sign_text"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.MEDIUM)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("misc.sign_text", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("misc.sign_text").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.sign")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.sign")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createIntegerOption(ResourceLocation.parse("bbe:misc.sign_text_distance"))
-                            .setName(Component.translatable("bbe.config.storage.main.misc.sign_text_distance"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text_distance.tooltip"))
-                            .setDefaultValue(16)
-                            .setImpact(OptionImpact.MEDIUM)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("misc.sign_text_distance", value),
-                                    () -> (int) GlobalScope.CONFIG.MAIN.getOption("misc.sign_text_distance").getValue()
-                            )
-                            .setRange(new Range(1, 64, 1))
-                            .setValueFormatter(ControlValueFormatterImpls.number())
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.sign")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:misc.sign_text")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.sign"),
-                                    ResourceLocation.parse("bbe:misc.sign_text")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:misc.sign_text_culling"))
-                            .setName(Component.translatable("bbe.config.storage.main.misc.sign_text_culling"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text_culling.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.MEDIUM)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("misc.sign_text_culling", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("misc.sign_text_culling").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.sign")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:misc.sign_text")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.sign"),
-                                    ResourceLocation.parse("bbe:misc.sign_text")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.decoratedpot"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.decoratedpot"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.decoratedpot.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("optimize.decoratedpot", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.decoratedpot").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:animation.decoratedpot"))
-                            .setName(Component.translatable("bbe.config.storage.main.animation.decoratedpot"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.animation.decoratedpot.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.LOW)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("animation.decoratedpot", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("animation.decoratedpot").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.decoratedpot")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.decoratedpot")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.banner"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.banner"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.banner.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("optimize.banner", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.banner").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createIntegerOption(ResourceLocation.parse("bbe:misc.banner_pose"))
-                            .setName(Component.translatable("bbe.config.storage.main.misc.banner_pose"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.banner_pose.tooltip"))
-                            .setDefaultValue(16)
-                            .setImpact(OptionImpact.MEDIUM)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("misc.banner_pose", value),
-                                    () -> (int) GlobalScope.CONFIG.MAIN.getOption("misc.banner_pose").getValue()
-                            )
-                            .setRange(new Range(1, 9, 1))
-                            .setValueFormatter(ControlValueFormatterImpls.number())
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.banner")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.banner")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createEnumOption(ResourceLocation.parse("bbe:misc.banner_graphics"), EnumTypes.BannerGraphicsType.class)
-                            .setName(Component.translatable("bbe.config.storage.main.misc.banner_graphics"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.banner_graphics.tooltip"))
-                            .setDefaultValue(EnumTypes.BannerGraphicsType.FANCY)
-                            .setImpact(OptionImpact.VARIES)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("misc.banner_graphics", EnumTypes.BannerGraphicsType.map(value)),
-                                    () -> EnumTypes.BannerGraphicsType.map((int)GlobalScope.CONFIG.MAIN.getOption("misc.banner_graphics").getValue())
-                            )
-                            .setElementNameProvider(e -> new Component[]{
-                                    Component.translatable("bbe.config.storage.main.misc.banner_graphics.type.fast"),
-                                    Component.translatable("bbe.config.storage.main.misc.banner_graphics.type.fancy"),
-                            }[e.ordinal()])
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.banner")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.banner")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.bell"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.bell"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.bell.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("optimize.bell", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.bell").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:animation.bell"))
-                            .setName(Component.translatable("bbe.config.storage.main.animation.bell"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.animation.bell.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.LOW)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("animation.bell", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("animation.bell").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")) &&
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:optimize.bell")),
-                                    ResourceLocation.parse("bbe:master"), ResourceLocation.parse("bbe:optimize.bell")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.bed"))
-                            .setName(Component.translatable("bbe.config.storage.main.optimize.bed"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.optimize.bed.tooltip"))
-                            .setDefaultValue(true)
-                            .setImpact(OptionImpact.HIGH)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("optimize.bed", value),
-                                    () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.bed").getValue()
-                            )
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
-        );
-
-        BBEPage.addOptionGroup(builder.createOptionGroup()
+    private void registerGeneralPage(ConfigBuilder builder, OptionPageBuilder page) {
+        page.addOptionGroup(builder.createOptionGroup()
                 .addOption(
-                        builder.createBooleanOption(ResourceLocation.parse("bbe:optimize.campfire"))
-                                .setName(Component.translatable("bbe.config.storage.main.optimize.campfire"))
-                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.campfire.tooltip"))
+                        builder.createBooleanOption(MASTER)
+                                .setName(Component.translatable("bbe.config.storage.main.optimize.master"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.master.tooltip"))
                                 .setDefaultValue(true)
                                 .setImpact(OptionImpact.HIGH)
                                 .setBinding(
-                                        value -> GlobalScope.CONFIG.MAIN.setOption("optimize.campfire", value),
-                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.campfire").getValue()
-                                )
-                                .setEnabledProvider(c ->
-                                        c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("optimize.master", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.master").getValue()
                                 )
                                 .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setStorageHandler(this.saveMainConfigStorageObject)
-                )
-        );
+                ));
 
-        BBEPage.addOptionGroup(builder.createOptionGroup()
-            .addOption(
-                    builder.createEnumOption(ResourceLocation.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
-                            .setName(Component.translatable("bbe.config.storage.main.misc.update_scheduler"))
-                            .setTooltip(Component.translatable("bbe.config.storage.main.misc.update_scheduler.tooltip"))
-                            .setDefaultValue(EnumTypes.UpdateSchedulerType.SMART)
-                            .setImpact(OptionImpact.VARIES)
-                            .setBinding(
-                                    value -> GlobalScope.CONFIG.MAIN.setOption("misc.update_scheduler", EnumTypes.UpdateSchedulerType.map(value)),
-                                    () -> EnumTypes.UpdateSchedulerType.map((int)GlobalScope.CONFIG.MAIN.getOption("misc.update_scheduler").getValue())
-                            )
-                            .setElementNameProvider(e -> new Component[]{
-                                    Component.translatable("bbe.config.storage.main.misc.update_scheduler.type.fast"),
-                                    Component.translatable("bbe.config.storage.main.misc.update_scheduler.type.smart"),
-                            }[e.ordinal()])
-                            .setEnabledProvider(c ->
-                                    c.readBooleanOption(ResourceLocation.parse("bbe:master")), ResourceLocation.parse("bbe:master")
-                            )
-                            .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
-                            .setStorageHandler(this.saveMainConfigStorageObject)
-            )
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(
+                        builder.createEnumOption(ResourceLocation.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
+                                .setName(Component.translatable("bbe.config.storage.main.misc.update_scheduler"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.update_scheduler.tooltip"))
+                                .setDefaultValue(EnumTypes.UpdateSchedulerType.SMART)
+                                .setImpact(OptionImpact.VARIES)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.update_scheduler", EnumTypes.UpdateSchedulerType.map(value)),
+                                        () -> EnumTypes.UpdateSchedulerType.map((int) GlobalScope.CONFIG.MAIN.getOption("misc.update_scheduler").getValue())
+                                )
+                                .setElementNameProvider(e -> new Component[]{
+                                        Component.translatable("bbe.config.storage.main.misc.update_scheduler.type.fast"),
+                                        Component.translatable("bbe.config.storage.main.misc.update_scheduler.type.smart")
+                                }[e.ordinal()])
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER), MASTER)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                ));
+    }
+
+    private void registerOptimizationPage(ConfigBuilder builder, OptionPageBuilder page) {
+        ResourceLocation sign = ResourceLocation.parse("bbe:optimize.sign");
+        ResourceLocation signText = ResourceLocation.parse("bbe:misc.sign_text");
+
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(
+                        builder.createBooleanOption(sign)
+                                .setName(Component.translatable("bbe.config.storage.main.optimize.sign"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.optimize.sign.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.HIGH)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("optimize.sign", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize.sign").getValue()
+                                )
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER), MASTER)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createBooleanOption(signText)
+                                .setName(Component.translatable("bbe.config.storage.main.misc.sign_text"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.sign_text", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("misc.sign_text").getValue()
+                                )
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER) && c.readBooleanOption(sign), MASTER, sign)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createIntegerOption(ResourceLocation.parse("bbe:misc.sign_text_distance"))
+                                .setName(Component.translatable("bbe.config.storage.main.misc.sign_text_distance"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text_distance.tooltip"))
+                                .setDefaultValue(16)
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.sign_text_distance", value),
+                                        () -> (int) GlobalScope.CONFIG.MAIN.getOption("misc.sign_text_distance").getValue()
+                                )
+                                .setRange(new Range(1, 64, 1))
+                                .setValueFormatter(value -> Component.literal(value + " blocks"))
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER) && c.readBooleanOption(sign)
+                                        && c.readBooleanOption(signText), MASTER, sign, signText)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createBooleanOption(ResourceLocation.parse("bbe:misc.sign_text_culling"))
+                                .setName(Component.translatable("bbe.config.storage.main.misc.sign_text_culling"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.sign_text_culling.tooltip"))
+                                .setDefaultValue(true)
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.sign_text_culling", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("misc.sign_text_culling").getValue()
+                                )
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER) && c.readBooleanOption(sign)
+                                        && c.readBooleanOption(signText), MASTER, sign, signText)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                ));
+
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(optimizationToggle(builder, "chest", "chest"))
+                .addOption(optimizationToggle(builder, "shulker", "shulker"))
+                .addOption(optimizationToggle(builder, "decoratedpot", "decoratedpot"))
+                .addOption(optimizationToggle(builder, "banner", "banner"))
+                .addOption(optimizationToggle(builder, "bell", "bell"))
+                .addOption(optimizationToggle(builder, "bed", "bed"))
+                .addOption(optimizationToggle(builder, "campfire", "campfire"))
         );
+    }
+
+    private BooleanOptionBuilder optimizationToggle(
+            ConfigBuilder builder,
+            String id,
+            String storageKey
+    ) {
+        return builder.createBooleanOption(ResourceLocation.parse("bbe:optimize." + id))
+                .setName(Component.translatable("bbe.config.storage.main.optimize." + id))
+                .setTooltip(Component.translatable("bbe.config.storage.main.optimize." + id + ".tooltip"))
+                .setDefaultValue(true)
+                .setImpact(OptionImpact.HIGH)
+                .setBinding(
+                        value -> GlobalScope.CONFIG.MAIN.setOption("optimize." + storageKey, value),
+                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("optimize." + storageKey).getValue()
+                )
+                .setEnabledProvider(c -> c.readBooleanOption(MASTER), MASTER)
+                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                .setStorageHandler(this.saveMainConfigStorageObject);
+    }
+
+    private void registerAnimationPage(ConfigBuilder builder, OptionPageBuilder page) {
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(animationToggle(builder, "chest", "chest"))
+                .addOption(animationToggle(builder, "shulker", "shulker"))
+                .addOption(animationToggle(builder, "decoratedpot", "decoratedpot"))
+                .addOption(animationToggle(builder, "bell", "bell"))
+        );
+    }
+
+    private BooleanOptionBuilder animationToggle(
+            ConfigBuilder builder,
+            String id,
+            String storageKey
+    ) {
+        ResourceLocation optimization = ResourceLocation.parse("bbe:optimize." + id);
+        return builder.createBooleanOption(ResourceLocation.parse("bbe:animation." + id))
+                .setName(Component.translatable("bbe.config.storage.main.animation." + id))
+                .setTooltip(Component.translatable("bbe.config.storage.main.animation." + id + ".tooltip"))
+                .setDefaultValue(true)
+                .setImpact(OptionImpact.LOW)
+                .setBinding(
+                        value -> GlobalScope.CONFIG.MAIN.setOption("animation." + storageKey, value),
+                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("animation." + storageKey).getValue()
+                )
+                .setEnabledProvider(c -> c.readBooleanOption(MASTER) && c.readBooleanOption(optimization), MASTER, optimization)
+                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                .setStorageHandler(this.saveMainConfigStorageObject);
+    }
+
+    private void registerAdvancedPage(ConfigBuilder builder, OptionPageBuilder page) {
+        ResourceLocation banner = ResourceLocation.parse("bbe:optimize.banner");
+        ResourceLocation chest = ResourceLocation.parse("bbe:optimize.chest");
+
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(
+                        builder.createIntegerOption(ResourceLocation.parse("bbe:misc.banner_pose"))
+                                .setName(Component.translatable("bbe.config.storage.main.misc.banner_pose"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.banner_pose.tooltip"))
+                                .setDefaultValue(1)
+                                .setImpact(OptionImpact.LOW)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.banner_pose", value),
+                                        () -> (int) GlobalScope.CONFIG.MAIN.getOption("misc.banner_pose").getValue()
+                                )
+                                .setRange(new Range(1, 9, 1))
+                                .setValueFormatter(value -> {
+                                    float degrees = Math.clamp(-0.45f * value, -4.05f, -0.45f);
+                                    return Component.literal(String.format(java.util.Locale.ROOT, "%.2f deg", Math.abs(degrees)));
+                                })
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER) && c.readBooleanOption(banner), MASTER, banner)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createEnumOption(ResourceLocation.parse("bbe:misc.banner_graphics"), EnumTypes.BannerGraphicsType.class)
+                                .setName(Component.translatable("bbe.config.storage.main.misc.banner_graphics"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.banner_graphics.tooltip"))
+                                .setDefaultValue(EnumTypes.BannerGraphicsType.FANCY)
+                                .setImpact(OptionImpact.VARIES)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.banner_graphics", EnumTypes.BannerGraphicsType.map(value)),
+                                        () -> EnumTypes.BannerGraphicsType.map((int) GlobalScope.CONFIG.MAIN.getOption("misc.banner_graphics").getValue())
+                                )
+                                .setElementNameProvider(e -> new Component[]{
+                                        Component.translatable("bbe.config.storage.main.misc.banner_graphics.type.fast"),
+                                        Component.translatable("bbe.config.storage.main.misc.banner_graphics.type.fancy")
+                                }[e.ordinal()])
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER) && c.readBooleanOption(banner), MASTER, banner)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
+                        builder.createBooleanOption(ResourceLocation.parse("bbe:misc.christmas_chest"))
+                                .setName(Component.translatable("bbe.config.storage.main.misc.christmas_chest"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.christmas_chest.tooltip"))
+                                .setDefaultValue(false)
+                                .setImpact(OptionImpact.LOW)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.christmas_chest", value),
+                                        () -> (boolean) GlobalScope.CONFIG.MAIN.getOption("misc.christmas_chest").getValue()
+                                )
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER) && c.readBooleanOption(chest), MASTER, chest)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                ));
+    }
+
+    @Override
+    public void registerConfigLate(ConfigBuilder builder) {
+        OptionPageBuilder generalPage = builder.createOptionPage()
+                .setName(Component.translatable("bbe.config.sodium.pagetext.general"));
+        OptionPageBuilder optimizationPage = builder.createOptionPage()
+                .setName(Component.translatable("bbe.config.sodium.pagetext.optimizations"));
+        OptionPageBuilder animationPage = builder.createOptionPage()
+                .setName(Component.translatable("bbe.config.sodium.pagetext.animations"));
+        OptionPageBuilder advancedPage = builder.createOptionPage()
+                .setName(Component.translatable("bbe.config.sodium.pagetext.advanced"));
+
+        registerGeneralPage(builder, generalPage);
+        registerOptimizationPage(builder, optimizationPage);
+        registerAnimationPage(builder, animationPage);
+        registerAdvancedPage(builder, advancedPage);
 
         builder.registerOwnModOptions()
                 .setNonTintedIcon(ResourceLocation.parse("betterblockentities:icon.png"))
-                .setColorTheme(builder.createColorTheme().setBaseThemeRGB(0xc68d46)) //old 0x603900
-                .addPage(BBEPage);
+                .setColorTheme(builder.createColorTheme().setBaseThemeRGB(0xc68d46))
+                .addPage(generalPage)
+                .addPage(optimizationPage)
+                .addPage(animationPage)
+                .addPage(advancedPage);
     }
 }
