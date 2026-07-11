@@ -48,8 +48,23 @@ public class SodiumWorldRendererMixin {
      * something similar, our API is available for just that
      */
     @Overwrite
-    private static void renderBlockEntity(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta,MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, LocalPlayer player, LocalBooleanRef isGlowing) {
+    private static void renderBlockEntity(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, LocalPlayer player, LocalBooleanRef isGlowing) {
+        BlockEntityExt ext = (BlockEntityExt) entity;
+        boolean managed = shouldManage(ext);
+        boolean skipVanillaRender = managed && (!ext.hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(entity));
+        boolean hasAltRenderers = AltRenderers.renderersLoaded();
+
+        if (skipVanillaRender && blockBreakingProgressions.isEmpty() && !hasAltRenderers) {
+            return;
+        }
+
         BlockPos pos = entity.getBlockPos();
+        SortedSet<BlockDestructionProgress> breakingInfo = blockBreakingProgressions.isEmpty() ? null : blockBreakingProgressions.get(pos.asLong());
+
+        if (skipVanillaRender && breakingInfo == null && !hasAltRenderers) {
+            return;
+        }
+
         matrices.pushPose();
 
         try {
@@ -59,7 +74,6 @@ public class SodiumWorldRendererMixin {
                     pos.getZ() - z
             );
 
-            SortedSet<BlockDestructionProgress> breakingInfo = blockBreakingProgressions.get(pos.asLong());
             VertexConsumer crumblingConsumer = null;
             MultiBufferSource consumer = immediate;
 
@@ -77,18 +91,16 @@ public class SodiumWorldRendererMixin {
                 }
             }
 
-            if (AltRenderers.renderersLoaded()) {
+            if (hasAltRenderers) {
                 GlobalScope.altRenderDispatcher.render(entity, tickDelta, matrices, consumer);
             }
 
-            BlockEntityExt ext = (BlockEntityExt) entity;
-            if (shouldManage(ext)) {
+            if (managed) {
                 if (breakingInfo != null) {
                     dispatcher.render(entity, tickDelta, matrices, new CrumblingOverlayConsumer.CrumblingOnlyBufferSource(immediate, crumblingConsumer));
                 }
 
-                boolean cancel = !ext.hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(entity);
-                if (cancel) {
+                if (skipVanillaRender) {
                     return;
                 }
             }
