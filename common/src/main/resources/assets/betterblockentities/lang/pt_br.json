@@ -60,16 +60,12 @@
 
   "bbe.config.storage.main.misc.update_scheduler": "Agendador de Atualizações",
   "bbe.config.storage.main.misc.update_scheduler.tooltip": "Determina qual agendador de atualização usar, Inteligente atualiza entidades de blocos com base em vários fatores como visibilidade (sem atualizações instantâneas) enquanto Rápido atualiza imediatamente",
-  "bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable": "Esta opção não está disponível porque o mod EMF está carregado!",
 
   "bbe.config.storage.main.misc.update_scheduler.type.fast": "Rápido",
   "bbe.config.storage.main.misc.update_scheduler.type.smart": "Inteligente",
 
   "bbe.config.storage.main.misc.banner_graphics.type.fast": "Rápido",
   "bbe.config.storage.main.misc.banner_graphics.type.fancy": "Elegante",
-
-  "bbe.config.storage.main.misc.item_mesh_type.type.fast" : "Rápido",
-  "bbe.config.storage.main.misc.item_mesh_type.type.fancy" : "Elegante",
 
   "bbe.config.storage.main.misc.banner_pose": "Pose do Estandarte",
   "bbe.config.storage.main.misc.banner_pose.tooltip": "Rotaciona o canvas/tela do estandarte para uma posição predefinida"

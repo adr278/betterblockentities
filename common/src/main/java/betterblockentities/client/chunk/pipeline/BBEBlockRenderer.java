@@ -128,6 +128,10 @@ public final class BBEBlockRenderer {
     }
 
     private void emitChest(BlockEntity blockEntity, BlockEntityExt ext, BlockState state, Supplier<RandomSource> randomSupplier) {
+        if (!shouldRender(ext)) {
+            return;
+        }
+
         final MultiPartBlockModel template = GeometryRegistry.getModel(ModelResourceUtil.getChestLayer(state));
         if (template == null) {
             return;
@@ -146,9 +150,6 @@ public final class BBEBlockRenderer {
         this.poseStack.mulPose(Axis.YP.rotationDegrees(-angle));
         this.poseStack.translate(-0.5F, -0.5F, -0.5F);
 
-        final boolean drawLid = shouldRender(ext);
-        final boolean addBase = drawLid || ConfigCache.updateType != EnumTypes.UpdateSchedulerType.SMART.ordinal();
-
         this.emitter.setMaterial(ModelResourceUtil.toMaterial(BlendMode.DEFAULT));
         this.emitter.setSprite(sprite);
         this.emitter.setTransform(new Matrix4f(this.poseStack.last().pose()));
@@ -159,20 +160,7 @@ public final class BBEBlockRenderer {
             return;
         }
 
-        List<BakedModel> merged = new ArrayList<>();
-
-        final BakedModel bottom = pairs.get("bottom");
-        if (addBase) {
-            merged.add(bottom);
-        }
-
-        if (drawLid) {
-            final BakedModel lid = pairs.get("lid");
-            final BakedModel lock = pairs.get("lock");
-
-            merged.add(lid);
-            merged.add(lock);
-        }
+        List<BakedModel> merged = new ArrayList<>(pairs.values());
 
         this.emitter.emit(merged, randomSupplier);
     }

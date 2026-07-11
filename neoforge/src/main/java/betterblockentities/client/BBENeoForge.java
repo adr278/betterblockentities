@@ -15,7 +15,6 @@ public class BBENeoForge {
         GlobalScope.platformAccess = new NeoForgePlatformAccess();
 
         GlobalScope.LOGGER.info("Checking for loaded mods for compact...");
-        GlobalScope.ModCompact.checkForLoadedMods();
 
         GlobalScope.LOGGER.info("Building config cache from user defined config file...");
         BBEConfig.updateConfigCache();

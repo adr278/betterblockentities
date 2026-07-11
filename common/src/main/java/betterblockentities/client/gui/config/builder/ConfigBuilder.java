@@ -60,7 +60,6 @@ public class ConfigBuilder {
         ConfigStorageObject hiddenStorage = new ConfigStorageObject(ConfigStorageIdentifiers.HIDDEN);
 
         List<OptionObject<?>> options = new ArrayList<>(List.of(
-                new BooleanOption("override.forced_updatescheduler", false),
                 new BooleanOption("debug.overlays", false)
         ));
 

@@ -3,11 +3,8 @@ package betterblockentities.client.render.immediate.blockentity.renderers;
 /* local */
 import betterblockentities.client.gui.config.ConfigCache;
 import betterblockentities.client.chunk.util.ModelResourceUtil;
-import betterblockentities.client.model.overrides.ChestModelOverride;
-import betterblockentities.client.render.immediate.blockentity.misc.CrumblingOverlayConsumer;
 
 /* minecraft */
-import betterblockentities.platform.GlobalScope;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -52,17 +49,6 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
     private final ModelPart doubleRightBottom;
     private final ModelPart doubleRightLock;
 
-    //bbe overrides
-    private ModelPart bbeLid;
-    private ModelPart bbeBottom;
-    private ModelPart bbeLock;
-    private ModelPart bbeDoubleLeftLid;
-    private ModelPart bbeDoubleLeftBottom;
-    private ModelPart bbeDoubleLeftLock;
-    private ModelPart bbeDoubleRightLid;
-    private ModelPart bbeDoubleRightBottom;
-    private ModelPart bbeDoubleRightLock;
-
     private final boolean xmasTextures;
 
     public BBEChestRenderer(final BlockEntityRendererProvider.Context context) {
@@ -82,30 +68,6 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         this.doubleRightBottom = doubleRight.getChild(BOTTOM);
         this.doubleRightLid = doubleRight.getChild(LID);
         this.doubleRightLock = doubleRight.getChild(LOCK);
-
-        initBBBModelOverrides(context);
-    }
-
-
-    public void initBBBModelOverrides(BlockEntityRendererProvider.Context context) {
-        final ModelPart chest = context.bakeLayer(ModelLayers.CHEST);
-        this.bbeBottom = chest.getChild(BOTTOM);
-        this.bbeLid = chest.getChild(LID);
-        this.bbeLock = chest.getChild(LOCK);
-
-        final ModelPart doubleLeft = context.bakeLayer(ModelLayers.DOUBLE_CHEST_LEFT);
-        this.bbeDoubleLeftBottom = doubleLeft.getChild(BOTTOM);
-        this.bbeDoubleLeftLid = doubleLeft.getChild(LID);
-        this.bbeDoubleLeftLock = doubleLeft.getChild(LOCK);
-
-        final ModelPart doubleRight = context.bakeLayer(ModelLayers.DOUBLE_CHEST_RIGHT);
-        this.bbeDoubleRightBottom = doubleRight.getChild(BOTTOM);
-        this.bbeDoubleRightLid = doubleRight.getChild(LID);
-        this.bbeDoubleRightLock = doubleRight.getChild(LOCK);
-
-        ChestModelOverride.splitModel(this.bbeBottom);
-        ChestModelOverride.splitModel(this.bbeDoubleLeftBottom);
-        ChestModelOverride.splitModel(this.bbeDoubleRightBottom);
     }
 
     @Override public void render(final T blockEntity, final float partialTick, final PoseStack poseStack, final MultiBufferSource vertexConsumers, final int light, final int overlay) {
@@ -146,30 +108,16 @@ public class BBEChestRenderer<T extends BlockEntity & LidBlockEntity> implements
         final int packedLight = combineResult.apply(new BrightnessCombiner<>()).applyAsInt(light);
         final Material material = ModelResourceUtil.getChestMaterial(blockEntity, chestType, this.xmasTextures);
         final VertexConsumer consumer = material.buffer(vertexConsumers, RenderType::entityCutout);
-
         if (isDouble) {
             if (chestType == ChestType.LEFT) {
-                if (vertexConsumers instanceof CrumblingOverlayConsumer.CrumblingOnlyBufferSource) {
-                    renderModel(poseStack, consumer, this.doubleLeftLid, this.doubleLeftLock, this.doubleLeftBottom, openness, packedLight, overlay);
-                }
-                else {
-                    renderModel(poseStack, consumer, this.bbeDoubleLeftLid, this.bbeDoubleLeftLock, this.bbeDoubleLeftBottom, openness, packedLight, overlay);
-                }
+                renderModel(poseStack, consumer, this.doubleLeftLid, this.doubleLeftLock, this.doubleLeftBottom,
+                        openness, packedLight, overlay);
             } else {
-                if (vertexConsumers instanceof CrumblingOverlayConsumer.CrumblingOnlyBufferSource) {
-                    renderModel(poseStack, consumer, this.doubleRightLid, this.doubleRightLock, this.doubleRightBottom, openness, packedLight, overlay);
-                }
-                else {
-                    renderModel(poseStack, consumer, this.bbeDoubleRightLid, this.bbeDoubleRightLock, this.bbeDoubleRightBottom, openness, packedLight, overlay);
-                }
+                renderModel(poseStack, consumer, this.doubleRightLid, this.doubleRightLock, this.doubleRightBottom,
+                        openness, packedLight, overlay);
             }
         } else {
-            if (vertexConsumers instanceof CrumblingOverlayConsumer.CrumblingOnlyBufferSource || GlobalScope.isItemInvoked) {
-                renderModel(poseStack, consumer, this.lid, this.lock, this.bottom, openness, packedLight, overlay);
-            }
-            else {
-                renderModel(poseStack, consumer, this.bbeLid, this.bbeLock, this.bbeBottom, openness, packedLight, overlay);
-            }
+            renderModel(poseStack, consumer, this.lid, this.lock, this.bottom, openness, packedLight, overlay);
         }
         poseStack.popPose();
     }
