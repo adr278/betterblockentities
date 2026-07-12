@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -125,7 +126,7 @@ public final class SpecialBlockEntityManager {
                 ModelFeatureRenderer.CrumblingOverlay breakProgress,
                 boolean isGloballyRendered
         ) {
-            if (blockEntity.hasBook()) {
+            if (blockEntity.getBlockState().getValue(LecternBlock.HAS_BOOK)) {
                 return Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(
                         blockEntity,
                         partialTicks,
