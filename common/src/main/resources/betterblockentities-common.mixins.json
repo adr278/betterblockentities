@@ -1,0 +1,53 @@
+{
+  "required": true,
+  "package": "betterblockentities.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "accessors.AbstractBlockRenderContextAccessor",
+    "accessors.BlockEntityRenderersAccessor",
+    "accessors.ChestBlockEntityAccessor",
+    "accessors.ChestLidControllerAccessor",
+    "accessors.DebugScreenEntriesAccessor",
+    "accessors.MipMapGeneratorAccessor",
+    "accessors.ModelPartAccessor",
+    "accessors.RenderSectionAccessor",
+    "core.ClientLevelMixin",
+    "core.MinecraftMixin",
+    "model.item.ChestSpecialRendererMixin",
+    "model.item.ClientItemInfoLoaderMixin",
+    "render.FeatureRenderDispatcherMixin",
+    "render.LevelRendererMixin",
+    "render.immediate.blockentity.BannerBlockEntityMixin",
+    "render.immediate.blockentity.BellBlockEntityMixin",
+    "render.immediate.blockentity.BlockEntityRenderersMixin",
+    "render.immediate.blockentity.CampfireBlockEntityMixin",
+    "render.immediate.blockentity.ChestBlockEntityMixin",
+    "render.immediate.blockentity.ChestRendererMixin",
+    "render.immediate.blockentity.CopperGolemStatueBlockEntityMixin",
+    "render.immediate.blockentity.DecoratedPotBlockEntityMixin",
+    "render.immediate.blockentity.EnderChestBlockEntityMixin",
+    "render.immediate.blockentity.LecternBlockEntityMixin",
+    "render.immediate.blockentity.ShelfBlockEntityMixin",
+    "render.immediate.blockentity.ShulkerBoxBlockEntityMixin",
+    "render.immediate.blockentity.SignBlockEntityMixin",
+    "render.immediate.blockentity.extentions.BlockEntityMixin",
+    "render.immediate.blockentity.extentions.BlockEntityRenderStateMixin",
+    "resource.ReloadableResourceManagerMixin",
+    "sodium.config.ConfigMixin",
+    "sodium.pipeline.BlockRendererMixin",
+    "sodium.render.RenderSectionManagerMixin",
+    "sodium.render.SodiumWorldRendererMixin",
+    "sodium.translucent_sorting.InnerPartitionBSPNodeMixin",
+    "sodium.translucent_sorting.TQuadMixin",
+    "sodium.translucent_sorting.TranslucentGeometryCollectorMixin",
+    "texture.AtlasManagerMixin",
+    "texture.MipMapGeneratorMixin"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "render.BlockEntityRenderDispatcherMixin"
+  ]
+}
