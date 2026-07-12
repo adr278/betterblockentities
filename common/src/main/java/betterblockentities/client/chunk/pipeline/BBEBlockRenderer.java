@@ -385,14 +385,14 @@ public final class BBEBlockRenderer {
         }
 
         this.emitter.setMaterial(ModelResourceUtil.toMaterial(BlendMode.DEFAULT));
-        this.emitter.setDisableSplit(false);
+        this.emitter.clearFlag(BBEEmitter.NO_QUAD_SPLITTING);
         this.emitter.setSprite(solidFlagSprite);
         this.emitter.setColor(0xFFFFFFFF);
         merged.add(flagQuads);
         this.emitter.emit(merged, randomSupplier);
 
         this.emitter.setMaterial(ModelResourceUtil.toMaterial(flagBlend));
-        this.emitter.setDisableSplit(true);
+        this.emitter.setFlag(BBEEmitter.NO_QUAD_SPLITTING);
         this.emitter.setSprite(basePatternSprite);
         this.emitter.setColor(banner.getBaseColor().getTextureDiffuseColor() | 0xFF000000);
         this.emitter.emit(merged, randomSupplier);
@@ -409,7 +409,7 @@ public final class BBEBlockRenderer {
             this.emitter.emit(merged, randomSupplier);
         }
 
-        this.emitter.setDisableSplit(false);
+        this.emitter.clearFlag(BBEEmitter.NO_QUAD_SPLITTING);
         this.emitter.setColor(0xFFFFFFFF);
     }
 

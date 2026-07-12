@@ -1,10 +1,10 @@
 package betterblockentities.mixin.sodium.translucent_sorting;
 
 /* local */
-import betterblockentities.client.chunk.translucent_sorting.QuadSplittingMode;
 import betterblockentities.client.chunk.translucent_sorting.TQuadExt;
 
 /* sodium */
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
 
 /* java/misc */
@@ -37,7 +37,7 @@ public class InnerPartitionBSPNodeMixin {
             final IntArrayList inside,
             final Operation<Void> original
     ) {
-        if (((TQuadExt) insideQuad).getSplittingMode() == QuadSplittingMode.NONE) {
+        if (((TQuadExt) insideQuad).getSplittingMode() == QuadSplittingMode.OFF) {
             splittingGroup.add(candidateIndex);
             return;
         }

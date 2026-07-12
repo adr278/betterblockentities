@@ -1,11 +1,11 @@
 package betterblockentities.mixin.sodium.translucent_sorting;
 
 /* local */
-import betterblockentities.client.chunk.translucent_sorting.QuadSplittingMode;
 import betterblockentities.client.chunk.translucent_sorting.TQuadExt;
 import betterblockentities.client.chunk.translucent_sorting.TranslucentGeometryCollectorExt;
 
 /* sodium */
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(TranslucentGeometryCollector.class)
 public class TranslucentGeometryCollectorMixin implements TranslucentGeometryCollectorExt {
-    @Unique private QuadSplittingMode lastSplittingMode = QuadSplittingMode.DEFERRED;
+    @Unique private QuadSplittingMode lastSplittingMode;
 
     @WrapOperation(
             method = "appendQuad",
@@ -34,8 +34,8 @@ public class TranslucentGeometryCollectorMixin implements TranslucentGeometryCol
             final Operation<Boolean> original
     ) {
         final TQuad tsQuad = (TQuad) appendingQuad;
-        if (this.lastSplittingMode != QuadSplittingMode.DEFERRED) {
-            ((TQuadExt) tsQuad).setSplittingMode(this.lastSplittingMode);
+        if (this.lastSplittingMode == QuadSplittingMode.OFF) {
+            ((TQuadExt) tsQuad).setSplittingMode(QuadSplittingMode.OFF);
         }
         return original.call(instance, appendingQuad);
     }
@@ -48,7 +48,9 @@ public class TranslucentGeometryCollectorMixin implements TranslucentGeometryCol
         return this.lastSplittingMode;
     }
 
+    //we don't actually set this, we only use it as an indication that we should allow
+    //splitting behavior to occur
     @Override public void deferSplittingMode() {
-        this.lastSplittingMode = QuadSplittingMode.DEFERRED;
+        this.lastSplittingMode = QuadSplittingMode.SAFE;
     }
 }
