@@ -4,6 +4,12 @@ object BuildConfig {
     //loom version for unobfuscated
     const val LOOM_VERSION: String = "1.15-SNAPSHOT"
 
+    //neoforge gradle plugin
+    const val MODDEV_GRADLE_VERSION: String = "2.0.141"
+
+    //neoforge
+    const val NEOFORGE_VERSION: String = "26.1.2.76"
+
     //fabric loader and api version
     const val FABRIC_LOADER_VERSION: String = "0.19.1"
     const val FABRIC_API_VERSION: String = "0.148.2+26.1.2"

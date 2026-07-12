@@ -20,13 +20,9 @@ tasks.withType<GenerateModuleMetadata>().configureEach {
 
 //replace version placeholder inside "fabric.mod.json" with our built version string
 tasks.processResources {
-    inputs.property("version", project.version)
+    inputs.property("version", version)
 
-    filesMatching("fabric.mod.json") {
-        expand(
-            mapOf(
-                "version" to project.version.toString()
-            )
-        )
+    filesMatching(listOf("fabric.mod.json", "META-INF/neoforge.mods.toml")) {
+        expand(mapOf("version" to inputs.properties["version"]))
     }
 }

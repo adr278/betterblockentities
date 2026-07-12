@@ -1,0 +1,55 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "LGPLv3"
+
+########### metadata #############
+[[mods]]
+modId = "betterblockentities"
+
+version = "${version}"
+displayName = "BBE"
+
+logoFile = "assets/betterblockentities/icon.png"
+
+authors = "Ceeden"
+credits = "Ceeden"
+
+description = '''
+Optimize and customize block entity rendering with a more modern approach.
+'''
+
+########### api entrypoints #############
+[modproperties.betterblockentities]
+"sodium:config_api_user" = "betterblockentities.client.gui.config.builder.SodiumConfigBuilder"
+
+########### depends #############
+[[dependencies.betterblockentities]]
+modId = "minecraft"
+type = "required"
+versionRange = "26.1"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.betterblockentities]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.1.2.10-beta,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.betterblockentities]]
+modId = "sodium"
+type = "required"
+versionRange = "[0.9.0-beta.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+########### break clauses #############
+
+
+########### mixin #############
+[[mixins]]
+config = "betterblockentities-common.mixins.json"
+
+[[mixins]]
+config = "betterblockentities-neoforge.mixins.json"
