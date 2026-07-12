@@ -57,6 +57,8 @@ public abstract class MinecraftMixin {
                 this.atlasManager,
                 this.playerSkinRenderCache
         );
+
+        original.call(instance, resourceManager);
     }
 
     @WrapOperation(method = "renderFrame",
