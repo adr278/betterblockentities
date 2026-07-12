@@ -136,6 +136,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 .addOption(optimizationToggle(builder, "bell", "bell"))
                 .addOption(optimizationToggle(builder, "bed", "bed"))
                 .addOption(optimizationToggle(builder, "campfire", "campfire"))
+                .addOption(optimizationToggle(builder, "lectern", "lectern"))
         );
     }
 

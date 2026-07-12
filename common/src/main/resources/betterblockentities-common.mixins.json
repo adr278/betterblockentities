@@ -22,6 +22,7 @@
     "render.immediate.blockentity.chest.EnderChestBlockEntityMixin",
     "render.immediate.blockentity.decordatedpot.DecoratedPotBlockEntityMixin",
     "render.immediate.blockentity.extentions.BlockEntityMixin",
+    "render.immediate.blockentity.lectern.LecternBlockEntityMixin",
     "render.immediate.blockentity.shulker.ShulkerBoxBlockEntityMixin",
     "render.immediate.blockentity.sign.SignBlockEntityMixin",
     "render.immediate.blockentity.sign.SignRendererMixin",

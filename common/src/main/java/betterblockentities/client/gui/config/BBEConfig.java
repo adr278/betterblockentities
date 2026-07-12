@@ -213,6 +213,7 @@ public class BBEConfig {
             ConfigCache.updateType = GenericConfigWrapper.MainStorage.updateScheduler();
             ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
+            ConfigCache.optimizeLectern = GenericConfigWrapper.MainStorage.optimizeLectern();
         }
         else {
             ConfigCache.optimizeSigns = false;
@@ -223,6 +224,7 @@ public class BBEConfig {
             ConfigCache.optimizeBells = false;
             ConfigCache.optimizeBanners = false;
             ConfigCache.optimizeCampfire = false;
+            ConfigCache.optimizeLectern = false;
         }
 
         OptEnabledTable.rebuildFromConfig();
@@ -245,6 +247,7 @@ public class BBEConfig {
             ENABLED[InstancedBlockEntityManager.OptKind.BANNER]  = ConfigCache.optimizeBanners;
             ENABLED[InstancedBlockEntityManager.OptKind.BELL]    = ConfigCache.optimizeBells;
             ENABLED[InstancedBlockEntityManager.OptKind.CAMPFIRE]     = ConfigCache.optimizeCampfire;
+            ENABLED[InstancedBlockEntityManager.OptKind.LECTERN]     = ConfigCache.optimizeLectern;
 
             ENABLED[InstancedBlockEntityManager.OptKind.NONE] = false;
         }

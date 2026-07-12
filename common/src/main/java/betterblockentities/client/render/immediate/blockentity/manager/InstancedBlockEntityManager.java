@@ -260,5 +260,6 @@ public final class InstancedBlockEntityManager {
         public static final byte BANNER = 6;
         public static final byte BELL   = 7;
         public static final byte CAMPFIRE  = 10;
+        public static final byte LECTERN = 11;
     }
 }

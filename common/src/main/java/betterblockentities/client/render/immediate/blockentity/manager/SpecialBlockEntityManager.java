@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.entity.*;
 
 /**
@@ -52,6 +53,11 @@ public final class SpecialBlockEntityManager {
             }
             return false;
         }
+
+        else if (blockEntity instanceof LecternBlockEntity lectern) {
+            return lectern.getBlockState().getValue(LecternBlock.HAS_BOOK);
+        }
+
         return true;
     }
 

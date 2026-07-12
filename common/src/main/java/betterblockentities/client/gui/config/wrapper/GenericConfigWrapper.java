@@ -24,6 +24,7 @@ public class GenericConfigWrapper {
         public static boolean optimizeBell() { return getGenericBooleanOption("optimize.bell"); }
         public static boolean optimizeBed() {return getGenericBooleanOption("optimize.bed");}
         public static boolean optimizeCampfire() {return getGenericBooleanOption("optimize.campfire");}
+        public static boolean optimizeLectern() {return getGenericBooleanOption("optimize.lectern");}
         public static boolean animateChest() {return getGenericBooleanOption("animation.chest");}
         public static boolean animateShulker() {return getGenericBooleanOption("animation.shulker");}
         public static boolean animateBell() {return getGenericBooleanOption("animation.bell");}
