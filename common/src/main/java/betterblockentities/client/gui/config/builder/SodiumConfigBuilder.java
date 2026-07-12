@@ -43,6 +43,24 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(
+                        builder.createEnumOption(ResourceLocation.parse("bbe:misc.shademode"), EnumTypes.ShadeMode.class)
+                                .setName(Component.translatable("bbe.config.storage.main.misc.shademode"))
+                                .setTooltip(Component.translatable("bbe.config.storage.main.misc.shademode.tooltip"))
+                                .setDefaultValue(EnumTypes.ShadeMode.SODIUM)
+                                .setImpact(OptionImpact.VARIES)
+                                .setBinding(
+                                        value -> GlobalScope.CONFIG.MAIN.setOption("misc.shademode", EnumTypes.ShadeMode.map(value)),
+                                        () -> EnumTypes.ShadeMode.map((int) GlobalScope.CONFIG.MAIN.getOption("misc.shademode").getValue())
+                                )
+                                .setElementNameProvider(e -> new Component[]{
+                                        Component.translatable("bbe.config.storage.main.misc.shademode.type.sodium"),
+                                        Component.translatable("bbe.config.storage.main.misc.shademode.type.vanilla")
+                                }[e.ordinal()])
+                                .setEnabledProvider(c -> c.readBooleanOption(MASTER), MASTER)
+                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                                .setStorageHandler(this.saveMainConfigStorageObject)
+                )
+                .addOption(
                         builder.createEnumOption(ResourceLocation.parse("bbe:misc.update_scheduler"), EnumTypes.UpdateSchedulerType.class)
                                 .setName(Component.translatable("bbe.config.storage.main.misc.update_scheduler"))
                                 .setTooltip(Component.translatable("bbe.config.storage.main.misc.update_scheduler.tooltip"))

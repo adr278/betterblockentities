@@ -84,6 +84,10 @@ public final class BBEBlockRenderer {
 
         this.emitter.bind(quadEmitter);
 
+        if (ConfigCache.shadeMode == EnumTypes.ShadeMode.VANILLA.ordinal()) {
+            this.emitter.setFlag(BBEEmitter.IMMEDIATE_SHADING);
+        }
+
         final BlockState blockState = blockEntity.getBlockState();
         final var block = blockState.getBlock();
 

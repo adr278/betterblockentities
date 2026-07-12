@@ -214,6 +214,7 @@ public class BBEConfig {
             ConfigCache.signTextCulling = GenericConfigWrapper.MainStorage.signTextCulling();
             ConfigCache.optimizeCampfire = GenericConfigWrapper.MainStorage.optimizeCampfire();
             ConfigCache.optimizeLectern = GenericConfigWrapper.MainStorage.optimizeLectern();
+            ConfigCache.shadeMode = GenericConfigWrapper.MainStorage.shadeMode();
         }
         else {
             ConfigCache.optimizeSigns = false;

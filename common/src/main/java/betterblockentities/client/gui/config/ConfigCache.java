@@ -6,6 +6,6 @@ public class ConfigCache {
                               optimizeSigns, optimizeDecoratedPots, optimizeBanners,
                               optimizeBells, optimizeBeds, optimizeShulker,
                               signTextCulling, optimizeCampfire, optimizeLectern;
-        public static int signTextRenderDistance, updateType, bannerGraphics, bannerPose;
+        public static int signTextRenderDistance, updateType, bannerGraphics, bannerPose, shadeMode;
 }
 

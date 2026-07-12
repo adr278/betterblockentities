@@ -18,9 +18,11 @@ public class ConfigBuilder {
 
         int defaultBannerGraphics = EnumTypes.BannerGraphicsType.FANCY.ordinal();
         int defaultUpdateScheduler = EnumTypes.UpdateSchedulerType.FAST.ordinal();
+        int defaultShadeMode = EnumTypes.ShadeMode.VANILLA.ordinal();
 
         List<OptionObject<?>> options = new ArrayList<>(List.of(
                 new BooleanOption("optimize.master", true),
+                new IntegerOption("misc.shademode", defaultShadeMode),
 
                 new BooleanOption("optimize.chest", true),
                 new BooleanOption("optimize.shulker", true),
