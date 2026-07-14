@@ -21,6 +21,7 @@ import java.util.Arrays;
 public class QuadLighter {
     private static final float MINECRAFT_LIGHT_POWER = 0.6F;
     private static final float MINECRAFT_AMBIENT_LIGHT = 0.4F;
+    private static final int LIGHTMAP_TEXEL_CENTER_OFFSET = 0x00080008;
 
     private static final Vector3f Light0_Direction = new Vector3f(0.2F, 1.0F, -0.7F).normalize();
     private static final Vector3f Light1_Direction = new Vector3f(-0.2F, 1.0F, 0.7F).normalize();
@@ -50,7 +51,9 @@ public class QuadLighter {
     }
 
     public void shadeEntityQuad(BlockPos pos, BlockState state, boolean emissive, MutableQuadViewImpl quad, QuadLightData out) {
-        int light = emissive ? LightTexture.FULL_BRIGHT : LevelRenderer.getLightColor(this.slice, state, pos);
+        int light = (emissive ? LightTexture.FULL_BRIGHT : LevelRenderer.getLightColor(this.slice, state, pos))
+                // Sodium filters terrain lightmaps, so we offset this to match entity lighting.
+                + LIGHTMAP_TEXEL_CENTER_OFFSET;
         float brightness = computeDirectionalLight(quad);
 
         //write brightness/ao
