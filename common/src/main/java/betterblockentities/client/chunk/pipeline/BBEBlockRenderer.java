@@ -161,6 +161,7 @@ public class BBEBlockRenderer  {
 
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setSprite(sprite);
         emitter.setTransformation(ChestRenderer.modelTransformation(facing));
         emitter.setRenderType(ChunkSectionLayer.SOLID);
@@ -188,6 +189,7 @@ public class BBEBlockRenderer  {
 
         Direction facing = state.getValue(BlockStateProperties.FACING);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.CUTOUT);
         emitter.setTransformation(ShulkerBoxRenderer.modelTransform(facing));
@@ -211,6 +213,7 @@ public class BBEBlockRenderer  {
 
         final boolean isWallSign = !state.hasProperty(BlockStateProperties.ROTATION_16);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
 
@@ -248,6 +251,7 @@ public class BBEBlockRenderer  {
 
         TextureAtlasSprite sprite = SpriteSelector.getHangingSignSprite(state);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.CUTOUT);
 
@@ -303,6 +307,7 @@ public class BBEBlockRenderer  {
             ModelResourceUtil.collectSingleModelParts(PRIMARY_MODEL_PARTS, model, random);
         });
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setSprite(BellRenderer.BELL_TEXTURE);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.emit(PRIMARY_MODEL_PARTS, isFaceCulled, emitter::buffer);
@@ -325,6 +330,7 @@ public class BBEBlockRenderer  {
 
         Direction facing = state.getValue(BedBlock.FACING);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.setTransformation(BBEBedRenderer.modelTransform(facing));
@@ -353,6 +359,7 @@ public class BBEBlockRenderer  {
 
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.setTransformation(DecoratedPotRenderer.modelTransformation(facing));
 
@@ -467,6 +474,7 @@ public class BBEBlockRenderer  {
 
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setSprite(sprite);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.setTransformation(CopperGolemStatueBlockRenderer.modelTransformation(facing));
