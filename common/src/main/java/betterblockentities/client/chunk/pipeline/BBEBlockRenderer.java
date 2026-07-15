@@ -221,6 +221,7 @@ public class BBEBlockRenderer  {
 
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
 
+        emitter.setShadeMode(SodiumShadeMode.VANILLA);
         emitter.setRenderType(ChunkSectionLayer.SOLID);
         emitter.setTransformation(DecoratedPotRenderer.modelTransformation(facing));
 
