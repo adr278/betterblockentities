@@ -11,7 +11,6 @@ import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.client.Minecraft;
 
@@ -28,7 +27,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
     @Shadow @Final public Font font;
-    @Shadow @Final private ReloadableResourceManager resourceManager;
     @Shadow public abstract BlockRenderDispatcher getBlockRenderer();
     @Shadow public abstract ItemRenderer getItemRenderer();
     @Shadow public abstract EntityRenderDispatcher getEntityRenderDispatcher();
@@ -49,8 +47,6 @@ public abstract class MinecraftMixin {
                 this::getItemRenderer,
                 this::getEntityRenderDispatcher
         );
-
-        this.resourceManager.registerReloadListener(GlobalScope.altRenderDispatcher);
 
         original.call();
     }
