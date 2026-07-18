@@ -3,6 +3,7 @@ package betterblockentities.mixin.render.immediate.blockentity;
 /* local */
 import betterblockentities.client.gui.config.BBEConfig;
 import betterblockentities.client.render.immediate.blockentity.extentions.BlockEntityExt;
+import betterblockentities.client.render.immediate.blockentity.manager.InstancedBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.manager.SpecialBlockEntityManager;
 import betterblockentities.client.render.immediate.blockentity.misc.CrumblingOverlayConsumer;
 import betterblockentities.client.render.immediate.blockentity.misc.CrumblingRenderContext;
@@ -81,19 +82,41 @@ public abstract class BlockEntityRenderDispatcherMixin {
                 ci.cancel();
             }
         }
-
-        //GlobalScope.limitVanillaSignRendering = true;
-    }
-
-    @Inject(method = "render", at = @At("TAIL"), cancellable = true)
-    private void restoreLimiters(BlockEntity entity, float tickDelta, PoseStack matrices, MultiBufferSource consumer, CallbackInfo ci) {
-        //GlobalScope.limitVanillaSignRendering = false;
     }
 
     @Unique
     private static boolean shouldManage(BlockEntityExt ext) {
         return ext.terrainRenderingReady()
                 && BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF];
+    }
+
+    @WrapOperation(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "net/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher.tryRender (Lnet/minecraft/world/level/block/entity/BlockEntity;Ljava/lang/Runnable;)V"
+            )
+    )
+    private void suppressTerrainSignModel(
+            BlockEntity blockEntity,
+            Runnable runnable,
+            Operation<Void> original
+    ) {
+        BlockEntityExt ext = (BlockEntityExt) blockEntity;
+        if (!shouldManage(ext)
+                || ext.optKind() != InstancedBlockEntityManager.OptKind.SIGN
+                || AltRenderers.hasRendererOverride(blockEntity.getType())) {
+            original.call(blockEntity, runnable);
+            return;
+        }
+
+        boolean previous = GlobalScope.limitVanillaSignRendering;
+        GlobalScope.limitVanillaSignRendering = true;
+        try {
+            original.call(blockEntity, runnable);
+        } finally {
+            GlobalScope.limitVanillaSignRendering = previous;
+        }
     }
 
     @Unique
