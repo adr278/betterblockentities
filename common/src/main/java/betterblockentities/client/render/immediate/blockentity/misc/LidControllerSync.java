@@ -27,7 +27,7 @@ public class LidControllerSync {
         if (!(block instanceof ChestBlock)) return;
 
         BlockEntity blockEntity = tryGetBlockEntity(clientLevel, blockPos);
-        ChestBlockEntity opposite = BlockVisibilityChecker.getOtherChestHalf(clientLevel, blockPos);
+        ChestBlockEntity opposite = BlockVisibilityChecker.getOtherChestHalf(clientLevel, blockPos, blockState);
 
         if (blockEntity == null || opposite == null) return;
 

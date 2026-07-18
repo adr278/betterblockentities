@@ -81,21 +81,17 @@ public final class BlockVisibilityChecker {
     }
 
     public static ChestBlockEntity getOtherChestHalf(Level level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
+        return getOtherChestHalf(level, pos, level.getBlockState(pos));
+    }
 
+    public static ChestBlockEntity getOtherChestHalf(Level level, BlockPos pos, BlockState state) {
         if (!(state.getBlock() instanceof ChestBlock)) return null;
 
         ChestType type = state.getValue(ChestBlock.TYPE);
-        Direction facing = state.getValue(ChestBlock.FACING);
+        if (type == ChestType.SINGLE) return null;
 
-        Direction side;
-        if (type == ChestType.LEFT) {
-            side = facing.getClockWise();
-        } else if (type == ChestType.RIGHT) {
-            side = facing.getCounterClockWise();
-        } else {
-            return null;
-        }
+        Direction facing = state.getValue(ChestBlock.FACING);
+        Direction side = type == ChestType.LEFT ? facing.getClockWise() : facing.getCounterClockWise();
 
         BlockPos otherPos = pos.relative(side);
         BlockEntity be = level.getBlockEntity(otherPos);
