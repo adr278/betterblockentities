@@ -10,8 +10,6 @@
     "render.entity.MinecartRendererMixin",
     "render.LevelRendererMixin",
     "render.immediate.blockentity.BlockEntityRenderDispatcherMixin",
-    "render.immediate.blockentity.BlockEntityRenderersAccessor",
-    "render.immediate.blockentity.BlockEntityRenderersMixin",
     "render.immediate.blockentity.VertexMultiConsumerDoubleAccessor",
     "render.immediate.blockentity.banner.BannerBlockEntityMixin",
     "render.immediate.blockentity.bed.BedBlockEntityMixin",

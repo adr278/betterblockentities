@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
@@ -72,6 +73,11 @@ public abstract class BlockEntityRenderDispatcherMixin {
             GlobalScope.altRenderDispatcher.render(entity, tickDelta, matrices, consumer);
         }
 
+        if (AltRenderers.hasRendererOverride(entity.getType())) {
+            ci.cancel();
+            return;
+        }
+
         BlockEntityExt ext = (BlockEntityExt)entity;
         if (shouldManage(ext)) {
             boolean cancel = !ext.hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(entity);
@@ -81,6 +87,21 @@ public abstract class BlockEntityRenderDispatcherMixin {
             if (cancel) {
                 ci.cancel();
             }
+        }
+    }
+
+    @Inject(method = "renderItem", at = @At("HEAD"), cancellable = true)
+    private void renderAltItem(
+            BlockEntity blockEntity,
+            PoseStack poseStack,
+            MultiBufferSource bufferSource,
+            int light,
+            int overlay,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        if (AltRenderers.renderersLoaded()
+                && !GlobalScope.altRenderDispatcher.renderItem(blockEntity, poseStack, bufferSource, light, overlay)) {
+            cir.setReturnValue(false);
         }
     }
 
