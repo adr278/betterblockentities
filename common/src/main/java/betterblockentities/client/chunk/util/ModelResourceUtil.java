@@ -205,11 +205,11 @@ public final class ModelResourceUtil {
     }
 
     public static Material getSignMaterial(final WoodType woodType) {
-        return new Material(SIGN_SHEET, vanilla("entity/signs/" + woodType.name()));
+        return new Material(SIGN_SHEET, textureLocation(ResourceLocation.DEFAULT_NAMESPACE, woodType.name(), "entity/signs/"));
     }
 
     public static Material getHangingSignMaterial(final WoodType woodType) {
-        return new Material(SIGN_SHEET, vanilla("entity/signs/hanging/" + woodType.name()));
+        return new Material(SIGN_SHEET, textureLocation(ResourceLocation.DEFAULT_NAMESPACE, woodType.name(), "entity/signs/hanging/"));
     }
 
     public static TextureAtlasSprite spriteForBannerPattern(final Holder<BannerPattern> pattern) {
@@ -282,7 +282,7 @@ public final class ModelResourceUtil {
     private static Material createBedMaterial(final String namespace, final String colorName) {
         return new Material(
                 BED_SHEET,
-                ResourceLocation.fromNamespaceAndPath(namespace, "entity/bed/" + colorName)
+                textureLocation(namespace, colorName, "entity/bed/")
         );
     }
 
@@ -300,12 +300,12 @@ public final class ModelResourceUtil {
     private static Material createShulkerMaterial(final String namespace, final String colorName) {
         return new Material(
                 SHULKER_SHEET,
-                ResourceLocation.fromNamespaceAndPath(namespace, "entity/shulker/shulker_" + colorName)
+                textureLocation(namespace, colorName, "entity/shulker/shulker_")
         );
     }
 
     private static Material createChestMaterial(final String textureName) {
-        return new Material(CHEST_SHEET, vanilla("entity/chest/" + textureName));
+        return new Material(CHEST_SHEET, textureLocation(ResourceLocation.DEFAULT_NAMESPACE, textureName, "entity/chest/"));
     }
 
     private static Material selectChestMaterial(
@@ -327,6 +327,13 @@ public final class ModelResourceUtil {
 
     private static ResourceLocation vanilla(final String path) {
         return ResourceLocation.withDefaultNamespace(path);
+    }
+
+    private static ResourceLocation textureLocation(final String defaultNamespace, final String name, final String pathPrefix) {
+        final ResourceLocation assetId = name.indexOf(':') >= 0
+                ? ResourceLocation.parse(name)
+                : ResourceLocation.fromNamespaceAndPath(defaultNamespace, name);
+        return assetId.withPrefix(pathPrefix);
     }
 
     private static boolean hasTextureResource(final ResourceLocation texture) {
