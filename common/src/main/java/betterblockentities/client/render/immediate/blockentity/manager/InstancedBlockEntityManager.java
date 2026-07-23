@@ -20,9 +20,8 @@ public final class InstancedBlockEntityManager {
     private enum Phase {
         IDLE,               //manager is inactive. nothing scheduled or required
         IMMEDIATE_ACTIVE,   //blockEntity must currently render using the BER path (animating, duration task, visible under SMART scheduler)
-        WAITING_TERRAIN }   //we requested a terrain section rebuild and are waiting for the fence callback
-
-    private boolean queued = false;
+        WAITING_TERRAIN     //we requested a terrain section rebuild and are waiting for the fence callback
+    }
 
     /* bound context */
     private final BlockEntity blockEntity;
@@ -44,21 +43,9 @@ public final class InstancedBlockEntityManager {
         this.pos = blockEntity.getBlockPos();
     }
 
-    /**
-     * Attempts to mark this manager as queued. Prevents duplicate queue entries.
-     */
-    public boolean tryMarkQueued() {
-        if (queued) return false;
-        queued = true;
-        return true;
-    }
+    public BlockEntity getBlockEntity() { return blockEntity; }
 
-    /**
-     * Called by ManagerTasks after this manager is dequeued.
-     */
-    public void clearQueued() {
-        queued = false;
-    }
+    public boolean isIdle() { return phase == Phase.IDLE; }
 
     public boolean isAnimating() { return animating; }
 
@@ -101,7 +88,6 @@ public final class InstancedBlockEntityManager {
         this.durationTaskStart = 0;
         this.duration = 0;
         this.phase = Phase.IDLE;
-        this.queued = false;
     }
 
     /**
@@ -224,6 +210,7 @@ public final class InstancedBlockEntityManager {
             if (!BBEConfig.OptEnabledTable.ENABLED[ext.optKind() & 0xFF]) {
                 ext.terrainMeshReady(true);
                 phase = Phase.IDLE;
+                ManagerTasks.clearActive(this);
                 return;
             }
 
@@ -237,6 +224,7 @@ public final class InstancedBlockEntityManager {
             /* terrain section finished rebuilding, switch to TERRAIN rendering */
             ext.terrainMeshReady(true);
             phase = Phase.IDLE;
+            ManagerTasks.clearActive(this);
         });
     }
 
@@ -260,5 +248,6 @@ public final class InstancedBlockEntityManager {
         public static final byte BANNER = 6;
         public static final byte BELL   = 7;
         public static final byte CAMPFIRE  = 10;
+        public static final byte LECTERN = 11;
     }
 }

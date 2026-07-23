@@ -40,7 +40,11 @@ public abstract class ShulkerBoxBlockEntityMixin {
         BlockEntityExt ext = (BlockEntityExt)(Object)shulkerBoxBlockEntity;
 
         if (ext.supportedBlockEntity()) {
-            self.manager.tick(shulkerBoxBlockEntity.getProgress(0.5f) > 0.01f, ConfigCache.shulkerAnims);
+            boolean animating = !shulkerBoxBlockEntity.isClosed();
+            boolean shouldAnimate = ConfigCache.shulkerAnims && animating;
+            if (self.manager.isAnimating() != shouldAnimate) {
+                self.manager.tick(animating, ConfigCache.shulkerAnims);
+            }
         }
     }
 }

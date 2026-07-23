@@ -54,7 +54,6 @@
 
   "bbe.config.storage.main.misc.update_scheduler" : "Планировщик обновлений",
   "bbe.config.storage.main.misc.update_scheduler.tooltip" : "Решает, какой планировщик обновлений использовать, Умно обновляет блоки-сущности на основе нескольких факторов, таких как видимость (без прямых обновлений), в то время как Быстро обновляет сразу",
-  "bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable" : "Эта опция недоступна: установлен мод EMF!",
 
   "bbe.config.storage.main.misc.update_scheduler.type.fast" : "Быстро",
   "bbe.config.storage.main.misc.update_scheduler.type.smart" : "Умно",

@@ -12,6 +12,8 @@ public interface BlockEntityExt {
     boolean terrainMeshReady();
     void terrainMeshReady(boolean b);
 
+    boolean terrainRenderingReady();
+
     boolean hasSpecialManager();
     void hasSpecialManager(boolean bl);
 

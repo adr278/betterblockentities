@@ -17,10 +17,12 @@ public class ConfigBuilder {
         ConfigStorageObject mainStorage = new ConfigStorageObject(ConfigStorageIdentifiers.MAIN);
 
         int defaultBannerGraphics = EnumTypes.BannerGraphicsType.FANCY.ordinal();
-        int defaultUpdateScheduler = EnumTypes.UpdateSchedulerType.SMART.ordinal();
+        int defaultUpdateScheduler = EnumTypes.UpdateSchedulerType.FAST.ordinal();
+        int defaultShadeMode = EnumTypes.ShadeMode.VANILLA.ordinal();
 
         List<OptionObject<?>> options = new ArrayList<>(List.of(
                 new BooleanOption("optimize.master", true),
+                new IntegerOption("misc.shademode", defaultShadeMode),
 
                 new BooleanOption("optimize.chest", true),
                 new BooleanOption("optimize.shulker", true),
@@ -30,6 +32,7 @@ public class ConfigBuilder {
                 new BooleanOption("optimize.bell", true),
                 new BooleanOption("optimize.bed", true),
                 new BooleanOption("optimize.campfire", true),
+                new BooleanOption("optimize.lectern", true),
 
                 new BooleanOption("animation.chest", true),
                 new BooleanOption("animation.shulker", true),
@@ -60,7 +63,6 @@ public class ConfigBuilder {
         ConfigStorageObject hiddenStorage = new ConfigStorageObject(ConfigStorageIdentifiers.HIDDEN);
 
         List<OptionObject<?>> options = new ArrayList<>(List.of(
-                new BooleanOption("override.forced_updatescheduler", false),
                 new BooleanOption("debug.overlays", false)
         ));
 

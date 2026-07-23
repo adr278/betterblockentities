@@ -25,6 +25,7 @@ public class ConfigMixin {
         final boolean beforeOptimizeBanners = ConfigCache.optimizeBanners;
         final boolean beforeOptimizeBells = ConfigCache.optimizeBells;
         final boolean beforeOptimizeCampfire = ConfigCache.optimizeCampfire;
+        final boolean beforeOptimizeLectern = ConfigCache.optimizeLectern;
         final boolean beforeChristmasChests = ConfigCache.christmasChests;
         final int beforeBannerGraphics = ConfigCache.bannerGraphics;
         final int beforeBannerPose = ConfigCache.bannerPose;
@@ -41,6 +42,7 @@ public class ConfigMixin {
                         || beforeOptimizeBanners != ConfigCache.optimizeBanners
                         || beforeOptimizeBells != ConfigCache.optimizeBells
                         || beforeOptimizeCampfire != ConfigCache.optimizeCampfire
+                        || beforeOptimizeLectern != ConfigCache.optimizeLectern
                         || beforeChristmasChests != ConfigCache.christmasChests
                         || beforeBannerGraphics != ConfigCache.bannerGraphics
                         || beforeBannerPose != ConfigCache.bannerPose;

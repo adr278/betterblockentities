@@ -1,8 +1,14 @@
 {
-  "bbe.config.sodium.pagetext": "Configuração BBE",
+  "bbe.config.sodium.pagetext.general" : "Geral",
+  "bbe.config.sodium.pagetext.optimizations" : "Otimizações",
+  "bbe.config.sodium.pagetext.animations" : "Aanimações",
+  "bbe.config.sodium.pagetext.advanced" : "Avançado",
 
   "bbe.config.storage.main.optimize.master": "Habilitar BBE",
   "bbe.config.storage.main.optimize.master.tooltip": "Usado para Ativar ou Desativar BBE e todas as suas otimizações",
+
+  "bbe.config.storage.main.misc.shademode": "Modo de sombreamento",
+  "bbe.config.storage.main.misc.shademode.tooltip": "Escolhe o método de sombreamento a ser utilizado para entidades de bloco que BBE otimiza. Embora Sodium possa apresentar um visual melhor — por aplicar oclusão de ambiente e *lightmaps* por vértice ao invés de somente por face —, ele pode causar uma diferença perceptível quando as entidades de bloco estiverem em transição entre a renderização padrão (*vanilla*) e a do Sodium",
 
   "bbe.config.storage.main.optimize.chest": "Otimizar Baú",
   "bbe.config.storage.main.optimize.chest.tooltip": "Usado para Ativar ou Desativar as otimizações de baú",
@@ -27,6 +33,9 @@
 
   "bbe.config.storage.main.optimize.campfire": "Otimizar Fogueira",
   "bbe.config.storage.main.optimize.campfire.tooltip": "Usado para Ativar ou Desativar as otimizações de Fogueira",
+
+  "bbe.config.storage.main.optimize.lectern": "Otimizar Atril",
+  "bbe.config.storage.main.optimize.lectern.tooltip": "Usado para Ativar ou Desativar as otimizações de Atril",
 
   "bbe.config.storage.main.animation.chest": "Animar Baú",
   "bbe.config.storage.main.animation.chest.tooltip": "Usado para Ativar ou Desativar as animações de Baú",
@@ -60,16 +69,15 @@
 
   "bbe.config.storage.main.misc.update_scheduler": "Agendador de Atualizações",
   "bbe.config.storage.main.misc.update_scheduler.tooltip": "Determina qual agendador de atualização usar, Inteligente atualiza entidades de blocos com base em vários fatores como visibilidade (sem atualizações instantâneas) enquanto Rápido atualiza imediatamente",
-  "bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable": "Esta opção não está disponível porque o mod EMF está carregado!",
 
   "bbe.config.storage.main.misc.update_scheduler.type.fast": "Rápido",
   "bbe.config.storage.main.misc.update_scheduler.type.smart": "Inteligente",
 
+  "bbe.config.storage.main.misc.shademode.type.sodium": "Sodium",
+  "bbe.config.storage.main.misc.shademode.type.vanilla": "Vanilla",
+
   "bbe.config.storage.main.misc.banner_graphics.type.fast": "Rápido",
   "bbe.config.storage.main.misc.banner_graphics.type.fancy": "Elegante",
-
-  "bbe.config.storage.main.misc.item_mesh_type.type.fast" : "Rápido",
-  "bbe.config.storage.main.misc.item_mesh_type.type.fancy" : "Elegante",
 
   "bbe.config.storage.main.misc.banner_pose": "Pose do Estandarte",
   "bbe.config.storage.main.misc.banner_pose.tooltip": "Rotaciona o canvas/tela do estandarte para uma posição predefinida"

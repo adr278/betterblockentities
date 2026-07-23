@@ -22,7 +22,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public final class BBEEmitter {
-    public static final int NO_QUAD_SPLITTING_TAG = "BBE-TS-QUAD-NO-SPLIT".hashCode();
+    public static final int NO_QUAD_SPLITTING = 1 << 0; //0b0001 = 1
+    public static final int IMMEDIATE_SHADING = 1 << 1; //0b0010 = 2
+    public static final int SUPPORTED_FLAGS = NO_QUAD_SPLITTING | IMMEDIATE_SHADING;
+    public static final int QUAD_VERTICES = 4;
 
     private final Vector3f scratch = new Vector3f();
     private MutableQuadViewImpl emitter;
@@ -30,7 +33,7 @@ public final class BBEEmitter {
     private TextureAtlasSprite sprite;
     private Matrix4f transform;
     private int color = 0xFFFFFFFF;
-    private boolean disableSplit = false;
+    private int flags;
 
     public void bind(final MutableQuadViewImpl emitter) {
         this.emitter = emitter;
@@ -40,8 +43,10 @@ public final class BBEEmitter {
         this.material = material;
     }
 
-    public void setSprite(final TextureAtlasSprite sprite) {
-        this.sprite = sprite;
+    public void setSprite(TextureAtlasSprite sprite) {
+        if (sprite != null) {
+            this.sprite = sprite;
+        }
     }
 
     public void setTransform(final Matrix4f transform) {
@@ -52,8 +57,18 @@ public final class BBEEmitter {
         this.color = color;
     }
 
-    public void setDisableSplit(final boolean disableSplit) {
-        this.disableSplit = disableSplit;
+    public void setFlag(final int flag) {
+        if ((flag & ~SUPPORTED_FLAGS) != 0) {
+            throw new IllegalArgumentException("Unsupported emitter flag: " + flag);
+        }
+        this.flags |= flag;
+    }
+
+    public void clearFlag(final int flag) {
+        if ((flag & ~SUPPORTED_FLAGS) != 0) {
+            throw new IllegalArgumentException("Unsupported emitter flag: " + flag);
+        }
+        this.flags &= ~flag;
     }
 
     public void emit(List<BakedModel> models, Supplier<RandomSource> randomSupplier) {
@@ -72,7 +87,7 @@ public final class BBEEmitter {
                 applySprite();
                 applyRotation();
                 applyColor();
-                applySplittingMode();
+                applyFlags();
 
                 this.emitter.faceNormal();
                 this.emitter.emitDirectly();
@@ -120,10 +135,8 @@ public final class BBEEmitter {
         }
     }
 
-    private void applySplittingMode() {
-        if (this.disableSplit) {
-            this.emitter.tag(NO_QUAD_SPLITTING_TAG);
-        }
+    private void applyFlags() {
+        this.emitter.tag(this.flags);
     }
 
     public void clearState() {
@@ -131,6 +144,6 @@ public final class BBEEmitter {
         this.sprite = null;
         this.transform = null;
         this.color = 0xFFFFFFFF;
-        this.disableSplit = false;
+        this.flags = 0;
     }
 }

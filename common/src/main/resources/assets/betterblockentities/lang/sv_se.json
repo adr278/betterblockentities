@@ -54,7 +54,6 @@
 
   "bbe.config.storage.main.misc.update_scheduler": "Schemaläggare",
   "bbe.config.storage.main.misc.update_scheduler.tooltip": "Bestämmer vilken updaterings-schemaläggare som ska användas, Smart uppdaterar block entiteter baserat på flera faktorer som synlighet (inga direkta uppdateringar) medan Snabb uppdateringar omedelbart",
-  "bbe.config.storage.main.misc.update_scheduler.tooltip_notavailable" : "Inställningen är inte tillgänglig eftersom EMF-modden är laddad!",
 
   "bbe.config.storage.main.misc.update_scheduler.type.fast": "Snabb",
   "bbe.config.storage.main.misc.update_scheduler.type.smart": "Smart",

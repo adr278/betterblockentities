@@ -14,7 +14,6 @@ public class BBEFabric implements ClientModInitializer {
         GlobalScope.platformAccess = new FabricPlatformAccess();
 
         GlobalScope.LOGGER.info("Checking for loaded mods for compact...");
-        GlobalScope.ModCompact.checkForLoadedMods();
 
         GlobalScope.LOGGER.info("Building config cache from user defined config file...");
         BBEConfig.updateConfigCache();

@@ -78,9 +78,8 @@ public class AltRenderDispatcher implements ResourceManagerReloadListener {
         this.blockRenderDispatcher = supplier;
     }
 
-    @Nullable
     public List<AltRenderer<?>> getRenderers(BlockEntity blockEntity) {
-        return this.renderers.get(blockEntity.getType());
+        return this.renderers.getOrDefault(blockEntity.getType(), List.of());
     }
 
     public void prepare(Level level, Camera camera, HitResult hitResult) {
@@ -94,13 +93,17 @@ public class AltRenderDispatcher implements ResourceManagerReloadListener {
 
     public void render(BlockEntity blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource) {
         List<AltRenderer<?>> altRenderers = this.getRenderers(blockEntity);
+        if (altRenderers.isEmpty()
+                || !blockEntity.hasLevel()
+                || !blockEntity.getType().isValid(blockEntity.getBlockState())
+                || this.camera == null) {
+            return;
+        }
 
         for (AltRenderer<?> altRenderer : altRenderers) {
             if (altRenderer != null) {
-                if (blockEntity.hasLevel() && blockEntity.getType().isValid(blockEntity.getBlockState())) {
-                    if (altRenderer.shouldRender(blockEntity, this.camera.getPosition())) {
-                        tryRender(blockEntity, () -> setupAndRender(altRenderer, blockEntity, f, poseStack, multiBufferSource));
-                    }
+                if (altRenderer.shouldRender(blockEntity, this.camera.getPosition())) {
+                    tryRender(blockEntity, () -> setupAndRender(altRenderer, blockEntity, f, poseStack, multiBufferSource));
                 }
             }
         }
