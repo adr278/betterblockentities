@@ -16,6 +16,7 @@ public abstract class BlockEntityMixin implements BlockEntityExt {
     @Unique private RenderingMode renderingMode = RenderingMode.TERRAIN;
     @Unique private boolean terrainMeshReady = true;
     @Unique private boolean hasSpecialManager = false;
+    @Unique private boolean breakingOverlay = false;
     @Unique private byte bbeKind = 0;
     @Unique private boolean supportedBlockEntity = false;
 
@@ -30,6 +31,9 @@ public abstract class BlockEntityMixin implements BlockEntityExt {
 
     @Override public boolean bbe$hasSpecialManager() { return hasSpecialManager; }
     @Override public void bbe$setSpecialManager(boolean bl) { hasSpecialManager = bl; }
+
+    @Override public boolean bbe$hasBreakingOverlay() { return breakingOverlay; }
+    @Override public void bbe$setBreakingOverlay(boolean bl) { breakingOverlay = bl; }
 
     @Override public byte bbe$getOptKind() { return bbeKind; }
     @Override public void bbe$setOptKind(byte k) { bbeKind = k; }

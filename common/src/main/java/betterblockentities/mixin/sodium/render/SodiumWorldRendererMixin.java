@@ -45,21 +45,22 @@ public abstract class SodiumWorldRendererMixin {
      */
     @Overwrite
     private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState) {
-        final BlockPos blockPos = blockEntity.getBlockPos();
-        final SortedSet<BlockDestructionProgress> sortedSet = progression.get(blockPos.asLong());
+        BlockEntityExt ext = (BlockEntityExt)blockEntity;
+        ModelFeatureRenderer.CrumblingOverlay crumblingOverlay = null;
+        if (ext.bbe$hasBreakingOverlay()) {
+            final BlockPos blockPos = blockEntity.getBlockPos();
+            final SortedSet<BlockDestructionProgress> sortedSet = progression.get(blockPos.asLong());
 
-        ModelFeatureRenderer.CrumblingOverlay crumblingOverlay;
-        if (sortedSet != null && !sortedSet.isEmpty()) {
-            poseStack.pushPose();
-            poseStack.translate(
-                    (double) blockPos.getX() - camera.position().x,
-                    (double) blockPos.getY() - camera.position().y,
-                    (double) blockPos.getZ() - camera.position().z
-            );
-            crumblingOverlay = new ModelFeatureRenderer.CrumblingOverlay(sortedSet.last().getProgress(), poseStack.last());
-            poseStack.popPose();
-        } else {
-            crumblingOverlay = null;
+            if (sortedSet != null && !sortedSet.isEmpty()) {
+                poseStack.pushPose();
+                poseStack.translate(
+                        (double) blockPos.getX() - camera.position().x,
+                        (double) blockPos.getY() - camera.position().y,
+                        (double) blockPos.getZ() - camera.position().z
+                );
+                crumblingOverlay = new ModelFeatureRenderer.CrumblingOverlay(sortedSet.last().getProgress(), poseStack.last());
+                poseStack.popPose();
+            }
         }
 
         /* extract our registered alt renderers for this block entity */
@@ -74,7 +75,6 @@ public abstract class SodiumWorldRendererMixin {
         }
 
         /* manage this block entity if optimizations for it is turned on */
-        BlockEntityExt ext = (BlockEntityExt)blockEntity;
         if (this.bbe$shouldManage(ext, crumblingOverlay))  {
             boolean cancel = !ext.bbe$hasSpecialManager() || !SpecialBlockEntityManager.shouldRender(blockEntity);
             if (cancel) {
