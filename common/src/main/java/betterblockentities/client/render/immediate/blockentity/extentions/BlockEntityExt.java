@@ -16,6 +16,9 @@ public interface BlockEntityExt {
     boolean bbe$hasSpecialManager();
     void bbe$setSpecialManager(boolean bl);
 
+    boolean bbe$hasBreakingOverlay();
+    void bbe$setBreakingOverlay(boolean bl);
+
     byte bbe$getOptKind();
     void bbe$setOptKind(byte k);
 }
